@@ -1,4 +1,4 @@
-## My Project
+## Redshift test drive
 
 TODO: Fill this README out!  
 
