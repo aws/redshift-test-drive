@@ -1,0 +1,37 @@
+## SimpleReplay 2.2.5
+- New self-service analysis UI for analyzing replay runs
+- Ability to replicate objects external to Redshift that a workload interacts with
+- Refactor extract code to be more modular
+
+## SimpleReplay 2.2.4
+- Reverting AutoCommit mode to FALSE
+
+## SimpleReplay 2.2.3
+- Ability to run Simple Replay Extract and Replay for Serverless
+- Boto3 Auth support for Replay on Serverless
+- Optional AWS secret manager support
+- Extract process supports CW Audit logs for both Provisioned and Serverless
+
+## SimpleReplay 2.2.2
+- AWS Secrets Manager integration for admin credentials
+- Replay workloads on Redshift Serverless targets
+
+## SimpleReplay 2.2.1
+- Ability to replay queries with bind variables
+- Remove CFT
+
+## SimpleReplay 2.2
+- Introduce analysis after each replay
+- Handle multi statement SQL to address driver limitations
+- Create one SQL.json during extract
+
+## SimpleReplay 2.1.9
+- Limit connections
+- Drop resultset
+
+
+## SimpleReplay 2.1.8
+- Remove pg8000 dependency
+
+## SimpleReplay 2.1.5
+- Add Cloudformation template
