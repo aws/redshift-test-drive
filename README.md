@@ -8,8 +8,8 @@ The following table provides links to all READMEs in the repository
 
 
 
- Index      | Open Source Tool | Description | README link|
-| ----------- | ----------- |-------| -------|
+| Index      | Tool | Description | README links|
+| ----------- | :-----------: |-------| :-------: |
 | 01      | Simple Replay       |Simple Replay is an open source tool which helps customers to mimic their workloads on clusters |link|
 | 02   | Replay Analysis        |Replay Analysis utility enhances auditing in the Simple Replay process to extract information about the errors that occurred, the validity of the run, and the performance of the replay. This is also a user interface in which customers can choose multiple replays to analyze, validate, and compare using the extracted audit logs.|link|
 |03 | External Object Replicator |lExternal Object Replicator replicates COPY manifest objects, and Spectrum object in the customer cluster|link|
