@@ -1,12 +1,13 @@
 import logging
 import sys
 
+from core.extract.extractor import Extractor
+
 print(sys.path)
 import yaml
 
 import common.config as config_helper
 import common.log as log_helper
-from extractor.extractor import Extractor
 
 
 def main():

@@ -4,14 +4,14 @@ workload_location: "s3://mybucketname/myworkload"
 # Optional. Providing this enables automatic log retrieval from S3 and system
 # table information retrieval (which allows query start and end times to be
 # extracted, rather than just record times)
-source_cluster_endpoint: "devsaba-sr-test.cqm7bdujbnqz.us-east-1.redshift.amazonaws.com:5439/dev"
+source_cluster_endpoint: ""
 
 # Required only if source_cluster_endpoint is given.
 master_username: "awsuser"
 
 # Required. Start and end time of the workload to be extracted, e.g. 2020-06-14T21:41:16+00:00
-start_time: "2022-12-27T16:40:17+00:00"
-end_time: "2022-12-27T16:45:26+00:00"
+start_time: ""
+end_time: ""
 
 # Required only if extraction using ODBC is preferred and installed. Otherwise, Python driver is used.
 odbc_driver: ""
@@ -40,5 +40,8 @@ source_cluster_system_table_unload_iam_role: ""
 # Set the amount of logging
 log_level: info
 
-# Number of simplereplay logfiles to maintain
+# Number of logfiles to maintain
 backup_count: 1
+
+#Provide the schemas list for spectrum to avoid modification during Replay in format ['schema_name']
+external_schemas:

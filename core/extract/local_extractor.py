@@ -4,7 +4,7 @@ import os
 
 from tqdm import tqdm
 
-from extract.extractor import extract_parser
+import extract_parser
 
 logger = logging.getLogger("SimpleReplayLogger")
 

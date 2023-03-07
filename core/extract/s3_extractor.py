@@ -5,7 +5,7 @@ import common.aws_service as aws_service_helper
 from tqdm import tqdm
 
 import util.log_validation
-from .extract_parser import parse_log
+from extract_parser import parse_log
 
 logger = logging.getLogger("SimpleReplayLogger")
 
