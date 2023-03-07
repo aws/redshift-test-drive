@@ -7,10 +7,10 @@ import time
 import traceback
 from queue import Empty
 
-from helper.log import init_logging
+from common.log import init_logging
 from .connection_thread import ConnectionThread
 from .stats import collect_stats, init_stats
-from util import prepend_ids_to_logs
+from common.util import prepend_ids_to_logs
 
 
 class ReplayWorker:

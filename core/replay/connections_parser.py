@@ -5,7 +5,7 @@ import logging
 import dateutil.parser
 from boto3 import client
 
-from util import matches_filters
+from common.util import matches_filters
 
 logger = logging.getLogger("SimpleReplayLogger")
 

@@ -1,5 +1,5 @@
 from replay.prep import ReplayPrep
-from util import db_connect
+from common.util import db_connect
 import re
 import logging
 

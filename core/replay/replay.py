@@ -5,13 +5,13 @@ import logging
 import re
 import sys
 import yaml
-import helper.config as config_helper
-import helper.log as log_helper
+import common.config as config_helper
+import common.log as log_helper
 from replay.connections_parser import ConnectionLog
 from replay.prep import ReplayPrep
 from replay.summarizer import summarize
 from replay.replayer import Replayer
-from util import (
+from common.util import (
     db_connect,
     cluster_dict,
     is_serverless,

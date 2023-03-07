@@ -12,7 +12,7 @@ from pathlib import Path
 import sqlparse
 
 from .prep import ReplayPrep
-from util import (
+from common.util import (
     prepend_ids_to_logs,
     db_connect,
     current_offset_ms,

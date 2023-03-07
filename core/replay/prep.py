@@ -12,7 +12,7 @@ from botocore.exceptions import NoCredentialsError
 
 from .transactions_parser import TransactionsParser
 from .connections_parser import parse_connections
-from util import get_connection_key, get_secret, is_serverless, CredentialsException
+from common.util import get_connection_key, get_secret, is_serverless, CredentialsException
 
 logger = logging.getLogger("SimpleReplayLogger")
 
