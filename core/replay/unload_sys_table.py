@@ -1,4 +1,4 @@
-from replay.prep import ReplayPrep
+from prep import ReplayPrep
 from common.util import db_connect
 import re
 import logging

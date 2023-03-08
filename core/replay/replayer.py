@@ -6,9 +6,9 @@ import time
 from multiprocessing.managers import SyncManager
 from queue import Full, Empty
 
-from .worker import ReplayWorker
+from worker import ReplayWorker
 
-from .stats import init_stats, collect_stats, display_stats, print_stats
+from stats import init_stats, collect_stats, display_stats, print_stats
 
 logger = logging.getLogger("SimpleReplayLogger")
 

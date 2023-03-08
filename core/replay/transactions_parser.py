@@ -6,7 +6,7 @@ import sys
 import dateutil.parser
 import re
 
-from .copy_replacements_parser import parse_copy_replacements
+from copy_replacements_parser import parse_copy_replacements
 from common.util import retrieve_compressed_json, matches_filters, get_connection_key
 
 logger = logging.getLogger("SimpleReplayLogger")

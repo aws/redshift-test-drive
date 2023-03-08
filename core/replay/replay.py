@@ -7,10 +7,10 @@ import sys
 import yaml
 import common.config as config_helper
 import common.log as log_helper
-from replay.connections_parser import ConnectionLog
-from replay.prep import ReplayPrep
-from replay.summarizer import summarize
-from replay.replayer import Replayer
+from connections_parser import ConnectionLog
+from prep import ReplayPrep
+from summarizer import summarize
+from replayer import Replayer
 from common.util import (
     db_connect,
     cluster_dict,
@@ -18,9 +18,9 @@ from common.util import (
     CredentialsException,
     bucket_dict,
 )
-from replay_analysis import run_replay_analysis
-from replay.unload_sys_table import UnloadSysTable
-import helper.aws_service as aws_service_helper
+#from replay_analysis import run_replay_analysis
+from unload_sys_table import UnloadSysTable
+import common.aws_service as aws_service_helper
 
 g_total_connections = 0
 g_queries_executed = 0
