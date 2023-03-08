@@ -1,0 +1,31 @@
+var customCSSPropertiesMap = {
+    offsetTop: '--awsui-offset-top-5mks97',
+    offsetTopWithNotifications: '--awsui-offset-top-with-notifications-5mks97',
+    contentGapLeft: '--awsui-content-gap-left-5mks97',
+    contentGapRight: '--awsui-content-gap-right-5mks97',
+    contentHeight: '--awsui-content-height-5mks97',
+    defaultMaxContentWidth: '--awsui-default-max-content-width-5mks97',
+    defaultMinContentWidth: '--awsui-default-min-content-width-5mks97',
+    footerHeight: '--awsui-footer-height-5mks97',
+    headerHeight: '--awsui-header-height-5mks97',
+    layoutWidth: '--awsui-layout-width-5mks97',
+    mainOffsetLeft: '--awsui-main-offset-left-5mks97',
+    maxContentWidth: '--awsui-max-content-width-5mks97',
+    minContentWidth: '--awsui-min-content-width-5mks97',
+    notificationsHeight: '--awsui-notifications-height-5mks97',
+    overlapHeight: '--awsui-overlap-height-5mks97',
+    navigationWidth: '--awsui-navigation-width-5mks97',
+    splitPanelReportedHeaderSize: '--awsui-split-panel-reported-header-size-5mks97',
+    splitPanelReportedSize: '--awsui-split-panel-reported-size-5mks97',
+    splitPanelHeight: '--awsui-split-panel-height-5mks97',
+    splitPanelMinWidth: '--awsui-split-panel-min-width-5mks97',
+    splitPanelMaxWidth: '--awsui-split-panel-max-width-5mks97',
+    toolsMaxWidth: '--awsui-tools-max-width-5mks97',
+    toolsWidth: '--awsui-tools-width-5mks97',
+    toolsAnimationStartingOpacity: '--awsui-tools-animation-starting-opacity-5mks97',
+    contentScrollMargin: '--awsui-content-scroll-margin-5mks97',
+    flashbarStackDepth: '--awsui-flashbar-stack-depth-5mks97',
+    flashbarStackIndex: '--awsui-flashbar-stack-index-5mks97'
+};
+export default customCSSPropertiesMap;
+//# sourceMappingURL=index.js.map

@@ -1,0 +1,1 @@
+{"version":3,"file":"click-away.d.ts","sourceRoot":"","sources":["../../../../src/table/body-cell/click-away.tsx"],"names":[],"mappings":"AAEA,OAAO,KAA4B,MAAM,OAAO,CAAC;AAIjD,wBAAgB,YAAY,CAAC,OAAO,EAAE,MAAM,IAAI,+BAgB/C;AAED,UAAU,eAAe;IACvB,OAAO,EAAE,MAAM,IAAI,CAAC;IACpB,QAAQ,EAAE,KAAK,CAAC,SAAS,CAAC;CAC3B;AACD,wBAAgB,SAAS,CAAC,EAAE,OAAO,EAAE,QAAQ,EAAE,EAAE,eAAe,eAa/D"}
