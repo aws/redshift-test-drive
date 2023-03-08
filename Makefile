@@ -6,6 +6,7 @@ CORE_FOLDER = $(PWD)/core
 COMMON_FOLDER = $(PWD)/common
 CONFIG_FOLDER = $(PWD)/config
 REPLAY_DIR = $(PWD)/core/replay
+EXTERNAL_OBJECT_REPLICATOR_DIR = $(PWD)/tools/external-object-replicator
 
 
 
@@ -17,6 +18,9 @@ extract:
 
 replay:
 	export PYTHONPATH=$(PYTHONPATH):$(CORE_FOLDER):$(CORE_FOLDER)/util:$(COMMON_FOLDER) && $(PYTHON) $(REPLAY_DIR)/replay.py $(CONFIG_FOLDER)/replay.yaml
+
+external-object-replicator:
+	export PYTHONPATH=$(PYTHONPATH):$(EXTERNAL_OBJECT_REPLICATOR_DIR):$(EXTERNAL_OBJECT_REPLICATOR_DIR)/util && $(PYTHON) $(EXTERNAL_OBJECT_REPLICATOR_DIR)/external_object_replicator.py $(CONFIG_FOLDER)/external_object_replicator.yaml
 
 setup: requirements.txt
 	pip3 install -r requirements.txt
