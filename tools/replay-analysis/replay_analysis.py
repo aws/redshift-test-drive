@@ -12,13 +12,14 @@ from boto3 import client
 from botocore.exceptions import ClientError
 from contextlib import contextmanager
 from io import StringIO
-from  util import  report_gen
+from util import report_gen
 import util.report_util
 from util.report_util import styles
 from tabulate import tabulate
 import util
 from common.util import init_logging
 import common.aws_service as aws_service_helper
+
 g_stylesheet = styles()
 g_columns = g_stylesheet.get("columns")
 
@@ -97,7 +98,9 @@ def run_replay_analysis(
     queries = unload(bucket, iam_role, cluster, user, replay)
     info = util.create_json(replay, cluster, workload, complete, stats, tag)
     try:
-        aws_service_helper.s3_upload(info, bucket.get("bucket_name"), f"{replay_path}/{info}")
+        aws_service_helper.s3_upload(
+            info, bucket.get("bucket_name"), f"{replay_path}/{info}"
+        )
     except ClientError as e:
         logger.error(
             f"{e} Could not upload info. Confirm IAM permissions include S3::PutObject."
@@ -121,8 +124,12 @@ def run_replay_analysis(
 
     # upload to s3 and output presigned urls
     try:
-        aws_service_helper.s3_upload(pdf, bucket.get("bucket_name"), f"{replay_path}/out/{pdf}")
-        aws_service_helper.s3_upload(info, bucket.get("bucket_name"), f"{replay_path}/out/{info}")
+        aws_service_helper.s3_upload(
+            pdf, bucket.get("bucket_name"), f"{replay_path}/out/{pdf}"
+        )
+        aws_service_helper.s3_upload(
+            info, bucket.get("bucket_name"), f"{replay_path}/out/{info}"
+        )
         analysis_summary(bucket.get("url"), replay)
     except ClientError as e:
         logger.error(
@@ -163,7 +170,9 @@ def initiate_connection(username, cluster):
     if cluster.get("is_serverless"):
         if cluster.get("secret_name"):
             logger.info(f"Fetching secrets from: {cluster.get['secret_name']}")
-            secret_name = util.get_secret(cluster.get("secret_name"), cluster.get("region"))
+            secret_name = util.get_secret(
+                cluster.get("secret_name"), cluster.get("region")
+            )
             if not len(set(secret_keys) - set(secret_name.keys())):
                 response = {
                     "DbUser": secret_name["admin_username"],
@@ -177,13 +186,21 @@ def initiate_connection(username, cluster):
             logger.debug(
                 f"Serverless cluster id {serverless_cluster_id} passed to get_cluster_credentials"
             )
-            response = aws_service_helper.redshift_get_cluster_credentials(cluster.get("region"), username,
-                                                                cluster.get("database"),serverless_cluster_id)
+            response = aws_service_helper.redshift_get_cluster_credentials(
+                cluster.get("region"),
+                username,
+                cluster.get("database"),
+                serverless_cluster_id,
+            )
 
     else:
         try:
-            response = aws_service_helper.redshift_get_cluster_credentials(cluster.get("region"), username,
-                                                                cluster.get("database"), cluster.get("id"))
+            response = aws_service_helper.redshift_get_cluster_credentials(
+                cluster.get("region"),
+                username,
+                cluster.get("database"),
+                cluster.get("id"),
+            )
         except Exception as e:
             logger.error(
                 f"Unable to connect to Redshift. Confirm IAM permissions include Redshift::GetClusterCredentials."
@@ -297,8 +314,10 @@ def get_raw_data(report, bucket, replay_path, query):
 
     logger = logging.getLogger("SimpleReplayLogger")
     try:
-        response = aws_service_helper.s3_get_object(Bucket=bucket.get("bucket_name"),
-                                                    filename=f"{replay_path}/raw_data/{query}000")
+        response = aws_service_helper.s3_get_object(
+            Bucket=bucket.get("bucket_name"),
+            filename=f"{replay_path}/raw_data/{query}000",
+        )
     except Exception as e:
         logger.error(
             f"Unable to get raw data from S3. Results for {query} not found. {e}"

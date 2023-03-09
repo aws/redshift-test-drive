@@ -18,7 +18,8 @@ from common.util import (
     CredentialsException,
     bucket_dict,
 )
-#from replay_analysis import run_replay_analysis
+
+# from replay_analysis import run_replay_analysis
 from unload_sys_table import UnloadSysTable
 import common.aws_service as aws_service_helper
 
@@ -72,9 +73,7 @@ def main():
         replay_start_timestamp.isoformat().encode("UTF-8")
     ).hexdigest()[:5]
     if g_config.get("tag", "") != "":
-        replay_id = (
-            f'{replay_start_timestamp.isoformat()}_{cluster.get("id")}_{g_config["tag"]}_{id_hash}'
-        )
+        replay_id = f'{replay_start_timestamp.isoformat()}_{cluster.get("id")}_{g_config["tag"]}_{id_hash}'
     else:
         replay_id = (
             f'{replay_start_timestamp.isoformat()}_{cluster.get("id")}_{id_hash}'

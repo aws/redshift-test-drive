@@ -4,7 +4,7 @@ import gzip
 import sys
 
 import common.aws_service as aws_service_helper
-from extract_parser import parse_log
+from extract.extract_parser import parse_log
 
 logger = logging.getLogger("SimpleReplayLogger")
 

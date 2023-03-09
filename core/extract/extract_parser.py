@@ -1,9 +1,7 @@
 import datetime
 import logging
 import re
-
 import dateutil.parser
-
 from util.audit_logs_parsing import Log, ConnectionLog
 from util.log_validation import is_valid_log, is_duplicate
 

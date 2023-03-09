@@ -32,7 +32,7 @@ setup: requirements.txt
 	pip3 install -r requirements.txt
 
 test:
-	${PYTHON} -m unittest discover
+	export PYTHONPATH=$(PYTHONPATH):$(CORE_FOLDER):$(CORE_FOLDER) && export PYTHONPATH=$(PYTHONPATH):$(EXTERNAL_OBJECT_REPLICATOR_DIR):$(EXTERNAL_OBJECT_REPLICATOR_DIR)/ && export PYTHONPATH=$(PYTHONPATH):$(CORE_FOLDER):$(REPLAY_ANALYSIS_DIR)/ && ${PYTHON} -m unittest discover
 
 clean:
 	rm -rf __pycache__
