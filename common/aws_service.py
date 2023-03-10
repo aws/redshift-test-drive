@@ -145,6 +145,9 @@ def s3_put_object(file_content, bucket, key):
     s3 = boto3.client("s3")
     s3.put_object(Body=file_content, Bucket=bucket, Key=key)
 
+def s3_resource_put_object(bucket,prefix,body):
+    s3_resource = boto3.resource("s3")
+    s3_resource.Object(bucket,prefix).put(Body=body)
 
 def s3_get_bucket_contents(bucket, prefix):
     conn = boto3.client("s3")
@@ -177,6 +180,11 @@ def s3_copy_object(src_bucket, src_prefix, dest_bucket, dest_prefix):
 def s3_get_object(bucket, filename):
     s3 = boto3.resource("s3")
     return s3.Object(bucket, filename)
+
+
+def s3_client_get_object(bucket, key):
+    s3 = boto3.client("s3")
+    return s3.get_object(Bucket=bucket, Key=key)
 
 
 def glue_get_table(database, table, region):
