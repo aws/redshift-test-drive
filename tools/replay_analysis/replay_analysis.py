@@ -298,7 +298,8 @@ def get_raw_data(report, bucket, replay_path, query):
     logger = logging.getLogger("SimpleReplayLogger")
     s3_client = boto3.client('s3')
     try:
-        response = s3_client.get_object(Bucket=bucket.get('bucket_name'), Key=f"{replay_path}/raw_data/{query}000")
+        response = aws_service_helper.s3_client_get_object(bucket=bucket.get("bucket_name"),
+                                                    key=f"{replay_path}/raw_data/{query}000")
     except Exception as e:
         logger.error(
             f"Unable to get raw data from S3. Results for {query} not found. {e}"
@@ -360,14 +361,12 @@ def read_data(table_name, df, report_columns, report):
 
     # upload formatted dataframe to S3 as csv
     try:
-        s3_resource = boto3.resource("s3")
         file = f"{table_name.replace(' ', '')}.csv"  # set filename for saving
         csv_buffer = StringIO()
         report_table.to_csv(csv_buffer)
         logger.debug(report.bucket)
-        s3_resource.Object(
-            report.bucket.get("bucket_name"), f"{report.path}/aggregated_data/{file}"
-        ).put(Body=csv_buffer.getvalue())
+        aws_service_helper.s3_resource_put_object(report.bucket.get("bucket_name"),
+                                                  f"{report.path}/aggregated_data/{file}", csv_buffer.getvalue())
     except Exception as e:
         logger.error(
             f"Could not upload aggregated data. Please confirm bucket. Error occurred while processing "
