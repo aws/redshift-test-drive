@@ -1,0 +1,19 @@
+{
+    "endpoint": "ra3-redshift-cluster-testing.cqm7bdujbnqz.us-east-1.redshift.amazonaws.com:5439/dev",
+    "id": "ra3-redshift-cluster-testing",
+    "host": "ra3-redshift-cluster-testing.cqm7bdujbnqz.us-east-1.redshift.amazonaws.com",
+    "region": "us-east-1",
+    "port": "5439",
+    "database": "dev",
+    "is_serverless": false,
+    "start_time": "2023-03-11T00:56:48+00:00",
+    "end_time": "2023-03-11T01:26:45+00:00",
+    "num_nodes": 2,
+    "instance": "ra3.xlplus",
+    "secret_name": null,
+    "duration": "0:29:57",
+    "status": "Complete",
+    "replay_id": "2023-03-11T00:56:48.015366+00:00_ra3-redshift-cluster-testing_3fefa",
+    "replay_tag": "",
+    "workload": "s3://simplereplay-v2.2.5-testing/testingphase1/Extraction_redshift-cluster-sreor-karlnish-source_2023-02-15T13:31:41.516297+00:00"
+}

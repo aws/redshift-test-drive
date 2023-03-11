@@ -199,7 +199,7 @@ def later_pages(canvas, doc, report):
         "\u00A9 2021, Amazon Web Services, Inc. or its Affiliates. All " "rights reserved.",
     )
     canvas.drawCentredString(4.25 * inch, 0.35 * inch, "Amazon Confidential and Trademark.")
-    canvas.drawImage("resources/logo.png", 7 * inch, 0.25 * inch, width=80, height=45, mask=None)
+    #canvas.drawImage("tools/replay_analsyis/util/logo.png", 7 * inch, 0.25 * inch, width=80, height=45, mask=None)
     canvas.restoreState()
 
 

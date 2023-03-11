@@ -12,12 +12,12 @@ from boto3 import client
 from botocore.exceptions import ClientError
 from contextlib import contextmanager
 from io import StringIO
-from  util import  report_gen
-import util.report_util
-from util.report_util import styles
+from  tools.replay_analysis.util import  report_gen
+from tools.replay_analysis.util.report_util import styles
+import tools.replay_analysis.util.report_util as report_util
 from tabulate import tabulate
 import util
-from common.util import init_logging
+from common.util import init_logging,cluster_dict,bucket_dict,create_json,db_connect
 import common.aws_service as aws_service_helper
 g_stylesheet = styles()
 g_columns = g_stylesheet.get("columns")
@@ -80,13 +80,13 @@ def run_replay_analysis(
 
     logger = logging.getLogger("SimpleReplayLogger")
     s3_client = boto3.client("s3")
-    cluster = util.cluster_dict(cluster_endpoint, is_serverless, start_time, end_time)
+    cluster = cluster_dict(cluster_endpoint, is_serverless, start_time, end_time)
     cluster["is_serverless"] = is_serverless
     cluster["secret_name"] = secret_name
     cluster["host"] = nlb_nat_dns if nlb_nat_dns != None else cluster["host"]
 
     if type(bucket_url) is str:
-        bucket = util.bucket_dict(bucket_url)
+        bucket = bucket_dict(bucket_url)
 
     logger.debug(bucket)
 
@@ -95,7 +95,7 @@ def run_replay_analysis(
 
     # unload from cluster
     queries = unload(bucket, iam_role, cluster, user, replay)
-    info = util.create_json(replay, cluster, workload, complete, stats, tag)
+    info = create_json(replay, cluster, workload, complete, stats, tag)
     try:
         aws_service_helper.s3_upload(info, bucket.get("bucket_name"), f"{replay_path}/{info}")
     except ClientError as e:
@@ -208,7 +208,7 @@ def initiate_connection(username, cluster):
     conn = None
     try:
         logger.info(f"Connecting to {cluster.get('id')}")
-        conn = util.db_connect(
+        conn = db_connect(
             host=cluster_string["host"],
             port=int(cluster_string["port"]),
             username=cluster_string["username"],
@@ -241,7 +241,7 @@ def unload(unload_location, iam_role, cluster, user, replay):
 
     logger = logging.getLogger("SimpleReplayLogger")
 
-    directory = r"sql"
+    directory = r"tools/replay_analysis/sql"
 
     queries = []  # used to return query names
     with initiate_connection(
@@ -296,9 +296,9 @@ def get_raw_data(report, bucket, replay_path, query):
     """
 
     logger = logging.getLogger("SimpleReplayLogger")
+    s3_client = boto3.client('s3')
     try:
-        response = aws_service_helper.s3_get_object(Bucket=bucket.get("bucket_name"),
-                                                    filename=f"{replay_path}/raw_data/{query}000")
+        response = s3_client.get_object(Bucket=bucket.get('bucket_name'), Key=f"{replay_path}/raw_data/{query}000")
     except Exception as e:
         logger.error(
             f"Unable to get raw data from S3. Results for {query} not found. {e}"
@@ -412,7 +412,7 @@ def analysis_summary(bucket_url, replay):
 
     logger = logging.getLogger("SimpleReplayLogger")
 
-    bucket = util.bucket_dict(bucket_url)
+    bucket = bucket_dict(bucket_url)
     logger.info(f"Simple Replay Workload Analysis: {replay}")
     replay_path = f"analysis/{replay}/out/"
     output_str = (
@@ -435,7 +435,7 @@ def list_replays(bucket_url):
     logger = logging.getLogger("SimpleReplayLogger")
 
     table = []
-    bucket = util.bucket_dict(bucket_url)
+    bucket = bucket_dict(bucket_url)
     try:
         resp = client("s3").list_objects_v2(
             Bucket=bucket.get("bucket_name"), Delimiter="/", Prefix="analysis/"
@@ -501,7 +501,7 @@ def list_sql(bucket_url, replay):
     """
 
     logger = logging.getLogger("SimpleReplayLogger")
-    bucket = util.bucket_dict(bucket_url)
+    bucket = bucket_dict(bucket_url)
     try:
         resp = client("s3").list_objects_v2(
             Bucket=bucket.get("bucket_name"),

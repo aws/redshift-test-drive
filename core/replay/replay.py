@@ -18,7 +18,7 @@ from common.util import (
     CredentialsException,
     bucket_dict,
 )
-#from replay_analysis import run_replay_analysis
+from tools.replay_analysis.replay_analysis import run_replay_analysis
 from unload_sys_table import UnloadSysTable
 import common.aws_service as aws_service_helper
 

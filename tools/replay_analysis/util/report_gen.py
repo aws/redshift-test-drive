@@ -16,7 +16,7 @@ from reportlab.platypus import (
     ListFlowable,
     ListItem,
 )
-from report_util import (
+from tools.replay_analysis.util.report_util import (
     styles,
     build_pdf_tables,
     df_to_np,
@@ -37,7 +37,7 @@ def pdf_gen(report, summary=None):
     @param summary: list, replay summary
 
     """
-    with open("report_content.yaml", "r") as stream:
+    with open("tools/replay_analysis/util/report_content.yaml", "r") as stream:
         docs = yaml.safe_load(stream)
 
         style = g_stylesheet.get("styles")
