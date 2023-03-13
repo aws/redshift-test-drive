@@ -199,7 +199,11 @@ def later_pages(canvas, doc, report):
         "\u00A9 2021, Amazon Web Services, Inc. or its Affiliates. All " "rights reserved.",
     )
     canvas.drawCentredString(4.25 * inch, 0.35 * inch, "Amazon Confidential and Trademark.")
+<<<<<<<< HEAD:tools/replay-analysis/report/report_util.py
     #canvas.drawImage("tools/replay_analsyis/util/logo.png", 7 * inch, 0.25 * inch, width=80, height=45, mask=None)
+========
+    canvas.drawImage("core/replay/logo.png", 7 * inch, 0.25 * inch, width=80, height=45, mask=None)
+>>>>>>>> 07eb0bc5 (Added files in core/replay for replay pdf generation):core/replay/report_util.py
     canvas.restoreState()
 
 
@@ -357,3 +361,4 @@ def build_pdf_tables(story, tables, report):
             story.append(PageBreak())
 
         # to add graphs for each table: call hist_gen on associated graph data
+
