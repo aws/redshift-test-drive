@@ -26,7 +26,7 @@ class TransactionsParser:
         gz_path = self.workload_directory.rstrip("/") + "/SQLs.json.gz"
 
         replacements = []
-        if self.execute_copy_statements:
+        if self.execute_copy_statements.lower() == 'true':
             replacements = parse_copy_replacements(self.workload_directory)
 
         sql_json = retrieve_compressed_json(gz_path)
@@ -50,13 +50,13 @@ class TransactionsParser:
             if q["end_time"] is not None:
                 end_time = dateutil.parser.isoparse(q["end_time"])
             if (
-                self.execute_copy_statements
+                self.execute_copy_statements.lower() == 'true'
                 and "copy " in q["text"].lower()
                 and "from 's3:" in q["text"].lower()
             ):
                 q["text"] = self.get_copy_replacement(q["text"], replacements)
             if (
-                self.execute_unload_statements
+                self.execute_unload_statements.lower() == 'true'
                 and ("unload" in q["text"].lower() and "to 's3:" in q["text"].lower())
                 and self.config["unload_iam_role"]
                 and self.config["replay_output"].startswith("s3://")
@@ -171,7 +171,7 @@ class TransactionsParser:
                     f"COPY replacement {existing_copy_location} is missing IAM role or "
                     f"credentials in copy_replacements.csv. Please add credentials or remove replacement."
                 )
-                sys.exit()
+                sys.exit(-1)
 
             query_text = query_text.replace(existing_copy_location, replacement_copy_location)
 
