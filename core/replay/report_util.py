@@ -200,7 +200,7 @@ def later_pages(canvas, doc, report):
     )
     canvas.drawCentredString(4.25 * inch, 0.35 * inch, "Amazon Confidential and Trademark.")
     canvas.drawImage("core/replay/logo.png", 7 * inch, 0.25 * inch, width=80, height=45, mask=None)
-
+    canvas.restoreState()
 
 def hist_gen(x_data, y_data, title, x_label):
     """Generates a histogram for give table data
