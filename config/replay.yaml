@@ -5,7 +5,7 @@ tag: ""
 workload_location: ""
 
 # Endpoint and username of target cluster to replay queries on
-target_cluster_endpoint: "host:port/database"
+target_cluster_endpoint: ""
 target_cluster_region: ""
 master_username: ""
 
@@ -22,12 +22,12 @@ default_interface: "psql"
 # Optional - Leaving it empty defers to connections.json. "all on" preserves
 # time between transactions. "all off" disregards time between transactions,
 # executing them as a batch.
-time_interval_between_transactions: "all on"
+time_interval_between_transactions: ""
 
 # Optional - Leaving it empty defers to connections.json. "all on" preserves
 # time between queries. "all off" disregards time between queries, executing
 # them as a batch.
-time_interval_between_queries: "all on"
+time_interval_between_queries: ""
 
 # Should COPY statements be executed?
 execute_copy_statements: "false"
@@ -71,7 +71,7 @@ filters:
 ##
 
 # Set the amount of logging
-log_level: "info"
+log_level: "INFO"
 
 # number of proceses to use to parallelize the work. If omitted or null, uses
 # one process per cpu - 1 

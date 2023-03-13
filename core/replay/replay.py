@@ -12,14 +12,12 @@ from prep import ReplayPrep
 from summarizer import summarize
 from replayer import Replayer
 from common.util import (
-    db_connect,
     cluster_dict,
     is_serverless,
     CredentialsException,
     bucket_dict,
 )
-
-# from replay_analysis import run_replay_analysis
+import report_gen
 from unload_sys_table import UnloadSysTable
 import common.aws_service as aws_service_helper
 
@@ -168,7 +166,7 @@ def main():
 
     if g_config.get("analysis_iam_role") and g_config.get("analysis_output"):
         try:
-            run_replay_analysis(
+            report_gen.replay_pdf_generator(
                 replay=replay_id,
                 cluster_endpoint=g_config["target_cluster_endpoint"],
                 start_time=replay_start_timestamp,
