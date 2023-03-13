@@ -2,6 +2,8 @@
 .json
 .sql
 .idea
+*.pdf
+*.csv
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
@@ -145,7 +147,7 @@ cython_debug/
 
 # gui
 # dependencies
-gui/node_modules/
+tools/replay-analysis/gui/node_modules/
 /.pnp
 .pnp.js
 

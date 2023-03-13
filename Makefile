@@ -19,10 +19,10 @@ extract:
 	export PYTHONPATH=$(PYTHONPATH):$(CORE_FOLDER):$(CORE_FOLDER)/util:$(COMMON_FOLDER) && $(PYTHON) $(EXTRACT_DIR)/extract.py $(CONFIG_FOLDER)/extract.yaml
 
 replay:
-	export PYTHONPATH=$(PYTHONPATH):$(CORE_FOLDER):$(CORE_FOLDER)/util:$(COMMON_FOLDER) && $(PYTHON) $(REPLAY_DIR)/replay.py $(CONFIG_FOLDER)/replay.yaml
+	export PYTHONPATH=$(PYTHONPATH):$(CORE_FOLDER):$(CORE_FOLDER)/util:$(COMMON_FOLDER) && export PYTHONPATH=$(PYTHONPATH):$(CORE_FOLDER):$(REPLAY_ANALYSIS_DIR)/ && $(PYTHON) $(REPLAY_DIR)/replay.py $(CONFIG_FOLDER)/replay.yaml
 
 replay_analysis:
-	export PYTHONPATH=$(PYTHONPATH):$(CORE_FOLDER):$(CORE_FOLDER)/util:$(COMMON_FOLDER) && export PYTHONPATH=$(PYTHONPATH):$(CORE_FOLDER):$(REPLAY_ANALYSIS_DIR)/util && $(PYTHON) $(REPLAY_ANALYSIS_DIR)/replay_analysis.py 
+	export PYTHONPATH=$(PYTHONPATH):$(CORE_FOLDER):$(REPLAY_ANALYSIS_DIR)/util && $(PYTHON) $(REPLAY_ANALYSIS_DIR)/replay_analysis.py 
 
 external-object-replicator:
 	export PYTHONPATH=$(PYTHONPATH):$(EXTERNAL_OBJECT_REPLICATOR_DIR):$(EXTERNAL_OBJECT_REPLICATOR_DIR)/util && $(PYTHON) $(EXTERNAL_OBJECT_REPLICATOR_DIR)/external_object_replicator.py $(CONFIG_FOLDER)/external_object_replicator.yaml
