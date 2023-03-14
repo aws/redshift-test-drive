@@ -5,10 +5,7 @@ import botocore.errorfactory
 import redshift_connector
 import botocore.errorfactory
 from botocore.exceptions import ClientError
-from botocore.stub import Stubber, ANY
-from common.aws_service import s3_upload
-from core.replay.report_util import Report
-#from report_gen import pdf_gen
+from pandas.testing import assert_frame_equal
 import core.replay.report_gen as report_gen
 import pandas
 from common.util import db_connect, init_logging, cluster_dict, bucket_dict, get_secret, create_json
@@ -34,13 +31,13 @@ class TestReportGen(unittest.TestCase):
         model = botocore.session.get_session().get_service_model('redshift')
         factory = botocore.errorfactory.ClientExceptionsFactory()
         self.exceptions = factory.create_client_exceptions(model)
-    @patch("util.cluster_dict")
-    @patch('util.bucket_dict')
-    @patch('report_gen.unload')
-    @patch('util.create_json', return_value = "fakefile")
-    @patch('helper.aws_service.s3_upload')
-    @patch('report_gen.pdf_gen')
-    @patch('report_gen.analysis_summary')
+    @patch("common.util.cluster_dict")
+    @patch('common.util.bucket_dict')
+    @patch('core.replay.report_gen.unload')
+    @patch('common.util.create_json', return_value = "fakefile")
+    @patch('common.aws_service.s3_upload')
+    @patch('core.replay.report_gen.pdf_gen')
+    @patch('core.replay.report_gen.analysis_summary')
     def test_replay_pdf_generator_serverless(self, mock_analysis_summary, mock_pdf_gen, mock_upload, mock_create_json,
                                             mock_unload,mock_bucket_dict, mock_cluster_dict):
         mock_cluster_dict.return_value = self.severless_cluster
@@ -57,15 +54,15 @@ class TestReportGen(unittest.TestCase):
         mock_create_json.assert_called_once_with("someid", self.severless_cluster, '', True, None, '')
 
 
-    @patch("util.cluster_dict")
-    @patch('util.bucket_dict')
-    @patch('report_gen.unload', return_value = ["query1", "query2"])
-    @patch('util.create_json')
-    @patch('report_gen.get_raw_data')
-    @patch('report_gen.pdf_gen')
-    @patch('report_gen.analysis_summary')
-    @patch('report_util.Report')
-    @patch('helper.aws_service.s3_upload')
+    @patch("common.util.cluster_dict")
+    @patch('common.util.bucket_dict')
+    @patch('core.replay.report_gen.unload', return_value = ["query1", "query2"])
+    @patch('common.util.create_json')
+    @patch('core.replay.report_gen.get_raw_data')
+    @patch('core.replay.report_gen.pdf_gen')
+    @patch('core.replay.report_gen.analysis_summary')
+    @patch('core.replay.report_util.Report')
+    @patch('common.aws_service.s3_upload')
     def test_replay_pdf_generator_provisioned(self,mock_upload, mock_report, mock_analysis_summary, mock_pdf_gen,
                                              mock_get_raw_data, mock_create_json, mock_unload, mock_bucket_dict,
                                              mock_cluster_dict):
@@ -89,15 +86,15 @@ class TestReportGen(unittest.TestCase):
         mock_pdf_gen.assert_called_once_with(self.report, None)
         self.assertTrue(mock_upload.call_count == 3)
 
-    @patch("util.cluster_dict")
-    @patch('util.bucket_dict')
-    @patch('report_gen.unload', return_value = ["query1", "query2"])
-    @patch('util.create_json')
-    @patch('report_gen.get_raw_data')
-    @patch('report_gen.pdf_gen')
-    @patch('report_gen.analysis_summary')
-    @patch('report_util.Report')
-    @patch('helper.aws_service.s3_upload')
+    @patch("common.util.cluster_dict")
+    @patch('common.util.bucket_dict')
+    @patch('core.replay.report_gen.unload', return_value = ["query1", "query2"])
+    @patch('common.util.create_json')
+    @patch('core.replay.report_gen.get_raw_data')
+    @patch('core.replay.report_gen.pdf_gen')
+    @patch('core.replay.report_gen.analysis_summary')
+    @patch('core.replay.report_util.Report')
+    @patch('common.aws_service.s3_upload')
     def test_replay_pdf_generator_no_key(self,mock_upload, mock_report, mock_analysis_summary, mock_pdf_gen,
                                              mock_get_raw_data, mock_create_json, mock_unload, mock_bucket_dict,
                                              mock_cluster_dict):
@@ -113,15 +110,15 @@ class TestReportGen(unittest.TestCase):
         mock_upload.assert_called_once()
         mock_analysis_summary.assert_not_called()
 
-    @patch("util.cluster_dict")
-    @patch('util.bucket_dict')
-    @patch('report_gen.unload', return_value = ["query1", "query2"])
-    @patch('util.create_json')
-    @patch('report_gen.get_raw_data')
-    @patch('report_gen.pdf_gen')
-    @patch('report_gen.analysis_summary')
-    @patch('report_util.Report')
-    @patch('helper.aws_service.s3_upload')
+    @patch("common.util.cluster_dict")
+    @patch('common.util.bucket_dict')
+    @patch('core.replay.report_gen.unload', return_value = ["query1", "query2"])
+    @patch('common.util.create_json')
+    @patch('core.replay.report_gen.get_raw_data')
+    @patch('core.replay.report_gen.pdf_gen')
+    @patch('core.replay.report_gen.analysis_summary')
+    @patch('core.replay.report_util.Report')
+    @patch('common.aws_service.s3_upload')
     def test_replay_pdf_generator_client_error(self,mock_upload, mock_report, mock_analysis_summary, mock_pdf_gen,
                                              mock_get_raw_data, mock_create_json, mock_unload, mock_bucket_dict,
                                              mock_cluster_dict):
@@ -134,13 +131,13 @@ class TestReportGen(unittest.TestCase):
                                                 tag='',workload="",is_serverless=False, secret_name=None, nlb_nat_dns=None,
                                                 complete=True, stats=None, summary=None)
 
-    @patch("util.cluster_dict")
-    @patch('util.bucket_dict')
-    @patch('report_gen.unload', return_value = ["query1", "query2"])
-    @patch('util.create_json')
-    @patch('report_util.Report')
+    @patch("common.util.cluster_dict")
+    @patch('common.util.bucket_dict')
+    @patch('core.replay.report_gen.unload', return_value = ["query1", "query2"])
+    @patch('common.util.create_json')
+    @patch('core.replay.report_util.Report')
     @patch('logging.getLogger')
-    @patch('helper.aws_service.s3_upload',
+    @patch('common.aws_service.s3_upload',
            side_effect=ClientError({'Error': {'Code': 'Error!','Message': 'oops'}}, 'testing'))
     def test_replay_pdf_generator_cannot_upload(self, mock_upload,mock_logger, mock_report, mock_create_json,
                                                mock_unload, mock_bucket_dict,mock_cluster_dict):
@@ -153,7 +150,7 @@ class TestReportGen(unittest.TestCase):
                                                 complete=True, stats=None, summary=None)
 
 
-    @patch('helper.aws_service.s3_get_object', return_value = {"Body": ""})
+    @patch('common.aws_service.s3_client_get_object', return_value = {"Body": ""})
     @patch('pandas.read_csv')
     def test_get_raw_data_latency_distribution(self, mock_read_csv, mock_get_object):
         empty_df = pandas.DataFrame()
@@ -164,9 +161,9 @@ class TestReportGen(unittest.TestCase):
         self.assertTrue(mock_report.feature_graph.empty)
         self.assertTrue(isinstance(mock_report.feature_graph, pandas.DataFrame))
 
-    @patch('helper.aws_service.s3_get_object', return_value = {"Body": ""})
+    @patch('common.aws_service.s3_client_get_object', return_value = {"Body": ""})
     @patch('pandas.read_csv')
-    @patch('report_gen.read_data')
+    @patch('core.replay.report_gen.read_data')
     def test_get_raw_data_iterate(self, mock_read_data, mock_read_csv, mock_get_object):
         mock_tables = {1:{"sql":"somesql", "data":"somedata", "columns":"somecolumn", "data":None}}
         empty_df = pandas.DataFrame()
@@ -179,7 +176,7 @@ class TestReportGen(unittest.TestCase):
         self.assertTrue(mock_read_data.call_args[0][2] == "somecolumn")
         self.assertTrue(mock_read_data.call_args[0][3] == mock_report)
 
-    @patch('helper.aws_service.s3_get_object')
+    @patch('common.aws_service.s3_client_get_object')
     def test_get_raw_data_error(self, mock_get_object):
         mock_get_object.side_effect = Exception("Boom")
         with self.assertRaises(SystemExit):
@@ -187,9 +184,9 @@ class TestReportGen(unittest.TestCase):
                                      "some_replay_path", "somesql")
 
 
-    @patch('util.db_connect',return_value = None)
+    @patch('common.util.db_connect',return_value = None)
     @patch('logging.getLogger')
-    @patch('helper.aws_service.redshift_get_cluster_credentials')
+    @patch('common.aws_service.redshift_get_cluster_credentials')
     def test_initiate_connection_serverless_success(self, mock_get_creds,get_logger, mock_db_connect):
         mock_get_creds.return_value =  {"DbUser": self.user, "DbPassword": "secret_password"}
         with report_gen.initiate_connection(username=self.user, cluster=self.severless_cluster):
@@ -199,10 +196,10 @@ class TestReportGen(unittest.TestCase):
                                                     database=self.severless_cluster['database'])
 
 
-    @patch('util.get_secret',return_value={"admin_username":"secret_user", "admin_password": "secret_password"})
-    @patch('util.db_connect',return_value = None)
+    @patch('common.util.get_secret',return_value={"admin_username":"secret_user", "admin_password": "secret_password"})
+    @patch('common.util.db_connect',return_value = None)
     @patch('logging.getLogger')
-    @patch('helper.aws_service.redshift_get_cluster_credentials')
+    @patch('common.aws_service.redshift_get_cluster_credentials')
     def test_initiate_connection_provisioned_success(self, mock_get_cluster_credentials, get_logger,
                                                      mock_db_connect, mock_get_secret):
         mock_get_cluster_credentials.return_value = self.rs_client_response
@@ -213,9 +210,9 @@ class TestReportGen(unittest.TestCase):
                                                     database=self.provisioned_cluster['database'])
             mock_get_cluster_credentials.assert_called_once_with("someregion", "someuser", "somedb", "someid")
 
-    @patch('util.get_secret',return_value={"admin_username":"secret_user", "admin_password": "secret_password"})
-    @patch('util.db_connect',return_value = None)
-    @patch('helper.aws_service.redshift_get_cluster_credentials')
+    @patch('common.util.get_secret',return_value={"admin_username":"secret_user", "admin_password": "secret_password"})
+    @patch('common.util.db_connect',return_value = None)
+    @patch('common.aws_service.redshift_get_cluster_credentials')
     def test_initiate_connection_exception(self, mock_get_cluster_credentials, mock_db_connect,
                                                               mock_get_secret):
         mock_get_cluster_credentials.return_value = self.rs_client_response
@@ -228,8 +225,8 @@ class TestReportGen(unittest.TestCase):
                                                             username=self.user,password= "password123",
                                                             database=self.provisioned_cluster['database'])
 
-    @patch('util.db_connect',return_value = None)
-    @patch('helper.aws_service.redshift_get_cluster_credentials')
+    @patch('common.util.db_connect',return_value = None)
+    @patch('common.aws_service.redshift_get_cluster_credentials')
     def test_initiate_connection_cluster_not_found(self, mock_get_cluster_credentials, mock_db_connect):
         mock_get_cluster_credentials.side_effect= self.exceptions.ClusterNotFoundFault({}, "")
         with self.assertRaises(SystemExit):
@@ -237,8 +234,8 @@ class TestReportGen(unittest.TestCase):
                 mock_get_cluster_credentials.assert_called_once_with("someregion", "someuser", "somedb", "someid")
                 mock_db_connect.assert_not_called()
 
-    @patch('util.db_connect',return_value = None)
-    @patch('helper.aws_service.redshift_get_cluster_credentials')
+    @patch('common.util.db_connect',return_value = None)
+    @patch('common.aws_service.redshift_get_cluster_credentials')
     def test_initiate_connection_redshift_conn_error(self, mock_get_cluster_credentials, mock_db_connect):
         mock_get_cluster_credentials.return_value = self.rs_client_response
         mock_db_connect.side_effect = redshift_connector.error.Error
@@ -250,8 +247,8 @@ class TestReportGen(unittest.TestCase):
                                                             username=self.user,password= "password123",
                                                             database=self.provisioned_cluster['database'])
 
-    @patch('util.db_connect',return_value = None)
-    @patch('helper.aws_service.redshift_get_cluster_credentials')
+    @patch('common.util.db_connect',return_value = None)
+    @patch('common.aws_service.redshift_get_cluster_credentials')
     def test_initiate_connection_no_response(self, mock_get_cluster_credentials, mock_db_connect):
         mock_get_cluster_credentials.return_value = None
         mock_db_connect.side_effect = redshift_connector.error.Error
@@ -261,8 +258,8 @@ class TestReportGen(unittest.TestCase):
                     mock_get_cluster_credentials.assert_called_once_with("someregion", "someuser", "somedb", "someid")
                     mock_db_connect.assert_not_called()
 
-    @patch('util.db_connect',return_value = None)
-    @patch('helper.aws_service.redshift_get_cluster_credentials')
+    @patch('common.util.db_connect',return_value = None)
+    @patch('common.aws_service.redshift_get_cluster_credentials')
     def test_initiate_connection_no_password(self, mock_get_cluster_credentials, mock_db_connect):
         mock_get_cluster_credentials.return_value =  {"DbUser": self.user, "DbPassword": None}
         mock_db_connect.side_effect = redshift_connector.error.Error
@@ -275,7 +272,7 @@ class TestReportGen(unittest.TestCase):
 
     @patch('os.path.splitext',return_value=["query_name"])
     @patch('os.listdir',  return_value = ["1.sql", "2.sql", "3.sql"])
-    @patch('report_gen.initiate_connection',return_value = MagicMock())
+    @patch('core.replay.report_gen.initiate_connection',return_value = MagicMock())
     def test_unload_success(self, mock_initiate_connection, mock_listdir, mock_splitext):
         mocked_open = mock_open(read_data="select * from table between {{START_TIME}} and {{END_TIME}}")
         with patch('builtins.open', mocked_open):
@@ -285,7 +282,7 @@ class TestReportGen(unittest.TestCase):
 
     @patch('os.path.splitext', return_value=["query_name"])
     @patch('os.listdir', return_value=["1.sql", "2.sql", "3.sql"])
-    @patch('report_gen.initiate_connection')
+    @patch('core.replay.report_gen.initiate_connection')
     def test_unload_fail(self, mock_init_conn, mock_listdir, mock_splitext):
         mock_cursor = MagicMock()
         mock_cursor.execute.side_effect = [Exception("boom")]
@@ -308,44 +305,26 @@ class TestReportGen(unittest.TestCase):
         mock_tables = {"table_name": {"type": "breakdown"}}
         mock_report = MagicMock(tables=mock_tables)
         response = report_gen.read_data("table_name", df_mock, ["Statement Type"], mock_report)
-        self.assertTrue(response == df_mock)
+        assert_frame_equal(response, df_mock)
+
 
     @patch('pandas.DataFrame', return_value=df_mock)
-    @patch('common.aws_service.s3_resource_put_object')
-    @patch('pandas.CategoricalDtype', return_value=df_mock)
-    # TODO: wip
-    def test_read_data_metric(self, mock_CategoricalDtype, mock_s3_put_obj, mock_pd_dataframe):
-        mock_tables = {"table_name": {"type": "metric"}}
-        mock_report = MagicMock(tables=mock_tables)
-        response = report_gen.read_data("table_name", df_mock, ["Statement Type"], mock_report)
-        self.assertTrue(response == df_mock)
-
-    @patch('pandas.DataFrame', return_value=df_mock)
-    @patch('common.aws_service.s3_resource_put_object')
-    # TODO: wip
-    def test_read_data_measure(self, mock_s3_put_obj, mock_df):
-        mock_tables = {"table_name": {"type": "breakdown"}}
-        mock_report = MagicMock(tables=mock_tables)
-        response = report_gen.read_data("table_name", df_mock, ["Statement Type"], mock_report)
-        self.assertTrue(response == df_mock)
-
-    @patch('pandas.DataFrame', return_value=df_mock)
-    @patch('common.aws_service.s3_resource_put_object', side_effect = Exception("boom"))
-    # TODO: wip
+    @patch('common.aws_service.s3_resource_put_object', side_effect = Exception("Boom"))
     def test_read_data_fail(self, mock_s3_put_obj, mock_df):
         mock_tables = {"table_name": {"type": "breakdown"}}
         mock_report = MagicMock(tables=mock_tables)
         with self.assertRaises(SystemExit):
-            report_gen.read_data("table_name", df_mock, ["Statement Type"], mock_report)
+            response = report_gen.read_data("table_name", df_mock, ["Statement Type"], mock_report)
+            assert_frame_equal(response, df_mock)
 
-    @patch('helper.aws_service.s3_generate_presigned_url')
+    @patch('common.aws_service.s3_generate_presigned_url')
     def test_create_presigned_url(self, mock_s3_generate_presigned_url):
         report_gen.create_presigned_url("fakebucket", "fakeobject")
 
         mock_s3_generate_presigned_url.assert_called_once_with(client_method="get_object",
                                                            bucket_name="fakebucket", object_name="fakeobject")
 
-    @patch('helper.aws_service.s3_generate_presigned_url')
+    @patch('common.aws_service.s3_generate_presigned_url')
     def test_create_presigned_url_fail(self, mock_s3_generate_presigned_url):
         mock_s3_generate_presigned_url.side_effect = ClientError({'Error': {'Code':
                                                                                 'Error!', 'Message': 'oops'}},
@@ -353,14 +332,13 @@ class TestReportGen(unittest.TestCase):
         response = report_gen.create_presigned_url("fakebucket", "fakeobject")
         self.assertTrue(response == None)
 
-    @patch('report_gen.create_presigned_url')
+    @patch('core.replay.report_gen.create_presigned_url')
     def test_analysis_summary(self, mock_test_create_presigned_url):
         report_gen.analysis_summary("s3://devsaba-sr-drill/extracts/", "replay_id")
 
         mock_test_create_presigned_url.called_once_with("devsaba-sr-drill",
                                                     "analysis/replay_id/out/replay_id_report.pdf")
 
-    # def pdf_gen
 
 if __name__ == "__main__":
     unittest.main()
