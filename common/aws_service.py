@@ -169,6 +169,15 @@ def s3_get_bucket_contents(bucket, prefix):
     return bucket_objects
 
 
+def s3_generate_presigned_url(client_method, bucket_name, object_name):
+    s3_client = boto3.client("s3")
+    response = s3_client.generate_presigned_url(
+        client_method,
+        Params={"Bucket": bucket_name, "Key": object_name},
+        ExpiresIn=604800,
+    )
+    return response
+
 def s3_copy_object(src_bucket, src_prefix, dest_bucket, dest_prefix):
     boto3.client("s3").copy_object(
         Bucket=dest_bucket,
