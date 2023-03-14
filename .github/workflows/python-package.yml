@@ -30,9 +30,4 @@ jobs:
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
     - name: Unit tests for core
       run: |
-        cd core
-        python -m unittest discover
-    - name: Unit tests for common
-      run: |
-        cd common
-        python -m unittest discover
+        make test
