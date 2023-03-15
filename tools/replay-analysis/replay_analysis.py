@@ -1,5 +1,6 @@
 import os
-from common.util import init_logging
+
+import common.log as log_helper
 
 
 def launch_analysis_v2():
@@ -23,7 +24,8 @@ def launch_analysis_v2():
 
 
 def main():
-    logger = init_logging()
+    log_helper.init_logging('replay_analysis.log', logger_name='ReplayAnalysisLogger')
+    log_helper.log_version()
     launch_analysis_v2()
 
 
