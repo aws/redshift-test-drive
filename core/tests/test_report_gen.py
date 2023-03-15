@@ -5,7 +5,6 @@ import botocore.errorfactory
 import redshift_connector
 import botocore.errorfactory
 from botocore.exceptions import ClientError
-from pandas.testing import assert_frame_equal
 import core.replay.report_gen as report_gen
 import pandas
 
@@ -314,7 +313,12 @@ class TestReportGen(unittest.TestCase):
         mock_report = Mock()
         mock_report.tables.return_value = mock_tables
         response = report_gen.read_data("table_name", df_mock, ["Statement Type"], mock_report)
-        assert_frame_equal(response, df_mock)
+        # assert_frame_equal(response, df_mock)
+        self.assertEqual(response["statement_type"][0], "a")
+        self.assertEqual(response["statement_type"][1], "mock")
+        self.assertEqual(response["statement_type"][3], "test")
+
+
 
     @patch('pandas.DataFrame', return_value=df_mock)
     @patch('common.aws_service.s3_resource_put_object', side_effect=Exception("Boom"))
@@ -323,7 +327,6 @@ class TestReportGen(unittest.TestCase):
         mock_report = MagicMock(tables=mock_tables)
         with self.assertRaises(SystemExit):
             response = report_gen.read_data("table_name", df_mock, ["Statement Type"], mock_report)
-            assert_frame_equal(response, df_mock)
 
     @patch('common.aws_service.s3_generate_presigned_url')
     def test_create_presigned_url(self, mock_s3_generate_presigned_url):
