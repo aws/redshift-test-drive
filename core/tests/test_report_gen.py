@@ -36,7 +36,7 @@ class TestReportGen(unittest.TestCase):
     @patch("common.util.cluster_dict")
     @patch('common.util.bucket_dict')
     @patch('core.replay.report_gen.unload')
-    @patch('common.util.create_json', return_value="fakefile")
+    @patch('core.replay.report_gen.create_json', return_value="fakefile")
     @patch('common.aws_service.s3_upload')
     @patch('core.replay.report_gen.pdf_gen')
     @patch('core.replay.report_gen.analysis_summary')
@@ -199,7 +199,7 @@ class TestReportGen(unittest.TestCase):
                                                     username="someuser", password="secret_password",
                                                     database=self.severless_cluster['database'])
 
-    @patch('common.util.get_secret',
+    @patch('common.aws_service.get_secret',
            return_value={"admin_username": "secret_user", "admin_password": "secret_password"})
     @patch('common.util.db_connect', return_value=None)
     @patch('logging.getLogger')
@@ -215,7 +215,7 @@ class TestReportGen(unittest.TestCase):
                                                     database=self.provisioned_cluster['database'])
             mock_get_cluster_credentials.assert_called_once_with("someregion", "someuser", "somedb", "someid")
 
-    @patch('common.util.get_secret',
+    @patch('common.aws_service.get_secret',
            return_value={"admin_username": "secret_user", "admin_password": "secret_password"})
     @patch('common.util.db_connect', return_value=None)
     @patch('common.aws_service.redshift_get_cluster_credentials')
@@ -311,7 +311,8 @@ class TestReportGen(unittest.TestCase):
     @patch('common.aws_service.s3_resource_put_object')
     def test_read_data_breakdown(self, mock_s3_put_obj, mock_df):
         mock_tables = {"table_name": {"type": "breakdown"}}
-        mock_report = MagicMock(tables=mock_tables)
+        mock_report = Mock()
+        mock_report.tables.return_value = mock_tables
         response = report_gen.read_data("table_name", df_mock, ["Statement Type"], mock_report)
         assert_frame_equal(response, df_mock)
 
