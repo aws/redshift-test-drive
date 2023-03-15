@@ -59,7 +59,9 @@ def check_file_existence(response, obj_type):
             source_key = record[1]["stringValue"][:-1]
         objects = aws_helper.s3_get_bucket_contents(source_bucket, source_key)
         if not objects:  # if no object is found, add it to objects_not_found list
-            objects_not_found.append({"source_bucket": source_bucket, "source_key": source_key})
+            objects_not_found.append(
+                {"source_bucket": source_bucket, "source_key": source_key}
+            )
         else:  # if object is found, append it to source_location to be cloned
             for object in objects:
                 source_location.append(
@@ -124,7 +126,9 @@ def clone_objects_to_s3(target_dest, obj_type, source_location, objects_not_foun
                     f"s3://{obj['source_bucket']}/{obj['source_key']},Object not found,N/A,N/A,N/A\n"
                 )
             fp.write(f"Number of objects not found: {len(objects_not_found)}")
-    aws_helper.s3_upload(file_output, bucket=f"{dest_bucket}", key=f"{dest_prefix}{file_output}")
+    aws_helper.s3_upload(
+        file_output, bucket=f"{dest_bucket}", key=f"{dest_prefix}{file_output}"
+    )
     logger.info(
         f"Details of {full_object_type} cloning uploaded to {dest_bucket}/{dest_prefix}{file_output}"
     )

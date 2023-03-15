@@ -71,9 +71,7 @@ def main():
         replay_start_timestamp.isoformat().encode("UTF-8")
     ).hexdigest()[:5]
     if g_config.get("tag", "") != "":
-        replay_id = (
-            f'{replay_start_timestamp.isoformat()}_{cluster.get("id")}_{g_config["tag"]}_{id_hash}'
-        )
+        replay_id = f'{replay_start_timestamp.isoformat()}_{cluster.get("id")}_{g_config["tag"]}_{id_hash}'
     else:
         replay_id = (
             f'{replay_start_timestamp.isoformat()}_{cluster.get("id")}_{id_hash}'

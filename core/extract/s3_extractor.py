@@ -1,11 +1,9 @@
 import gzip
 import logging
-
 import common.aws_service as aws_service_helper
 from tqdm import tqdm
-
-import util.log_validation
-from extract_parser import parse_log
+from util import log_validation
+from extract.extract_parser import parse_log
 
 logger = logging.getLogger("SimpleReplayLogger")
 

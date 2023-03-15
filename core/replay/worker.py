@@ -97,11 +97,15 @@ class ReplayWorker:
                         self.connection_semaphore.release()
 
                     elapsed = (
-                        int(time.time() - last_empty_queue_time) if last_empty_queue_time else 0
+                        int(time.time() - last_empty_queue_time)
+                        if last_empty_queue_time
+                        else 0
                     )
                     # take into account the initial timeout
                     elapsed += timeout_sec
-                    empty_queue_timeout_sec = self.config.get("empty_queue_timeout_sec", 120)
+                    empty_queue_timeout_sec = self.config.get(
+                        "empty_queue_timeout_sec", 120
+                    )
                     self.logger.debug(
                         f"No jobs for {elapsed} seconds (timeout {empty_queue_timeout_sec})"
                     )
@@ -124,11 +128,14 @@ class ReplayWorker:
 
                 # how much time has elapsed since the replay started
                 time_elapsed_ms = (
-                    datetime.datetime.now(tz=datetime.timezone.utc) - self.replay_start_time
+                    datetime.datetime.now(tz=datetime.timezone.utc)
+                    - self.replay_start_time
                 ).total_seconds() * 1000.0
 
                 # what is the time offset of this connection job relative to the first event
-                connection_offset_ms = job["connection"].offset_ms(self.first_event_time)
+                connection_offset_ms = job["connection"].offset_ms(
+                    self.first_event_time
+                )
                 delay_sec = (connection_offset_ms - time_elapsed_ms) / 1000.0
 
                 self.logger.debug(
@@ -169,11 +176,15 @@ class ReplayWorker:
                 connection_thread.start()
                 connection_threads[connection_thread] = thread_stats
 
-                self.join_finished_threads(connection_threads, self.worker_stats, wait=False)
+                self.join_finished_threads(
+                    connection_threads, self.worker_stats, wait=False
+                )
 
                 connections_processed += 1
 
-            self.logger.debug(f"Waiting for {len(connection_threads)} connections to finish...")
+            self.logger.debug(
+                f"Waiting for {len(connection_threads)} connections to finish..."
+            )
             self.join_finished_threads(connection_threads, self.worker_stats, wait=True)
         except Exception as e:
             self.logger.error(f"Process {self.process_idx} threw exception: {e}")
@@ -191,7 +202,9 @@ class ReplayWorker:
         finished_threads = []
         for t in connection_threads:
             if not t.is_alive() or wait:
-                self.logger.debug(f"Joining thread {t.connection_log.session_initiation_time}")
+                self.logger.debug(
+                    f"Joining thread {t.connection_log.session_initiation_time}"
+                )
                 t.join()
                 collect_stats(worker_stats, connection_threads[t])
                 finished_threads.append(t)

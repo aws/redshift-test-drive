@@ -154,9 +154,12 @@ def first_page(canvas, doc, report):
     canvas.drawCentredString(
         4.25 * inch,
         0.5 * inch,
-        "\u00A9 2021, Amazon Web Services, Inc. or its Affiliates. All " "rights reserved.",
+        "\u00A9 2021, Amazon Web Services, Inc. or its Affiliates. All "
+        "rights reserved.",
     )
-    canvas.drawCentredString(4.25 * inch, 0.35 * inch, "Amazon Confidential and Trademark.")
+    canvas.drawCentredString(
+        4.25 * inch, 0.35 * inch, "Amazon Confidential and Trademark."
+    )
     if not report.complete:
         canvas.setFillColorRGB(1, 0, 0)
         canvas.drawCentredString(
@@ -196,7 +199,14 @@ def later_pages(canvas, doc, report):
     canvas.drawCentredString(
         4.25 * inch,
         0.5 * inch,
-        "\u00A9 2021, Amazon Web Services, Inc. or its Affiliates. All " "rights reserved.",
+        "\u00A9 2021, Amazon Web Services, Inc. or its Affiliates. All "
+        "rights reserved.",
+    )
+    canvas.drawCentredString(
+        4.25 * inch, 0.35 * inch, "Amazon Confidential and Trademark."
+    )
+    canvas.drawImage(
+        "resources/logo.png", 7 * inch, 0.25 * inch, width=80, height=45, mask=None
     )
     canvas.drawCentredString(4.25 * inch, 0.35 * inch, "Amazon Confidential and Trademark.")
     canvas.drawImage("core/replay/logo.png", 7 * inch, 0.25 * inch, width=80, height=45, mask=None)
@@ -293,7 +303,9 @@ def styles():
     style["Normal"].textSize = 8
     style["Normal"].borderPadding = 4
     style.add(
-        ParagraphStyle(name="incomplete", fontFamily="Helvetica", fontSize=10, textColor="red")
+        ParagraphStyle(
+            name="incomplete", fontFamily="Helvetica", fontSize=10, textColor="red"
+        )
     )
 
     return {
@@ -356,4 +368,3 @@ def build_pdf_tables(story, tables, report):
             story.append(PageBreak())
 
         # to add graphs for each table: call hist_gen on associated graph data
-
