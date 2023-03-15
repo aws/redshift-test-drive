@@ -321,10 +321,12 @@ class TestReportGen(unittest.TestCase):
 
 
     @patch('pandas.DataFrame', return_value=df_mock)
-    @patch('common.aws_service.s3_resource_put_object', side_effect=Exception("Boom"))
-    def test_read_data_fail(self, mock_s3_put_obj, mock_df):
+    @patch('pandas.DataFrame.round', return_value=df_mock)
+    @patch('common.aws_service.s3_resource_put_object')
+    def test_read_data_breakdown(self, mock_s3_put_obj, mock_round, mock_df):
         mock_tables = {"table_name": {"type": "breakdown"}}
-        mock_report = MagicMock(tables=mock_tables)
+        mock_report = Mock()
+        mock_report.tables.return_value = mock_tables
         with self.assertRaises(SystemExit):
             response = report_gen.read_data("table_name", df_mock, ["Statement Type"], mock_report)
 
