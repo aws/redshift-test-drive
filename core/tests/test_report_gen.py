@@ -307,8 +307,9 @@ class TestReportGen(unittest.TestCase):
             report_gen.read_data("sometable", pandas.DataFrame(), [], self.report)
 
     @patch('pandas.DataFrame', return_value=df_mock)
+    @patch('pandas.DataFrame.round', return_value=df_mock)
     @patch('common.aws_service.s3_resource_put_object')
-    def test_read_data_breakdown(self, mock_s3_put_obj, mock_df):
+    def test_read_data_breakdown(self, mock_s3_put_obj, mock_round, mock_df):
         mock_tables = {"table_name": {"type": "breakdown"}}
         mock_report = Mock()
         mock_report.tables.return_value = mock_tables
