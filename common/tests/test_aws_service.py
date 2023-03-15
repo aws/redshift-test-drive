@@ -1,6 +1,6 @@
 import datetime
 from unittest import TestCase, mock
-from unittest.mock import patch, Mock
+from unittest.mock import patch, Mock, MagicMock
 
 import boto3
 import common.aws_service as aws_service_helper
@@ -9,9 +9,11 @@ from botocore.stub import Stubber
 redshift_client = boto3.client("redshift", "us-east-1")
 cw_client = boto3.client("logs", "us-east-1")
 s3_client = boto3.client("s3", "us-east-1")
+s3_resource = boto3.resource("s3", "us-east-1")
 mock_redshift_client = mock.MagicMock(return_value=redshift_client)
 mock_cw_client = mock.MagicMock(return_value=cw_client)
 mock_s3_client = mock.MagicMock(return_value=s3_client)
+mock_s3_resource = mock.MagicMock(return_value=s3_resource)
 
 
 class AWSServiceTestCases(TestCase):
@@ -84,3 +86,32 @@ class AWSServiceTestCases(TestCase):
         s.activate()
         objects = aws_service_helper.s3_get_bucket_contents("bucket", "prefix")
         assert objects == [{}, {}]
+        s.deactivate()
+
+
+    @patch("boto3.client", mock_s3_client)
+    def test_s3_client_get_object(self):
+        s = Stubber(s3_client)
+        s.add_response("get_object", {})
+        s.activate()
+        aws_call = aws_service_helper.s3_client_get_object("bucket", "key")
+        assert aws_call == {}
+        s.deactivate()
+
+    @patch("boto3.resource")
+    def test_s3_resource_put_object(self,mock_s3_resource):
+        mock_object = MagicMock()
+        mock_put = MagicMock()
+        mock_s3_resource.return_value.Object = mock_object
+        mock_object.return_value.put = mock_put
+        aws_service_helper.s3_resource_put_object("bucket", "key", "body")
+        mock_object.assert_called_with("bucket", "key")
+        mock_put.assert_called_once_with(Body="body")
+
+    @patch("boto3.client", mock_s3_client)
+    def test_generate_presigned_url(self):
+        mock_generate_url = Mock()
+        mock_s3_client.return_value.generate_presigned_url = mock_generate_url
+        mock_generate_url.return_value = {}
+        aws_call = aws_service_helper.s3_generate_presigned_url("clientmethod","bucket", "key")
+        assert aws_call == {}
