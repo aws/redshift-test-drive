@@ -313,7 +313,6 @@ class TestReportGen(unittest.TestCase):
         mock_report = Mock()
         mock_report.tables.return_value = mock_tables
         response = report_gen.read_data("table_name", df_mock, ["Statement Type"], mock_report)
-        # assert_frame_equal(response, df_mock)
         self.assertEqual(response["statement_type"][0], "a")
         self.assertEqual(response["statement_type"][1], "mock")
         self.assertEqual(response["statement_type"][3], "test")
