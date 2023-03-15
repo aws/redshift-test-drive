@@ -107,7 +107,7 @@ def main():
 
 def execute_SVL_query(cluster_object, end_time, file_config, redshift_user, start_time):
     with open(
-        "tools/external-object-replicator/sql/external_table_query.sql", "r"
+        "tools/external_object_replicator/sql/external_table_query.sql", "r"
     ) as svv_external_table:
         external_table_query = svv_external_table.read().format(
             start=start_time, end=end_time, db=cluster_object["database"]
@@ -128,7 +128,7 @@ def execute_SVL_query(cluster_object, end_time, file_config, redshift_user, star
     )
     SVL_S3LIST_result = OrderedDict()
     with open(
-        "tools/external-object-replicator/sql/svl_s3_list.sql", "r"
+        "tools/external_object_replicator/sql/svl_s3_list.sql", "r"
     ) as svl_s3_list:
         SVL_S3LIST_query = svl_s3_list.read().format(
             start=start_time, end=end_time, db=cluster_object["database"]
@@ -183,7 +183,7 @@ def execute_stl_load_query(
     copy_source_location = []
     STL_LOAD_response = OrderedDict()
     with open(
-        "tools/external-object-replicator/sql/stl_load_query.sql", "r"
+        "tools/external_object_replicator/sql/stl_load_query.sql", "r"
     ) as stl_load:
         STL_LOAD_query = stl_load.read().format(
             start=start_time, end=end_time, db=cluster_object["database"]
