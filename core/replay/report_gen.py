@@ -27,7 +27,7 @@ from reportlab.platypus import (
     ListFlowable,
     ListItem,
 )
-from report_util import (
+from core.replay.report_util import (
     styles,
     build_pdf_tables,
     df_to_np,
@@ -38,7 +38,7 @@ from report_util import (
 )
 from common import util
 from common import aws_service as aws_service_helper
-import report_util
+import core.replay.report_util as report_util
 g_stylesheet = styles()
 g_columns = g_stylesheet.get("columns")
 
