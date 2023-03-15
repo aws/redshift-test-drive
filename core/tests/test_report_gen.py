@@ -308,22 +308,26 @@ class TestReportGen(unittest.TestCase):
             report_gen.read_data("sometable", pandas.DataFrame(), [], self.report)
 
     @patch('pandas.DataFrame', return_value=df_mock)
+    @patch('pandas.DataFrame.round', return_value=df_mock)
     @patch('common.aws_service.s3_resource_put_object')
-    def test_read_data_breakdown(self, mock_s3_put_obj, mock_df):
+    def test_read_data_breakdown(self, mock_s3_put_obj, mock_round, mock_df):
         mock_tables = {"table_name": {"type": "breakdown"}}
         mock_report = Mock()
         mock_report.tables.return_value = mock_tables
         response = report_gen.read_data("table_name", df_mock, ["Statement Type"], mock_report)
-        assert_frame_equal(response, df_mock)
+        self.assertEqual(response["statement_type"][0], "a")
+        self.assertEqual(response["statement_type"][1], "mock")
+        self.assertEqual(response["statement_type"][3], "test")
 
     @patch('pandas.DataFrame', return_value=df_mock)
     @patch('common.aws_service.s3_resource_put_object', side_effect=Exception("Boom"))
-    def test_read_data_fail(self, mock_s3_put_obj, mock_df):
+    @patch('pandas.DataFrame.round', return_value=df_mock)
+    def test_read_data_fail(self, mock_round, mock_s3_put_obj, mock_df):
         mock_tables = {"table_name": {"type": "breakdown"}}
-        mock_report = MagicMock(tables=mock_tables)
+        mock_report = Mock()
+        mock_report.tables.return_value = mock_tables
         with self.assertRaises(SystemExit):
             response = report_gen.read_data("table_name", df_mock, ["Statement Type"], mock_report)
-            assert_frame_equal(response, df_mock)
 
     @patch('common.aws_service.s3_generate_presigned_url')
     def test_create_presigned_url(self, mock_s3_generate_presigned_url):
