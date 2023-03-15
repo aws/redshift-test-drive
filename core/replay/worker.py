@@ -185,7 +185,7 @@ class ReplayWorker:
         except Exception as e:
             self.logger.error(f"Process {self.process_idx} threw exception: {e}")
             self.logger.debug("".join(traceback.format_exception(*sys.exc_info())))
-
+            
         if connections_processed:
             self.logger.debug(
                 f"Max connection offset for this process: {self.worker_stats['connection_diff_sec']:.3f} sec"
