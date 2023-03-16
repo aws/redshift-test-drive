@@ -318,8 +318,6 @@ class TestReportGen(unittest.TestCase):
         self.assertEqual(response["statement_type"][1], "mock")
         self.assertEqual(response["statement_type"][3], "test")
 
-
-
     @patch('pandas.DataFrame', return_value=df_mock)
     @patch('common.aws_service.s3_resource_put_object', side_effect=Exception("Boom"))
     @patch('pandas.DataFrame.round', return_value=df_mock)
