@@ -1,3 +1,4 @@
+import datetime
 import os
 import pandas as pd
 import yaml
@@ -27,6 +28,8 @@ from reportlab.platypus import (
     ListFlowable,
     ListItem,
 )
+
+import common.aws_service
 from core.replay.report_util import (
     styles,
     build_pdf_tables,
@@ -213,7 +216,7 @@ def replay_pdf_generator(
 
     # unload from cluster
     queries = unload(bucket, iam_role, cluster, user, replay)
-    info = util.create_json(replay, cluster, workload, complete, stats, tag)
+    info = create_json(replay, cluster, workload, complete, stats, tag)
     try:
         aws_service_helper.s3_upload(info, bucket.get("bucket_name"), f"{replay_path}/{info}")
     except ClientError as e:
@@ -263,7 +266,7 @@ def initiate_connection(username, cluster):
     if cluster.get("is_serverless"):
         if cluster.get("secret_name"):
             logger.info(f"Fetching secrets from: {cluster.get['secret_name']}")
-            secret_name = util.get_secret(cluster.get("secret_name"), cluster.get("region"))
+            secret_name = common.aws_service.get_secret(cluster.get("secret_name"), cluster.get("region"))
             if not len(set(secret_keys) - set(secret_name.keys())):
                 response = {
                     "DbUser": secret_name["admin_username"],
@@ -519,3 +522,35 @@ def analysis_summary(bucket_url, replay):
     )
     output_str += f"\n\nReplay Analysis Report | Click to Download:\n{r_url}\n"
     logger.info(output_str)
+
+
+def create_json(replay, cluster, workload, complete, stats, tag=""):
+    """Generates a JSON containing cluster details for the replay"""
+
+    if cluster["start_time"] and cluster["end_time"]:
+        duration = cluster["end_time"] - cluster["start_time"]
+        duration = duration - datetime.timedelta(microseconds=duration.microseconds)
+
+        cluster["start_time"] = str(cluster["start_time"].isoformat(timespec="seconds"))
+        cluster["end_time"] = str(cluster["end_time"].isoformat(timespec="seconds"))
+        cluster["duration"] = str(duration)
+
+    if complete:
+        cluster["status"] = "Complete"
+    else:
+        cluster["status"] = "Incomplete"
+
+    cluster["replay_id"] = replay
+    cluster["replay_tag"] = tag
+    cluster["workload"] = workload
+
+    if stats:
+        for k, v in enumerate(stats):
+            cluster[v] = stats[v]
+
+    # cluster["connection_success"] = cluster["connection_count"] - cluster["connection_errors"]
+
+    json_object = json.dumps(cluster, indent=4)
+    with open(f"info.json", "w") as outfile:
+        outfile.write(json_object)
+        return outfile.name
