@@ -6,11 +6,12 @@ import logging
 
 
 from collections import OrderedDict
-from common.util import cluster_dict
-from common.config import get_config_file_from_args
-from util.glue_util import clone_glue_catalog
+import common.util
+import common.config
+from tools.ExternalObjectReplicator.util.glue_util import clone_glue_catalog
 from common.aws_service import redshift_execute_query
-from util.copy_util import clone_objects_to_s3, get_s3_folder_size, check_file_existence
+import tools.ExternalObjectReplicator.util.copy_util as copy_util
+from tools.ExternalObjectReplicator.util.copy_util import clone_objects_to_s3, get_s3_folder_size, check_file_existence
 from common.log import init_logging, log_version
 
 logger = logging.getLogger("SimpleReplayLogger")
@@ -19,95 +20,9 @@ g_disable_progress_bar = None
 global_lock = threading.Lock()
 g_bar_format = "{desc}: {percentage:3.0f}%|{bar}"
 
-
-def main():
-    # Parse config file
-    file_config = get_config_file_from_args()
-
-    # Setup Logging
-    level = logging.getLevelName(file_config.get("log_level", "INFO").upper())
-    init_logging(
-        "external_replicator.log",
-        dir="external_replicator_logs",
-        level=level,
-        preamble=yaml.dump(file_config),
-        backup_count=file_config.get("backup_count", 2),
-        script_type="external object replicator",
-    )
-    log_version()
-
-    cluster_object = cluster_dict(endpoint=file_config["source_cluster_endpoint"])
-    start_time = dateutil.parser.parse(file_config["start_time"]).astimezone(
-        dateutil.tz.tzutc()
-    )
-    end_time = dateutil.parser.parse(file_config["end_time"]).astimezone(
-        dateutil.tz.tzutc()
-    )
-    redshift_user = file_config["redshift_user"]
-
-    (
-        STL_LOAD_response,
-        copy_objects_not_found,
-        copy_source_location,
-    ) = execute_stl_load_query(
-        cluster_object, end_time, file_config, redshift_user, start_time
-    )
-    (
-        SVL_S3LIST_result,
-        spectrum_source_location,
-        external_table_response,
-        spectrum_obj_not_found,
-    ) = execute_SVL_query(
-        cluster_object, end_time, file_config, redshift_user, start_time
-    )
-
-    options = ["1. Yes - Proceed with cloning", "2. No - Exit"]
-    print("Would you like to proceed with cloning?")
-    print(options[0])
-    print(options[1])
-    for idx, element in enumerate(options):
-        choice = input("Enter your choice: ")
-        if int(choice) == 1:
-            if STL_LOAD_response["TotalNumRows"] > 0:
-                logger.info(
-                    f"== Begin to clone COPY files to {file_config['target_s3_location']} =="
-                )
-                clone_objects_to_s3(
-                    file_config["target_s3_location"],
-                    obj_type="copyfiles",
-                    source_location=copy_source_location,
-                    objects_not_found=copy_objects_not_found,
-                )
-            if SVL_S3LIST_result["TotalNumRows"] > 0:
-                logger.info("== Begin to clone Glue databases and tables ==")
-                new_gluedb_list = clone_glue_catalog(
-                    external_table_response["Records"],
-                    file_config["target_s3_location"],
-                    file_config["region"],
-                )
-                logger.info(
-                    f"== Begin to clone Spectrum files to {file_config['target_s3_location']} =="
-                )
-                clone_objects_to_s3(
-                    file_config["target_s3_location"],
-                    objects_not_found=spectrum_obj_not_found,
-                    source_location=spectrum_source_location,
-                    obj_type="spectrumfiles",
-                )
-            if (
-                SVL_S3LIST_result["TotalNumRows"] == 0
-                and STL_LOAD_response["TotalNumRows"] == 0
-            ):
-                logger.info("No object found to be replicated")
-            exit(-1)
-        else:
-            logger.info("Customer decided not to proceed with cloning")
-            exit(-1)
-
-
-def execute_SVL_query(cluster_object, end_time, file_config, redshift_user, start_time):
+def execute_svl_query(cluster_object, end_time, file_config, redshift_user, start_time):
     with open(
-        "tools/external_object_replicator/sql/external_table_query.sql", "r"
+        "tools/ExternalObjectReplicator/sql/external_table_query.sql", "r"
     ) as svv_external_table:
         external_table_query = svv_external_table.read().format(
             start=start_time, end=end_time, db=cluster_object["database"]
@@ -128,7 +43,7 @@ def execute_SVL_query(cluster_object, end_time, file_config, redshift_user, star
     )
     SVL_S3LIST_result = OrderedDict()
     with open(
-        "tools/external_object_replicator/sql/svl_s3_list.sql", "r"
+        "tools/ExternalObjectReplicator/sql/svl_s3_list.sql", "r"
     ) as svl_s3_list:
         SVL_S3LIST_query = svl_s3_list.read().format(
             start=start_time, end=end_time, db=cluster_object["database"]
@@ -183,7 +98,7 @@ def execute_stl_load_query(
     copy_source_location = []
     STL_LOAD_response = OrderedDict()
     with open(
-        "tools/external_object_replicator/sql/stl_load_query.sql", "r"
+        "tools/ExternalObjectReplicator/sql/stl_load_query.sql", "r"
     ) as stl_load:
         STL_LOAD_query = stl_load.read().format(
             start=start_time, end=end_time, db=cluster_object["database"]
@@ -217,6 +132,89 @@ def execute_stl_load_query(
         logger.info("No COPY files found.")
     return STL_LOAD_response, copy_objects_not_found, copy_source_location
 
+def main():
+    # Parse config file
+    file_config = common.config.get_config_file_from_args()
+
+    # Setup Logging
+    level = logging.getLevelName(file_config.get("log_level", "INFO").upper())
+    init_logging(
+        "external_replicator.log",
+        dir="external_replicator_logs",
+        level=level,
+        preamble=yaml.dump(file_config),
+        backup_count=file_config.get("backup_count", 2),
+        script_type="external object replicator",
+    )
+    log_version()
+
+    cluster_object = common.util.cluster_dict(endpoint=file_config["source_cluster_endpoint"])
+    start_time = dateutil.parser.parse(file_config["start_time"]).astimezone(
+        dateutil.tz.tzutc()
+    )
+    end_time = dateutil.parser.parse(file_config["end_time"]).astimezone(
+        dateutil.tz.tzutc()
+    )
+    redshift_user = file_config["redshift_user"]
+
+    (
+        STL_LOAD_response,
+        copy_objects_not_found,
+        copy_source_location,
+    ) = execute_stl_load_query(
+        cluster_object, end_time, file_config, redshift_user, start_time
+    )
+    (
+        SVL_S3LIST_result,
+        spectrum_source_location,
+        external_table_response,
+        spectrum_obj_not_found,
+    ) = execute_svl_query(
+        cluster_object, end_time, file_config, redshift_user, start_time
+    )
+
+    options = ["1. Yes - Proceed with cloning", "2. No - Exit"]
+    print("Would you like to proceed with cloning?")
+    print(options[0])
+    print(options[1])
+    for idx, element in enumerate(options):
+        choice = input("Enter your choice: ")
+        if int(choice) == 1:
+            if STL_LOAD_response["TotalNumRows"] > 0:
+                logger.info(
+                    f"== Begin to clone COPY files to {file_config['target_s3_location']} =="
+                )
+                copy_util.clone_objects_to_s3(
+                    file_config["target_s3_location"],
+                    obj_type="copyfiles",
+                    source_location=copy_source_location,
+                    objects_not_found=copy_objects_not_found,
+                )
+            if SVL_S3LIST_result["TotalNumRows"] > 0:
+                logger.info("== Begin to clone Glue databases and tables ==")
+                new_gluedb_list = clone_glue_catalog(
+                    external_table_response["Records"],
+                    file_config["target_s3_location"],
+                    file_config["region"],
+                )
+                logger.info(
+                    f"== Begin to clone Spectrum files to {file_config['target_s3_location']} =="
+                )
+                copy_util.clone_objects_to_s3(
+                    file_config["target_s3_location"],
+                    objects_not_found=spectrum_obj_not_found,
+                    source_location=spectrum_source_location,
+                    obj_type="spectrumfiles",
+                )
+            if (
+                SVL_S3LIST_result["TotalNumRows"] == 0
+                and STL_LOAD_response["TotalNumRows"] == 0
+            ):
+                logger.info("No object found to be replicated")
+                exit(-1)
+        else:
+            logger.info("Customer decided not to proceed with cloning")
+            exit(-1)
 
 if __name__ == "__main__":
     main()

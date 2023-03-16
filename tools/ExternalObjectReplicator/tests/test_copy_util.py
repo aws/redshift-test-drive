@@ -6,7 +6,7 @@ from unittest import mock
 from dateutil.tz import tzutc
 from common import aws_service
 
-from tools.external_object_replicator.util import copy_util
+from tools.ExternalObjectReplicator.util import copy_util
 
 
 class CopyUtilTestCases(unittest.TestCase):
@@ -91,7 +91,7 @@ class CopyUtilTestCases(unittest.TestCase):
         self.assertTrue(objects_not_found[0]["source_key"])
 
     @patch("common.aws_service.s3_upload")
-    @patch("tools.external_object_replicator.util.copy_util.copy_parallel")
+    @patch("tools.ExternalObjectReplicator.util.copy_util.copy_parallel")
     def test_clone_s3_objects_not_copy_files(self, mock_s3_upload, mock_copy_parallel):
         target_dest = "simple-replay-test/test"
         obj_type = "test files"
@@ -124,7 +124,7 @@ class CopyUtilTestCases(unittest.TestCase):
         self.assertEqual(mock_s3_upload.call_count, 1)
 
     @patch("common.aws_service.s3_upload")
-    @patch("tools.external_object_replicator.util.copy_util.copy_parallel")
+    @patch("tools.ExternalObjectReplicator.util.copy_util.copy_parallel")
     def test_clone_s3_objects_copy_files(self, mock_s3_upload, mock_copy_parallel):
         target_dest = "simple-replay-test/test"
         obj_type = "copyfiles"
@@ -157,7 +157,7 @@ class CopyUtilTestCases(unittest.TestCase):
         self.assertEqual(mock_s3_upload.call_count, 1)
 
     @patch("common.aws_service.s3_upload")
-    @patch("tools.external_object_replicator.util.copy_util.copy_parallel")
+    @patch("tools.ExternalObjectReplicator.util.copy_util.copy_parallel")
     def test_clone_s3_objects_object_found_empty(
         self, mock_s3_upload, mock_copy_parallel
     ):
