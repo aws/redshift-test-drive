@@ -5,7 +5,6 @@ import botocore.errorfactory
 import redshift_connector
 import botocore.errorfactory
 from botocore.exceptions import ClientError
-from pandas.testing import assert_frame_equal
 import core.replay.report_gen as report_gen
 import pandas
 
