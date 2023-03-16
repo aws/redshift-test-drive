@@ -613,9 +613,6 @@ class TestWorker(unittest.TestCase):
         mock_log.error.assert_any_call(
             "Process 0 threw exception: unsupported operand type(s) for -: 'datetime.datetime' and 'float'"
         )
-        mock_log.debug.assert_any_call(
-            'Traceback (most recent call last):\n  File "/Users/devsaba/Documents/PyProjects/SimpleReplay/redshift-test-drive/core/replay/worker.py", line 139, in replay\n    delay_sec = (connection_offset_ms - time_elapsed_ms) / 1000.0\nTypeError: unsupported operand type(s) for -: \'datetime.datetime\' and \'float\'\n'
-        )
 
     @patch("core.replay.worker.collect_stats")
     def test_join_finished_threads(self, mock_stats):
