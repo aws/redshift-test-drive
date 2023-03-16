@@ -1,13 +1,18 @@
+import gzip
+import io
+import json
 import logging
 import random
 import string
 import sys
+from urllib.parse import urlparse
 
+import boto3
 import dateutil.parser
 import re
 
 from replay.copy_replacements_parser import parse_copy_replacements
-from common.util import retrieve_compressed_json, matches_filters, get_connection_key
+from common.util import matches_filters, get_connection_key, logger
 
 logger = logging.getLogger("SimpleReplayLogger")
 
@@ -265,3 +270,33 @@ class Query:
 
     def offset_ms(self, ref_time):
         return (self.start_time - ref_time).total_seconds() * 1000.0
+
+
+def retrieve_compressed_json(location):
+    """Load a gzipped json file from the specified location, either local or s3"""
+    sql_gz = load_file(location)
+    json_content = (
+        gzip.GzipFile(fileobj=io.BytesIO(sql_gz), mode="rb").read().decode("utf-8")
+    )
+    return json.loads(json_content)
+
+
+def load_file(location, decode=False):
+    """load a file from s3 or local. decode if the file should be interpreted as text rather than binary"""
+    try:
+        if location.startswith("s3://"):
+            url = urlparse(location, allow_fragments=False)
+            s3 = boto3.resource("s3")
+            content = s3.Object(url.netloc, url.path.lstrip("/")).get()["Body"].read()
+        else:
+            with open(location, "rb") as data:
+                content = data.read()
+        if decode:
+            content = content.decode("utf-8")
+    except Exception as e:
+        logger.error(
+            f"Unable to load file from {location}. Does the file exist and do you have correct permissions? {str(e)}"
+        )
+        raise e
+
+    return content

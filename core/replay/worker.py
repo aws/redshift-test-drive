@@ -10,7 +10,6 @@ from queue import Empty
 from common.log import init_logging
 from connection_thread import ConnectionThread
 from stats import collect_stats, init_stats
-from common.util import prepend_ids_to_logs
 
 
 class ReplayWorker:
@@ -65,9 +64,6 @@ class ReplayWorker:
         perf_lock = threading.Lock()
 
         try:
-            # prepend the process index to all log messages in this worker
-            prepend_ids_to_logs(self.process_idx)
-
             # stagger worker startup to not hammer the get_cluster_credentials api
             time.sleep(random.randrange(1, 3))
             self.logger.debug(f"Worker {self.process_idx} ready for jobs")

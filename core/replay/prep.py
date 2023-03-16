@@ -13,10 +13,10 @@ from replay.transactions_parser import TransactionsParser
 from replay.connections_parser import parse_connections
 from common.util import (
     get_connection_key,
-    get_secret,
     is_serverless,
     CredentialsException,
 )
+from common.aws_service import get_secret
 
 logger = logging.getLogger("SimpleReplayLogger")
 
