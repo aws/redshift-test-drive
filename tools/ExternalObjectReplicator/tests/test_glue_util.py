@@ -3,7 +3,7 @@ from unittest.mock import patch
 import sys
 
 sys.path.append("../")
-from external_object_replicator import glue_util
+from tools.ExternalObjectReplicator.util import glue_util
 
 
 def mock_glue_get_database(name, region):
@@ -27,12 +27,12 @@ def mock_glue_create_table(database, table_input, region):
 
 
 class GlueUtilTestCases(unittest.TestCase):
-    @patch("helper.aws_service.glue_get_database", mock_glue_get_database)
-    @patch("helper.aws_service.glue_create_database", mock_create_database)
-    @patch("helper.aws_service.glue_get_table", mock_glue_get_table)
-    @patch("helper.aws_service.glue_create_table", mock_glue_create_table)
+    @patch("common.aws_service.glue_get_database", mock_glue_get_database)
+    @patch("common.aws_service.glue_create_database", mock_create_database)
+    @patch("common.aws_service.glue_get_table", mock_glue_get_table)
+    @patch("common.aws_service.glue_create_table", mock_glue_create_table)
     @patch(
-        "helper.aws_service.glue_get_partition_indexes", mock_glue_get_partition_indexes
+        "common.aws_service.glue_get_partition_indexes", mock_glue_get_partition_indexes
     )
     def test_glue_cloning(self):
         response = glue_util.clone_glue_catalog(
