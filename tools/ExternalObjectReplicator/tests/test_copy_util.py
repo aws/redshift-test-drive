@@ -6,11 +6,11 @@ from unittest import mock
 from dateutil.tz import tzutc
 from common import aws_service
 
-from external_object_replicator import copy_util
+from tools.ExternalObjectReplicator.util import copy_util
 
 
 class CopyUtilTestCases(unittest.TestCase):
-    @patch("helper.aws_service.s3_copy_object")
+    @patch("common.aws_service.s3_copy_object")
     def test_copy_parallel(self, mock_s3_copy_object):
         source_location = [
             {
@@ -34,7 +34,7 @@ class CopyUtilTestCases(unittest.TestCase):
         self.assertTrue(mock_s3_copy_object.called)
         self.assertEqual(mock_s3_copy_object.call_count, 1)
 
-    @patch("helper.aws_service.s3_get_bucket_contents")
+    @patch("common.aws_service.s3_get_bucket_contents")
     def test_check_file_existence_object_not_found(self, mock_objects_not_found):
         response = {
             "ColumnMetadata": [{}],
@@ -63,7 +63,7 @@ class CopyUtilTestCases(unittest.TestCase):
         self.assertTrue(source_location[0]["source_key"])
         self.assertFalse(objects_not_found)
 
-    @patch("helper.aws_service.s3_get_bucket_contents")
+    @patch("common.aws_service.s3_get_bucket_contents")
     def test_check_file_existence_empty_request(self, mock_objects_not_found_empty_req):
         response = {
             "ColumnMetadata": [{}],
@@ -90,8 +90,8 @@ class CopyUtilTestCases(unittest.TestCase):
         self.assertFalse(mock_objects_not_found_empty_req.return_value)
         self.assertTrue(objects_not_found[0]["source_key"])
 
-    @patch("helper.aws_service.s3_upload")
-    @patch("external_object_replicator.copy_util.copy_parallel")
+    @patch("common.aws_service.s3_upload")
+    @patch("tools.ExternalObjectReplicator.util.copy_util.copy_parallel")
     def test_clone_s3_objects_not_copy_files(self, mock_s3_upload, mock_copy_parallel):
         target_dest = "simple-replay-test/test"
         obj_type = "test files"
@@ -123,8 +123,8 @@ class CopyUtilTestCases(unittest.TestCase):
         self.assertTrue(mock_s3_upload.called)
         self.assertEqual(mock_s3_upload.call_count, 1)
 
-    @patch("helper.aws_service.s3_upload")
-    @patch("external_object_replicator.copy_util.copy_parallel")
+    @patch("common.aws_service.s3_upload")
+    @patch("tools.ExternalObjectReplicator.util.copy_util.copy_parallel")
     def test_clone_s3_objects_copy_files(self, mock_s3_upload, mock_copy_parallel):
         target_dest = "simple-replay-test/test"
         obj_type = "copyfiles"
@@ -156,8 +156,8 @@ class CopyUtilTestCases(unittest.TestCase):
         self.assertTrue(mock_s3_upload.called)
         self.assertEqual(mock_s3_upload.call_count, 1)
 
-    @patch("helper.aws_service.s3_upload")
-    @patch("external_object_replicator.copy_util.copy_parallel")
+    @patch("common.aws_service.s3_upload")
+    @patch("tools.ExternalObjectReplicator.util.copy_util.copy_parallel")
     def test_clone_s3_objects_object_found_empty(
         self, mock_s3_upload, mock_copy_parallel
     ):

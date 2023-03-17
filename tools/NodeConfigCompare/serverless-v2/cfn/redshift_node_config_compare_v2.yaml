@@ -4,7 +4,7 @@ Parameters:
   ConfigJsonS3Path:
     Description: S3 location URI for configuration json file. Please note, this automation would grant full access on your config file's S3 bucket.
     Type: String
-    Default: s3://your-node-config-compare-bucket/test-cases/user_config.json
+    Default: s3://your-NodeConfigCompare-bucket/test-cases/user_config.json
   ClusterIdentifierPrefix:
     Description: Redshift cluster identifier prefix
     Type: String
@@ -134,7 +134,7 @@ Mappings:
       PopulateComparisonResultsScript: 'populate_comparison_results.sql'
       ConfigTestingLambdaScript: 'RedshiftConfigTestingLambda.py.zip'
       ConfigTestingStepFunctionScript: 'RedshiftConfigTestingStepFunction.json'
-      ExternalPublicBucket: 'amazon-redshift-node-config-compare'
+      ExternalPublicBucket: 'amazon-redshift-NodeConfigCompare'
     Pricing:
       Uri: 'https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonRedshift/current/index.csv'
       File: 'pricing/redshift_pricing.csv'
@@ -341,8 +341,8 @@ Resources:
               - s3:ListBucketMultipartUploads
               - s3:ListObjects
             Resource:
-              - arn:aws:s3:::amazon-redshift-node-config-compare/*
-              - arn:aws:s3:::amazon-redshift-node-config-compare
+              - arn:aws:s3:::amazon-redshift-NodeConfigCompare/*
+              - arn:aws:s3:::amazon-redshift-NodeConfigCompare
               - !Sub
                 - arn:aws:s3:::${RedshiftWhatIfConfigJsonBucket}/*
                 - {RedshiftWhatIfConfigJsonBucket: !Select [2, !Split ["/", !Ref ConfigJsonS3Path]]}

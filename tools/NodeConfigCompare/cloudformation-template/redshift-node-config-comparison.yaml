@@ -5,7 +5,7 @@ Parameters:
   ConfigJsonS3Path:
     Description: S3 location URI for configuration json file. Please note, this automation would grant full access on your config file's S3 bucket.
     Type: String
-    Default: s3://your-node-config-compare-bucket/test-cases/user_config.json
+    Default: s3://your-NodeConfigCompare-bucket/test-cases/user_config.json
   ClusterIdentifierPrefix:
     Description: Redshift cluster identifier prefix
     Type: String
