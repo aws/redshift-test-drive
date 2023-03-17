@@ -11,7 +11,7 @@ import boto3
 import dateutil.parser
 import re
 
-from replay.copy_replacements_parser import parse_copy_replacements
+from core.replay.copy_replacements_parser import parse_copy_replacements
 from common.util import matches_filters, get_connection_key, logger
 
 logger = logging.getLogger("SimpleReplayLogger")

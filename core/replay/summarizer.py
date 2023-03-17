@@ -4,7 +4,7 @@ import os
 
 from boto3 import client
 
-from replay.stats import init_stats, collect_stats
+from core.replay.stats import init_stats, collect_stats
 import common.aws_service as aws_service_helper
 
 logger = logging.getLogger("SimpleReplayLogger")

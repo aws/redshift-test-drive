@@ -9,8 +9,8 @@ import boto3
 from boto3 import client
 from botocore.exceptions import NoCredentialsError
 
-from replay.transactions_parser import TransactionsParser
-from replay.connections_parser import parse_connections
+from core.replay.transactions_parser import TransactionsParser
+from core.replay.connections_parser import parse_connections
 from common.util import (
     get_connection_key,
     is_serverless,
