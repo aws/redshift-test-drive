@@ -8,7 +8,7 @@ import yaml
 import common.config as config_helper
 import common.log as log_helper
 from connections_parser import ConnectionLog
-from prep import ReplayPrep
+from core.replay.prep import ReplayPrep
 from summarizer import summarize
 from replayer import Replayer
 from common.util import (
