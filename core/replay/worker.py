@@ -8,8 +8,8 @@ import traceback
 from queue import Empty
 
 from common.log import init_logging
-from connection_thread import ConnectionThread
-from stats import collect_stats, init_stats
+from core.replay.connection_thread import ConnectionThread
+from core.replay.stats import collect_stats, init_stats
 
 
 class ReplayWorker:

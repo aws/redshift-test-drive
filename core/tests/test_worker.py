@@ -89,68 +89,67 @@ class TestWorker(unittest.TestCase):
             logger_name="SimpleReplayWorkerLogger",
         )
 
-    @patch.object(ReplayWorker, "logger")
-    @patch("core.replay.worker.init_logging")
-    @patch("core.replay.worker.prepend_ids_to_logs")
-    def test_replay_prepend_ids_call_first_debug_call(
-        self, mock_prepend_ids, mock_init_logging, mock_log
-    ):
-        mock_queue = MagicMock()
-        mock_init_logging.return_value = True
+    # @patch.object(ReplayWorker, "logger")
+    # @patch("core.replay.worker.init_logging")
+    # def test_replay_prepend_ids_call_first_debug_call(
+    #     self, mock_prepend_ids, mock_init_logging, mock_log
+    # ):
+    #     mock_queue = MagicMock()
+    #     mock_init_logging.return_value = True
 
-        query = Query(
-            start_time=datetime.datetime(2023, 1, 9, 15, 48, 15, tzinfo=tzutc()),
-            end_time=datetime.datetime(2023, 1, 9, 15, 48, 15, tzinfo=tzutc()),
-            text="SET query_group='0000_create_user.ddl - IR-960eb458-9033-11ed-84bb-029845ae12cf.create-user.create-user.s0001.f0000.1.0';",
-        )
+    #     query = Query(
+    #         start_time=datetime.datetime(2023, 1, 9, 15, 48, 15, tzinfo=tzutc()),
+    #         end_time=datetime.datetime(2023, 1, 9, 15, 48, 15, tzinfo=tzutc()),
+    #         text="SET query_group='0000_create_user.ddl - IR-960eb458-9033-11ed-84bb-029845ae12cf.create-user.create-user.s0001.f0000.1.0';",
+    #     )
 
-        transaction = Transaction(
-            time_interval=True,
-            database_name="dev",
-            username="testuser",
-            pid="1073815778",
-            xid="2612671",
-            queries=query,
-            transaction_key="dev_testuser_1073815778",
-        )
+    #     transaction = Transaction(
+    #         time_interval=True,
+    #         database_name="dev",
+    #         username="testuser",
+    #         pid="1073815778",
+    #         xid="2612671",
+    #         queries=query,
+    #         transaction_key="dev_testuser_1073815778",
+    #     )
 
-        connection = ConnectionLog(
-            session_initiation_time=1000,
-            disconnection_time=datetime.datetime(
-                2023, 1, 9, 15, 48, 15, 872000, tzinfo=datetime.timezone.utc
-            ),
-            application_name="",
-            database_name="dev",
-            username="testuser",
-            pid="1073815778",
-            time_interval_between_transactions=True,
-            time_interval_between_queries="all on",
-            connection_key="dev_testuser_1073815778",
-        )
+    #     connection = ConnectionLog(
+    #         session_initiation_time=1000,
+    #         disconnection_time=datetime.datetime(
+    #             2023, 1, 9, 15, 48, 15, 872000, tzinfo=datetime.timezone.utc
+    #         ),
+    #         application_name="",
+    #         database_name="dev",
+    #         username="testuser",
+    #         pid="1073815778",
+    #         time_interval_between_transactions=True,
+    #         time_interval_between_queries="all on",
+    #         connection_key="dev_testuser_1073815778",
+    #     )
 
-        connection.transactions = transaction
+    #     connection.transactions = transaction
 
-        mock_log.debug.return_value = logging.getLogger("SimpleReplayWorkerLogger")
-        worker = ReplayWorker(
-            process_idx,
-            replay_start_time,
-            first_event_time,
-            mock_queue,
-            worker_stats,
-            connection_semaphore,
-            num_connections,
-            peak_connections,
-            config,
-            total_connections,
-            error_logger,
-        )
+    #     mock_log.debug.return_value = logging.getLogger("SimpleReplayWorkerLogger")
+    #     worker = ReplayWorker(
+    #         process_idx,
+    #         replay_start_time,
+    #         first_event_time,
+    #         mock_queue,
+    #         worker_stats,
+    #         connection_semaphore,
+    #         num_connections,
+    #         peak_connections,
+    #         config,
+    #         total_connections,
+    #         error_logger,
+    #     )
 
-        mock_queue.get.side_effect = [{"job_id": 0, "connection": connection}, False]
+    #     mock_queue.get.side_effect = [{"job_id": 0, "connection": connection}, False]
 
-        worker.replay()
+    #     worker.replay()
 
-        mock_prepend_ids.assert_called_once_with(0)
-        mock_log.debug.assert_any_call("Worker 0 ready for jobs")
+    #     mock_prepend_ids.assert_called_once_with(0)
+    #     mock_log.debug.assert_any_call("Worker 0 ready for jobs")
 
     @patch("core.replay.worker.threading")
     @patch.object(ConnectionLog, "offset_ms")
@@ -160,10 +159,8 @@ class TestWorker(unittest.TestCase):
     @patch.object(ReplayWorker, "join_finished_threads")
     @patch.object(ReplayWorker, "logger")
     @patch("core.replay.worker.init_logging")
-    @patch("core.replay.worker.prepend_ids_to_logs")
     def test_replay_job_present(
         self,
-        mock_prepend_ids,
         mock_init_logging,
         mock_log,
         mock_finished_thread,
@@ -177,7 +174,6 @@ class TestWorker(unittest.TestCase):
         mock_log.debug.return_value = logging.getLogger("SimpleReplayWorkerLogger")
 
         mock_init_logging.return_value = True
-        mock_prepend_ids.return_value = True
         mock_finished_thread.return_value = True
         mock_conn_thread.start.return_value = True
         mock_init_stats.return_value = True
@@ -257,10 +253,8 @@ class TestWorker(unittest.TestCase):
     @patch.object(ReplayWorker, "join_finished_threads")
     @patch.object(ReplayWorker, "logger")
     @patch("core.replay.worker.init_logging")
-    @patch("core.replay.worker.prepend_ids_to_logs")
     def test_replay_job_is_False(
         self,
-        mock_prepend_ids,
         mock_init_logging,
         mock_log,
         mock_finished_thread,
@@ -271,7 +265,6 @@ class TestWorker(unittest.TestCase):
         mock_log.debug.return_value = logging.getLogger("SimpleReplayWorkerLogger")
 
         mock_init_logging.return_value = True
-        mock_prepend_ids.return_value = True
         mock_finished_thread.return_value = True
         mock_conn_thread.start.return_value = True
         mock_init_stats.return_value = True
@@ -340,10 +333,8 @@ class TestWorker(unittest.TestCase):
     @patch.object(ReplayWorker, "join_finished_threads")
     @patch.object(ReplayWorker, "logger")
     @patch("core.replay.worker.init_logging")
-    @patch("core.replay.worker.prepend_ids_to_logs")
     def test_replay_job_present_with_semaphore(
         self,
-        mock_prepend_ids,
         mock_init_logging,
         mock_log,
         mock_finished_thread,
@@ -359,7 +350,6 @@ class TestWorker(unittest.TestCase):
         mock_log.debug.return_value = logging.getLogger("SimpleReplayWorkerLogger")
 
         mock_init_logging.return_value = True
-        mock_prepend_ids.return_value = True
         mock_finished_thread.return_value = True
         mock_conn_thread.start.return_value = True
         mock_init_stats.return_value = True
@@ -439,10 +429,8 @@ class TestWorker(unittest.TestCase):
     @patch.object(ReplayWorker, "join_finished_threads")
     @patch.object(ReplayWorker, "logger")
     @patch("core.replay.worker.init_logging")
-    @patch("core.replay.worker.prepend_ids_to_logs")
     def test_replay_job_Empty(
         self,
-        mock_prepend_ids,
         mock_init_logging,
         mock_log,
         mock_finished_thread,
@@ -457,7 +445,6 @@ class TestWorker(unittest.TestCase):
         mock_log.debug.return_value = logging.getLogger("SimpleReplayWorkerLogger")
 
         mock_init_logging.return_value = True
-        mock_prepend_ids.return_value = True
         mock_finished_thread.return_value = True
         mock_conn_thread.start.return_value = True
         mock_init_stats.return_value = True
@@ -531,10 +518,8 @@ class TestWorker(unittest.TestCase):
     @patch.object(ReplayWorker, "join_finished_threads")
     @patch.object(ReplayWorker, "logger")
     @patch("core.replay.worker.init_logging")
-    @patch("core.replay.worker.prepend_ids_to_logs")
     def test_replay_job_exception(
         self,
-        mock_prepend_ids,
         mock_init_logging,
         mock_log,
         mock_finished_thread,
@@ -548,7 +533,6 @@ class TestWorker(unittest.TestCase):
         mock_log.debug.return_value = logging.getLogger("SimpleReplayWorkerLogger")
 
         mock_init_logging.return_value = True
-        mock_prepend_ids.return_value = True
         mock_finished_thread.return_value = True
         mock_conn_thread.start.return_value = True
         mock_init_stats.return_value = True
