@@ -48,16 +48,6 @@ def main():
     g_config = config_helper.get_config_file_from_args()
     config_helper.validate_config_for_replay(g_config)
 
-    # Setup Logging
-    level = logging.getLevelName(g_config.get("log_level", "INFO").upper())
-    log_helper.init_logging(
-        "replay.log",
-        level=level,
-        preamble=yaml.dump(g_config),
-        backup_count=g_config.get("backup_count", 2),
-    )
-    log_helper.log_version()
-
     global g_is_serverless
 
     g_is_serverless = is_serverless(g_config)
@@ -76,6 +66,18 @@ def main():
         replay_id = (
             f'{replay_start_timestamp.isoformat()}_{cluster.get("id")}_{id_hash}'
         )
+
+    # Setup Logging
+    level = logging.getLevelName(g_config.get("log_level", "INFO").upper())
+    log_helper.init_logging(
+        "replay.log",
+        dir=f"simplereplay_logs/replay_log-{id_hash}",
+        level = level,
+        preamble = yaml.dump(g_config),
+        backup_count = g_config.get("backup_count", 2),
+        script_type='replay',
+    )
+    log_helper.log_version()
 
     if not g_config["replay_output"]:
         g_config["replay_output"] = None
@@ -123,7 +125,7 @@ def main():
     try:
         replayer = Replayer(g_config)
         aggregated_stats = replayer.start_replay(
-            connection_logs, first_event_time, query_count, replay_start_timestamp
+            connection_logs, first_event_time, query_count, replay_start_timestamp, id_hash
         )
         complete = True
     except KeyboardInterrupt:
