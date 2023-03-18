@@ -50,7 +50,7 @@ class Replayer:
         raise KeyboardInterrupt
 
     def start_replay(
-        self, connection_logs, first_event_time, total_queries, replay_start_timestamp, id_hash
+        self, connection_logs, first_event_time, total_queries, replay_start_timestamp, replay_id
     ):
         manager = SyncManager()
         manager.start(init_manager)
@@ -91,7 +91,7 @@ class Replayer:
                 self.config,
                 len(connection_logs),
                 errors,
-                id_hash,
+                replay_id,
             )
             self.workers.append(multiprocessing.Process(target=replay_worker.replay))
             self.workers[-1].start()

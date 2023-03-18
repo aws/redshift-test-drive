@@ -28,7 +28,7 @@ class ReplayWorker:
         config,
         total_connections,
         error_logger,
-        id_hash,
+        replay_id,
 
     ):
         self.peak_connections = peak_connections
@@ -44,7 +44,7 @@ class ReplayWorker:
         self.odbc_driver = (self.config.get("odbc_driver"),)
         self.total_connections = total_connections
         self.error_logger = error_logger
-        self.id_hash = id_hash
+        self.replay_id = replay_id
 
 
     def replay(self):
@@ -55,7 +55,7 @@ class ReplayWorker:
         # Logging needs to be separately initialized so that the worker can log to a separate log file
         init_logging(
             f"replay_worker-{self.process_idx}",
-            dir = f"simplereplay_logs/replay_log-{self.id_hash}",
+            dir = f"simplereplay_logs/replay_log-{self.replay_id}",
             logger_name="SimpleReplayWorkerLogger",
             level=self.config.get("log_level", "INFO"),
             script_type=f"replay worker - {self.process_idx}"

@@ -71,7 +71,7 @@ def main():
     level = logging.getLevelName(g_config.get("log_level", "INFO").upper())
     log_helper.init_logging(
         "replay.log",
-        dir=f"simplereplay_logs/replay_log-{id_hash}",
+        dir=f"simplereplay_logs/replay_log-{replay_id}",
         level = level,
         preamble = yaml.dump(g_config),
         backup_count = g_config.get("backup_count", 2),
@@ -125,7 +125,7 @@ def main():
     try:
         replayer = Replayer(g_config)
         aggregated_stats = replayer.start_replay(
-            connection_logs, first_event_time, query_count, replay_start_timestamp, id_hash
+            connection_logs, first_event_time, query_count, replay_start_timestamp, replay_id
         )
         complete = True
     except KeyboardInterrupt:
