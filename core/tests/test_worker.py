@@ -27,8 +27,8 @@ replay_start_time = datetime.datetime(
 process_idx = 0
 config = {
     "tag": "",
-    "workload_location": "test-location/Edited_Extraction_devsaba-sr-test_2023-01-23T09:46:24.784062+00:00",
-    "target_cluster_endpoint": "ra3-redshift-cluster-testing.cqm7bdujbnqz.us-east-1.redshift.amazonaws.com:5439/dev",
+    "workload_location": "test-location/test-sr-test_2023-01-23T09:46:24.784062+00:00",
+    "target_cluster_endpoint": "ra3-redshift-cluster-testing.cqm7bdu-testing.us-east-1.redshift.amazonaws.com:1111/dev",
     "target_cluster_region": "us-east-1",
     "master_username": "awsuser",
     "nlb_nat_dns": None,
