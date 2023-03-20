@@ -84,10 +84,13 @@ Here is a sample configuration JSON file, used to implement this example use-cas
   "SNAPSHOT_ID": "redshift-cluster-manual-snapshot",
   "SNAPSHOT_ACCOUNT_ID": "123456789012",
 
-  "PARAMETER_GROUP_CONFIG_S3_PATH": "s3://node-config-compare-bucket/pg_config.json",
+RIPT_S3_PATH":"s3://node-config-compare-bucket/test_queries.sql",
+=======
+  "PARAMETER_GROUP_CONFIG_S3_PATH": "s3://NodeConfigCompare-bucket/pg_config.json",
 
-  "DDL_AND_COPY_SCRIPT_S3_PATH": "s3://node-config-compare-bucket/ddl.sql",
-  "SQL_SCRIPT_S3_PATH":"s3://node-config-compare-bucket/test_queries.sql",
+  "DDL_AND_COPY_SCRIPT_S3_PATH": "s3://NodeConfigCompare-bucket/ddl.sql",
+  "SQL_SCRIPT_S3_PATH":"s3://NodeConfigCompare-bucket/test_queries.sql",
+
   "NUMBER_OF_PARALLEL_SESSIONS_LIST": "1",
 
   "SIMPLE_REPLAY_LOG_LOCATION":"s3://redshift-logging-xxxxxxxx/RSLogs/",
@@ -117,6 +120,7 @@ Here is a sample configuration JSON file, used to implement this example use-cas
   	"TYPE": "Provisioned",
   	"NODE_TYPE": "ra3.4xlarge",
   	"NUMBER_OF_NODES": "4",
+
   	"WLM_CONFIG_S3_PATH": "s3://node-config-compare-bucket/wlmconfig.json"
   	},
   	{

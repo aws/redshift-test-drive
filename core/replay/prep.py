@@ -1,4 +1,3 @@
-
 import copy
 import datetime
 import logging
@@ -10,9 +9,14 @@ import boto3
 from boto3 import client
 from botocore.exceptions import NoCredentialsError
 
-from transactions_parser import TransactionsParser
-from connections_parser import parse_connections
-from common.util import get_connection_key, get_secret, is_serverless, CredentialsException
+from core.replay.transactions_parser import TransactionsParser
+from core.replay.connections_parser import parse_connections
+from common.util import (
+    get_connection_key,
+    is_serverless,
+    CredentialsException,
+)
+from common.aws_service import get_secret
 
 logger = logging.getLogger("SimpleReplayLogger")
 

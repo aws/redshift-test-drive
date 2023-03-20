@@ -1,13 +1,18 @@
+import gzip
+import io
+import json
 import logging
 import random
 import string
 import sys
+from urllib.parse import urlparse
 
+import boto3
 import dateutil.parser
 import re
 
-from copy_replacements_parser import parse_copy_replacements
-from common.util import retrieve_compressed_json, matches_filters, get_connection_key
+from core.replay.copy_replacements_parser import parse_copy_replacements
+from common.util import matches_filters, get_connection_key, logger
 
 logger = logging.getLogger("SimpleReplayLogger")
 
@@ -98,14 +103,18 @@ class TransactionsParser:
         )
 
     @staticmethod
-    def get_unload_replacements(query_text, replay_output, replay_name, unload_iam_role):
+    def get_unload_replacements(
+        query_text, replay_output, replay_name, unload_iam_role
+    ):
         to_text = re.search(r"to 's3:\/\/[^']*", query_text, re.IGNORECASE).group()[9:]
 
         if to_text:
             existing_unload_location = re.search(
                 r"to 's3:\/\/[^']*", query_text, re.IGNORECASE
             ).group()[4:]
-            replacement_unload_location = replay_output + "/" + replay_name + "/UNLOADs/" + to_text
+            replacement_unload_location = (
+                replay_output + "/" + replay_name + "/UNLOADs/" + to_text
+            )
 
             new_query_text = query_text.replace(
                 existing_unload_location, replacement_unload_location
@@ -173,7 +182,9 @@ class TransactionsParser:
                 )
                 sys.exit(-1)
 
-            query_text = query_text.replace(existing_copy_location, replacement_copy_location)
+            query_text = query_text.replace(
+                existing_copy_location, replacement_copy_location
+            )
 
             iam_replacements = [
                 (
@@ -199,7 +210,9 @@ class TransactionsParser:
 
 
 class Transaction:
-    def __init__(self, time_interval, database_name, username, pid, xid, queries, transaction_key):
+    def __init__(
+        self, time_interval, database_name, username, pid, xid, queries, transaction_key
+    ):
         self.time_interval = time_interval
         self.database_name = database_name
         self.username = username
@@ -222,7 +235,9 @@ class Transaction:
         )
 
     def get_base_filename(self):
-        return self.database_name + "-" + self.username + "-" + self.pid + "-" + self.xid
+        return (
+            self.database_name + "-" + self.username + "-" + self.pid + "-" + self.xid
+        )
 
     def start_time(self):
         return self.queries[0].start_time
@@ -255,3 +270,33 @@ class Query:
 
     def offset_ms(self, ref_time):
         return (self.start_time - ref_time).total_seconds() * 1000.0
+
+
+def retrieve_compressed_json(location):
+    """Load a gzipped json file from the specified location, either local or s3"""
+    sql_gz = load_file(location)
+    json_content = (
+        gzip.GzipFile(fileobj=io.BytesIO(sql_gz), mode="rb").read().decode("utf-8")
+    )
+    return json.loads(json_content)
+
+
+def load_file(location, decode=False):
+    """load a file from s3 or local. decode if the file should be interpreted as text rather than binary"""
+    try:
+        if location.startswith("s3://"):
+            url = urlparse(location, allow_fragments=False)
+            s3 = boto3.resource("s3")
+            content = s3.Object(url.netloc, url.path.lstrip("/")).get()["Body"].read()
+        else:
+            with open(location, "rb") as data:
+                content = data.read()
+        if decode:
+            content = content.decode("utf-8")
+    except Exception as e:
+        logger.error(
+            f"Unable to load file from {location}. Does the file exist and do you have correct permissions? {str(e)}"
+        )
+        raise e
+
+    return content

@@ -147,7 +147,7 @@ cython_debug/
 
 # gui
 # dependencies
-tools/replay-analysis/gui/node_modules/
+tools/ReplayAnalysis/gui/node_modules/
 /.pnp
 .pnp.js
 
@@ -171,3 +171,4 @@ api/*.csv
 
 
 simplereplay_logs/
+statements_to_be_avoided.txt

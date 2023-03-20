@@ -1,10 +1,8 @@
 import gzip
 import logging
 import os
-
 from tqdm import tqdm
-
-import extract_parser
+from extract import extract_parser
 
 logger = logging.getLogger("SimpleReplayLogger")
 

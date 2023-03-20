@@ -28,11 +28,6 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-    - name: Unit tests for core
+    - name: Unit tests for redshift-test-drive
       run: |
-        cd core
-        python -m unittest discover
-    - name: Unit tests for common
-      run: |
-        cd common
-        python -m unittest discover
+        make test

@@ -16,7 +16,9 @@ def print_stats(stats):
 
     max_connection_diff = 0
     for process_idx in stats.keys():
-        if abs(stats[process_idx].get("connection_diff_sec", 0)) > abs(max_connection_diff):
+        if abs(stats[process_idx].get("connection_diff_sec", 0)) > abs(
+            max_connection_diff
+        ):
             max_connection_diff = stats[process_idx]["connection_diff_sec"]
         logger.debug(
             f"[{process_idx}] Max connection offset: {stats[process_idx].get('connection_diff_sec', 0):+.3f} sec"
@@ -46,8 +48,12 @@ def init_stats(stats_dict):
     stats_dict["transaction_error"] = 0
     stats_dict["query_success"] = 0
     stats_dict["query_error"] = 0
-    stats_dict["connection_error_log"] = {}  # map filename to array of connection errors
-    stats_dict["transaction_error_log"] = {}  # map filename to array of transaction errors
+    stats_dict[
+        "connection_error_log"
+    ] = {}  # map filename to array of connection errors
+    stats_dict[
+        "transaction_error_log"
+    ] = {}  # map filename to array of transaction errors
     stats_dict["multi_statements"] = 0
     stats_dict["executed_queries"] = 0  # includes multi-statement queries
     return stats_dict
@@ -60,11 +66,18 @@ def collect_stats(aggregated_stats, stats):
         return
 
     # take the maximum absolute connection difference between actual and expected
-    if abs(stats["connection_diff_sec"]) >= abs(aggregated_stats.get("connection_diff_sec", 0)):
+    if abs(stats["connection_diff_sec"]) >= abs(
+        aggregated_stats.get("connection_diff_sec", 0)
+    ):
         aggregated_stats["connection_diff_sec"] = stats["connection_diff_sec"]
 
     # for each aggregated, add up these scalars across all threads
-    for stat in ("transaction_success", "transaction_error", "query_success", "query_error"):
+    for stat in (
+        "transaction_success",
+        "transaction_error",
+        "query_success",
+        "query_error",
+    ):
         aggregated_stats[stat] += stats[stat]
 
     # same for arrays.
