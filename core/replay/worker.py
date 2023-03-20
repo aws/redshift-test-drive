@@ -28,6 +28,8 @@ class ReplayWorker:
         config,
         total_connections,
         error_logger,
+        replay_id,
+
     ):
         self.peak_connections = peak_connections
         self.num_connections = num_connections
@@ -42,6 +44,8 @@ class ReplayWorker:
         self.odbc_driver = (self.config.get("odbc_driver"),)
         self.total_connections = total_connections
         self.error_logger = error_logger
+        self.replay_id = replay_id
+
 
     def replay(self):
         """Worker process to distribute the work among several processes.  Each
@@ -51,8 +55,10 @@ class ReplayWorker:
         # Logging needs to be separately initialized so that the worker can log to a separate log file
         init_logging(
             f"replay_worker-{self.process_idx}",
+            dir = f"simplereplay_logs/replay_log-{self.replay_id}",
             logger_name="SimpleReplayWorkerLogger",
             level=self.config.get("log_level", "INFO"),
+            script_type=f"replay worker - {self.process_idx}"
         )
 
         # map thread to stats dict
