@@ -8,8 +8,8 @@ import traceback
 from queue import Empty
 
 from common.log import init_logging
-from connection_thread import ConnectionThread
-from stats import collect_stats, init_stats
+from core.replay.connection_thread import ConnectionThread
+from core.replay.stats import collect_stats, init_stats
 
 
 class ReplayWorker:
@@ -185,7 +185,7 @@ class ReplayWorker:
         except Exception as e:
             self.logger.error(f"Process {self.process_idx} threw exception: {e}")
             self.logger.debug("".join(traceback.format_exception(*sys.exc_info())))
-
+            
         if connections_processed:
             self.logger.debug(
                 f"Max connection offset for this process: {self.worker_stats['connection_diff_sec']:.3f} sec"

@@ -12,7 +12,7 @@ from pathlib import Path
 
 import sqlparse
 
-from prep import ReplayPrep
+from core.replay.prep import ReplayPrep
 from common.util import (
     db_connect,
     current_offset_ms,
