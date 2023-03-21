@@ -6,8 +6,8 @@ CORE_FOLDER = $(PWD)/core
 COMMON_FOLDER = $(PWD)/common
 CONFIG_FOLDER = $(PWD)/config
 REPLAY_DIR = $(PWD)/core/replay
-REPLAY_ANALYSIS_DIR = $(PWD)/tools/replay-analysis
-EXTERNAL_OBJECT_REPLICATOR_DIR = $(PWD)/tools/external-object-replicator
+REPLAY_ANALYSIS_DIR = $(PWD)/tools/ReplayAnalysis
+EXTERNAL_OBJECT_REPLICATOR_DIR = $(PWD)/tools/ExternalObjectReplicator
 
 
 
