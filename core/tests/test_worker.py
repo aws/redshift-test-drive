@@ -7,9 +7,7 @@ from core.replay.transactions_parser import Transaction, Query
 from core.replay.connections_parser import ConnectionLog
 from dateutil.tz import tzutc
 from queue import Empty
-from core.replay.connection_thread import ConnectionThread
 from core.replay.stats import init_stats
-import threading
 
 
 num_connections = MagicMock()
@@ -27,8 +25,8 @@ replay_start_time = datetime.datetime(
 process_idx = 0
 config = {
     "tag": "",
-    "workload_location": "test-location/test-sr-test_2023-01-23T09:46:24.784062+00:00",
-    "target_cluster_endpoint": "ra3-redshift-cluster-testing.cqm7bdu-testing.us-east-1.redshift.amazonaws.com:1111/dev",
+    "workload_location": "test-location",
+    "target_cluster_endpoint": "test.redshift.us-east-1.redshift.amazonaws.com:1111/dev",
     "target_cluster_region": "us-east-1",
     "master_username": "awsuser",
     "nlb_nat_dns": None,
@@ -55,37 +53,40 @@ config = {
 }
 total_connections = 1
 error_logger = "logger"
+replay_id = "test_replay_id"
 
+query = Query(
+    start_time=datetime.datetime(2023, 1, 9, 15, 48, 15, tzinfo=tzutc()),
+    end_time=datetime.datetime(2023, 1, 9, 15, 48, 15, tzinfo=tzutc()),
+    text="SET query_group='0000_create_user.ddl - IR-960eb458-9033-11ed-84bb-029845ae12cf.create-user.create-user.s0001.f0000.1.0';",
+)
 
-def mock_logger():
-    logger = logging.getLogger("SimpleReplayWorkerLogger")
-    return logger
+transaction = Transaction(
+    time_interval=True,
+    database_name="dev",
+    username="testuser",
+    pid="1073815778",
+    xid="2612671",
+    queries=query,
+    transaction_key="dev_testuser_1073815778",
+)
+
+connection = ConnectionLog(
+    session_initiation_time=1000,
+    disconnection_time=datetime.datetime(
+        2023, 1, 9, 15, 48, 15, 872000, tzinfo=datetime.timezone.utc
+    ),
+    application_name="",
+    database_name="dev",
+    username="testuser",
+    pid="1073815778",
+    time_interval_between_transactions=True,
+    time_interval_between_queries="all on",
+    connection_key="dev_testuser_1073815778",
+)
 
 
 class TestWorker(unittest.TestCase):
-    @patch("core.replay.worker.init_logging")
-    def test_replay_init_logging_call(self, mock_init_logging):
-        worker = ReplayWorker(
-            peak_connections,
-            num_connections,
-            connection_semaphore,
-            worker_stats,
-            queue,
-            first_event_time,
-            replay_start_time,
-            process_idx,
-            config,
-            total_connections,
-            error_logger,
-        )
-
-        worker.replay()
-
-        mock_init_logging.assert_called_once_with(
-            "replay_worker-1",
-            level="info",
-            logger_name="SimpleReplayWorkerLogger",
-        )
 
     @patch("core.replay.worker.threading")
     @patch.object(ConnectionLog, "offset_ms")
@@ -119,36 +120,6 @@ class TestWorker(unittest.TestCase):
         mock_thread.enumerate.return_value = [1, 1, 1]
         mock_thread.active_count.return_value = 1
 
-        query = Query(
-            start_time=datetime.datetime(2023, 1, 9, 15, 48, 15, tzinfo=tzutc()),
-            end_time=datetime.datetime(2023, 1, 9, 15, 48, 15, tzinfo=tzutc()),
-            text="SET query_group='0000_create_user.ddl - IR-960eb458-9033-11ed-84bb-029845ae12cf.create-user.create-user.s0001.f0000.1.0';",
-        )
-
-        transaction = Transaction(
-            time_interval=True,
-            database_name="dev",
-            username="testuser",
-            pid="1073815778",
-            xid="2612671",
-            queries=query,
-            transaction_key="dev_testuser_1073815778",
-        )
-
-        connection = ConnectionLog(
-            session_initiation_time=1000,
-            disconnection_time=datetime.datetime(
-                2023, 1, 9, 15, 48, 15, 872000, tzinfo=datetime.timezone.utc
-            ),
-            application_name="",
-            database_name="dev",
-            username="testuser",
-            pid="1073815778",
-            time_interval_between_transactions=True,
-            time_interval_between_queries="all on",
-            connection_key="dev_testuser_1073815778",
-        )
-
         connection.transactions = transaction
 
         mock_queue.get.side_effect = [{"job_id": 0, "connection": connection}, False]
@@ -167,6 +138,7 @@ class TestWorker(unittest.TestCase):
             config,
             total_connections,
             error_logger,
+            replay_id
         )
 
         worker.replay()
@@ -205,38 +177,6 @@ class TestWorker(unittest.TestCase):
         mock_conn_thread.start.return_value = True
         mock_init_stats.return_value = True
 
-        query = Query(
-            start_time=datetime.datetime(2023, 1, 9, 15, 48, 15, tzinfo=tzutc()),
-            end_time=datetime.datetime(2023, 1, 9, 15, 48, 15, tzinfo=tzutc()),
-            text="SET query_group='0000_create_user.ddl - IR-960eb458-9033-11ed-84bb-029845ae12cf.create-user.create-user.s0001.f0000.1.0';",
-        )
-
-        transaction = Transaction(
-            time_interval=True,
-            database_name="dev",
-            username="testuser",
-            pid="1073815778",
-            xid="2612671",
-            queries=query,
-            transaction_key="dev_testuser_1073815778",
-        )
-
-        connection = ConnectionLog(
-            session_initiation_time=datetime.datetime(
-                2023, 1, 9, 15, 48, 15, 313000, tzinfo=datetime.timezone.utc
-            ),
-            disconnection_time=datetime.datetime(
-                2023, 1, 9, 15, 48, 15, 872000, tzinfo=datetime.timezone.utc
-            ),
-            application_name="",
-            database_name="dev",
-            username="testuser",
-            pid="1073815778",
-            time_interval_between_transactions=True,
-            time_interval_between_queries="all on",
-            connection_key="dev_testuser_1073815778",
-        )
-
         connection.transactions = transaction
 
         mock_queue.get.side_effect = [False]
@@ -253,6 +193,7 @@ class TestWorker(unittest.TestCase):
             config,
             total_connections,
             error_logger,
+            replay_id
         )
 
         worker.replay()
@@ -296,41 +237,7 @@ class TestWorker(unittest.TestCase):
         mock_thread.active_count.return_value = 1
         mock_time.time.return_value = 10
         mock_acquire.acquire.return_value = True
-
-        connection_semaphore = mock_acquire
-
-        query = Query(
-            start_time=datetime.datetime(2023, 1, 9, 15, 48, 15, tzinfo=tzutc()),
-            end_time=datetime.datetime(2023, 1, 9, 15, 48, 15, tzinfo=tzutc()),
-            text="SET query_group='0000_create_user.ddl - IR-960eb458-9033-11ed-84bb-029845ae12cf.create-user.create-user.s0001.f0000.1.0';",
-        )
-
-        transaction = Transaction(
-            time_interval=True,
-            database_name="dev",
-            username="testuser",
-            pid="1073815778",
-            xid="2612671",
-            queries=query,
-            transaction_key="dev_testuser_1073815778",
-        )
-
-        connection = ConnectionLog(
-            session_initiation_time=1000,
-            disconnection_time=datetime.datetime(
-                2023, 1, 9, 15, 48, 15, 872000, tzinfo=datetime.timezone.utc
-            ),
-            application_name="",
-            database_name="dev",
-            username="testuser",
-            pid="1073815778",
-            time_interval_between_transactions=True,
-            time_interval_between_queries="all on",
-            connection_key="dev_testuser_1073815778",
-        )
-
         connection.transactions = transaction
-
         mock_queue.get.side_effect = [{"job_id": 0, "connection": connection}, False]
         replay_start_time = datetime.datetime(2023, 1, 1, 0, 0, 0)
         mock_offset_log.return_value = 3000
@@ -341,12 +248,13 @@ class TestWorker(unittest.TestCase):
             first_event_time,
             mock_queue,
             worker_stats,
-            connection_semaphore,
+            mock_acquire,
             num_connections(),
             peak_connections,
             config,
             total_connections,
             error_logger,
+            replay_id
         )
 
         worker.replay()
@@ -391,36 +299,6 @@ class TestWorker(unittest.TestCase):
         mock_thread.active_count.return_value = 1
         mock_time.time.side_effect = [200, 400]
 
-        query = Query(
-            start_time=datetime.datetime(2023, 1, 9, 15, 48, 15, tzinfo=tzutc()),
-            end_time=datetime.datetime(2023, 1, 9, 15, 48, 15, tzinfo=tzutc()),
-            text="SET query_group='0000_create_user.ddl - IR-960eb458-9033-11ed-84bb-029845ae12cf.create-user.create-user.s0001.f0000.1.0';",
-        )
-
-        transaction = Transaction(
-            time_interval=True,
-            database_name="dev",
-            username="testuser",
-            pid="1073815778",
-            xid="2612671",
-            queries=query,
-            transaction_key="dev_testuser_1073815778",
-        )
-
-        connection = ConnectionLog(
-            session_initiation_time=1000,
-            disconnection_time=datetime.datetime(
-                2023, 1, 9, 15, 48, 15, 872000, tzinfo=datetime.timezone.utc
-            ),
-            application_name="",
-            database_name="dev",
-            username="testuser",
-            pid="1073815778",
-            time_interval_between_transactions=True,
-            time_interval_between_queries="all on",
-            connection_key="dev_testuser_1073815778",
-        )
-
         connection.transactions = transaction
 
         mock_queue.get.side_effect = [Empty, Empty, False]
@@ -439,6 +317,7 @@ class TestWorker(unittest.TestCase):
             config,
             total_connections,
             error_logger,
+            replay_id
         )
 
         worker.replay()
@@ -478,36 +357,6 @@ class TestWorker(unittest.TestCase):
         mock_thread.enumerate.return_value = [1, 1, 1]
         mock_thread.active_count.return_value = 1
 
-        query = Query(
-            start_time=datetime.datetime(2023, 1, 9, 15, 48, 15, tzinfo=tzutc()),
-            end_time=datetime.datetime(2023, 1, 9, 15, 48, 15, tzinfo=tzutc()),
-            text="SET query_group='0000_create_user.ddl - IR-960eb458-9033-11ed-84bb-029845ae12cf.create-user.create-user.s0001.f0000.1.0';",
-        )
-
-        transaction = Transaction(
-            time_interval=True,
-            database_name="dev",
-            username="testuser",
-            pid="1073815778",
-            xid="2612671",
-            queries=query,
-            transaction_key="dev_testuser_1073815778",
-        )
-
-        connection = ConnectionLog(
-            session_initiation_time=1000,
-            disconnection_time=datetime.datetime(
-                2023, 1, 9, 15, 48, 15, 872000, tzinfo=datetime.timezone.utc
-            ),
-            application_name="",
-            database_name="dev",
-            username="testuser",
-            pid="1073815778",
-            time_interval_between_transactions=True,
-            time_interval_between_queries="all on",
-            connection_key="dev_testuser_1073815778",
-        )
-
         connection.transactions = transaction
 
         mock_queue.get.side_effect = [{"job_id": 0, "connection": connection}, False]
@@ -526,6 +375,7 @@ class TestWorker(unittest.TestCase):
             config,
             total_connections,
             error_logger,
+            replay_id
         )
 
         worker.replay()
@@ -540,38 +390,6 @@ class TestWorker(unittest.TestCase):
 
         mock_connection_thread.is_alive.return_value = False
         mock_connection_thread.join.return_value = True
-
-        query = Query(
-            start_time=datetime.datetime(2023, 1, 9, 15, 48, 15, tzinfo=tzutc()),
-            end_time=datetime.datetime(2023, 1, 9, 15, 48, 15, tzinfo=tzutc()),
-            text="SET query_group='0000_create_user.ddl - IR-960eb458-9033-11ed-84bb-029845ae12cf.create-user.create-user.s0001.f0000.1.0';",
-        )
-
-        transaction = Transaction(
-            time_interval=True,
-            database_name="dev",
-            username="testuser",
-            pid="1073815778",
-            xid="2612671",
-            queries=query,
-            transaction_key="dev_testuser_1073815778",
-        )
-
-        connection = ConnectionLog(
-            session_initiation_time=datetime.datetime(
-                2023, 1, 9, 15, 48, 15, 313000, tzinfo=datetime.timezone.utc
-            ),
-            disconnection_time=datetime.datetime(
-                2023, 1, 9, 15, 48, 15, 872000, tzinfo=datetime.timezone.utc
-            ),
-            application_name="",
-            database_name="dev",
-            username="testuser",
-            pid="1073815778",
-            time_interval_between_transactions=True,
-            time_interval_between_queries="all on",
-            connection_key="dev_testuser_1073815778",
-        )
 
         connection.transactions = transaction
 
@@ -592,27 +410,10 @@ class TestWorker(unittest.TestCase):
             config,
             total_connections,
             error_logger,
+            replay_id
         )
         connection_threads = {}
         thread_stats = init_stats({})
-        connection_thread = ConnectionThread(
-            process_idx=process_idx,
-            job_id=0,
-            connection_log=connection,
-            default_interface=config["default_interface"],
-            odbc_driver=config["odbc_driver"],
-            replay_start=replay_start_time,
-            first_event_time=first_event_time,
-            error_logger=error_logger,
-            thread_stats=0,
-            num_connections=num_connections,
-            peak_connections=peak_connections,
-            connection_semaphore=connection_semaphore,
-            perf_lock=threading.Lock(),
-            config=config,
-            total_connections=total_connections,
-        )
-        connection_thread.start()
         connection_threads[mock_connection_thread] = thread_stats
 
         length = worker.join_finished_threads(

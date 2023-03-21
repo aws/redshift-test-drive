@@ -16,7 +16,7 @@ from common.util import (
     is_serverless,
     CredentialsException,
 )
-from common.aws_service import get_secret
+from common.aws_service import get_secret, redshift_get_cluster_credentials
 
 logger = logging.getLogger("SimpleReplayLogger")
 
@@ -142,10 +142,12 @@ class ReplayPrep:
         odbc_driver = self.config["odbc_driver"]
 
         cluster_endpoint_split = cluster_endpoint.split(".")
-        cluster_id = cluster_endpoint_split[0]
+        cluster_id = f"redshift-serverless-{cluster_endpoint_split[0]}" if is_serverless(self.config) \
+            else cluster_endpoint_split[0]
+        cluster_region = self.config.get("target_cluster_region", cluster_endpoint_split[2])
 
         # Keeping NLB just for Serverless for now
-        if self.config["nlb_nat_dns"] is not None and is_serverless(self.config):
+        if self.config.get("nlb_nat_dns", None) is not None and is_serverless(self.config):
             cluster_host = self.config["nlb_nat_dns"]
         else:
             cluster_host = cluster_endpoint.split(":")[0]
@@ -165,123 +167,37 @@ class ReplayPrep:
             }
 
         response = None
-        db_user = None
-        db_password = None
-        secret_keys = ["admin_username", "admin_password"]
 
-        if is_serverless(self.config):
-            if self.config["secret_name"] is not None:
-                logger.info(f"Fetching secrets from: {self.config['secret_name']}")
-                secret_name = get_secret(
-                    self.config["secret_name"], self.config["target_cluster_region"]
-                )
-                if len(set(secret_keys) - set(secret_name.keys())) == 0:
-                    response = {
-                        "DbUser": secret_name["admin_username"],
-                        "DbPassword": secret_name["admin_password"],
-                    }
-                else:
-                    logger.error(f"Required secrets not found: {secret_keys}")
-                    exit(-1)
-            else:
-                # Using backward compatibility method to fetch user credentials for serverless workgroup
-                # rs_client = client('redshift-serverless', region_name=g_config.get("target_cluster_region", None))
-                rs_client = client(
-                    "redshift",
-                    region_name=self.config.get("target_cluster_region", None),
-                )
-                for attempt in range(1, max_attempts + 1):
-                    try:
-                        serverless_cluster_id = f"redshift-serverless-{cluster_id}"
-                        logger.debug(
-                            f"Serverless cluster id {serverless_cluster_id} passed to get_cluster_credentials"
-                        )
-                        response = rs_client.get_cluster_credentials(
-                            DbUser=username,
-                            ClusterIdentifier=serverless_cluster_id,
-                            AutoCreate=False,
-                            DurationSeconds=credentials_timeout_sec,
-                        )
-                    except rs_client.exceptions.ClientError as e:
-                        if e.response["Error"]["Code"] == "ExpiredToken":
-                            logger.error(
-                                f"Error retrieving credentials for {cluster_id}: IAM credentials have expired."
-                            )
-                            exit(-1)
-                        elif e.response["Error"]["Code"] == "ResourceNotFoundException":
-                            logger.error(
-                                f"Serverless endpoint could not be found "
-                                f"RedshiftServerless:GetCredentials. {e}"
-                            )
-                            exit(-1)
-                        else:
-                            logger.error(
-                                f"Got exception retrieving credentials ({e.response['Error']['Code']})"
-                            )
-                            raise e
-
-                    if response is None or response.get("DbPassword") is None:
-                        logger.warning(
-                            f"Failed to retrieve credentials for db {database} (attempt {attempt}/{max_attempts})"
-                        )
-                        logger.debug(response)
-                        response = None
-                        if attempt < max_attempts:
-                            time.sleep(retry_delay_sec)
-                    else:
-                        break
-                db_user = response["DbUser"]
-                db_password = response["DbPassword"]
-        else:
-            rs_client = self.boto3_session.client(
-                "redshift", region_name=self.config.get("target_cluster_region", None)
+        if is_serverless(self.config) and self.config.get("secret_name", None) is not None:
+            logger.info(f"Fetching secrets from: {self.config['secret_name']}")
+            secret_keys = ["admin_username", "admin_password"]
+            secret_name = get_secret(
+                self.config["secret_name"], self.config["target_cluster_region"]
             )
-            for attempt in range(1, max_attempts + 1):
-                try:
-                    response = rs_client.get_cluster_credentials(
-                        DbUser=username,
-                        ClusterIdentifier=cluster_id,
-                        AutoCreate=False,
-                        DurationSeconds=credentials_timeout_sec,
-                    )
-                except NoCredentialsError:
-                    raise CredentialsException("No credentials found")
-                except rs_client.exceptions.ClientError as e:
-                    if e.response["Error"]["Code"] == "ExpiredToken":
-                        logger.error(
-                            f"Error retrieving credentials for {cluster_id}: IAM credentials have expired."
-                        )
-                        exit(-1)
-                    else:
-                        logger.error(
-                            f"Got exception retrieving credentials ({e.response['Error']['Code']})"
-                        )
-                        raise e
-                except rs_client.exceptions.ClusterNotFoundFault:
-                    logger.error(
-                        f"Cluster {cluster_id} not found. Please confirm cluster endpoint, account, and region."
-                    )
-                    exit(-1)
-                except Exception as e:
-                    logger.error(f"Failed to get credentials, {e}")
-                    exit(-1)
-
-                if response is None or response.get("DbPassword") is None:
-                    logger.warning(
-                        f"Failed to retrieve credentials for user {username} (attempt {attempt}/{max_attempts})"
-                    )
-                    logger.debug(response)
-                    response = None
-                    if attempt < max_attempts:
-                        time.sleep(retry_delay_sec)
-                else:
-                    break
-            db_user = response["DbUser"]
-            db_password = response["DbPassword"]
+            if len(set(secret_keys) - set(secret_name.keys())) == 0:
+                response = {
+                    "DbUser": secret_name["admin_username"],
+                    "DbPassword": secret_name["admin_password"],
+                }
+            else:
+                logger.error(f"Required secrets not found: {secret_keys}")
+                exit(-1)
+        else:
+            response = redshift_get_cluster_credentials(
+                region=cluster_region,
+                user=username,
+                database_name=database,
+                cluster_id=cluster_id,
+                duration=credentials_timeout_sec,
+                auto_create=False
+            )
 
         if response is None:
             msg = f"Failed to retrieve credentials for {username}"
             raise CredentialsException(msg)
+
+        db_user = response["DbUser"]
+        db_password = response["DbPassword"]
 
         cluster_odbc_url = "Driver={}; Server={}; Database={}; IAM=1; DbUser={}; DbPassword={}; Port={}".format(
             odbc_driver,
