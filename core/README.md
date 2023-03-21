@@ -62,7 +62,7 @@ git clone https://github.com/awslabs/amazon-redshift-utils.git
 In Simple Replay root directory, you will find the file requirements.txt. Run the following command
 
 ```
-sudo pip3 install -r requirements.txt
+make setup
 ```
 
 2.5 Install ODBC Driver for Linux
@@ -129,7 +129,7 @@ This script extracts query and connection info from User Activity Log (audit) an
 Once the above configuration parameters are set in extraction.yaml, the workload from the source cluster can be extracted using the following command:
 
 ```
-python3 extract.py extract/extract.yaml
+make extract
 ```
 
 ### Output
@@ -228,7 +228,7 @@ Note: Setting up secrets manager is not required, but an optional step
 ### Command
 
 ```
-python3 replay.py replay.yaml
+make replay
 ```
 
 ### Output
