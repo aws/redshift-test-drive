@@ -88,7 +88,19 @@ def cw_describe_log_groups(log_group_name=None, region=None):
     if log_group_name:
         return cloudwatch_client.describe_log_groups(logGroupNamePrefix=log_group_name)
     else:
-        return cloudwatch_client.describe_log_groups()
+        response_pg_1 = cloudwatch_client.describe_log_groups()
+        logs = response_pg_1
+
+        if 'nextToken' in response_pg_1.keys():
+            token = response_pg_1['nextToken']
+            while token != '':
+                response_itr = cloudwatch_client.describe_log_groups(nextToken=token)
+                logs['logGroups'].extend(response_itr['logGroups'])
+                if 'nextToken' in response_itr.keys():
+                    token = response_itr['nextToken']
+                else:
+                    token = ''
+    return logs
 
 
 def cw_describe_log_streams(log_group_name, region):
