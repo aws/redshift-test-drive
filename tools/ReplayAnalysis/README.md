@@ -42,8 +42,21 @@ The start page of the interface will prompt users to provide the bucket location
 
 ### Web UI Output
 * Replay Analysis <br />
-The main feature of this section is the interaction.The user will be able to select a section of the throughput graph and have the tables for execution time and top running queries update to reflect the selection portion of the replays. The user will be able to filter the results in these tables by statement type (COPY, SELECT, INSERT, UPDATE, etc.) and by user.Additionally, this section will include tables that show the execution time metrics for each replay and the top 100 running queries. 
-
+The main feature of this section is the interaction.It displays following outputs:
+    * Compare Throughput <br />
+    It is a graph which showcases the number of queries executed per second. This data is filtered by the selected query types, users, and time range.
+    * Aggregated Metrics <br />
+    It is a table which displays the different percentiles of execution time, elapsed time, and queue time across selected replays. These values are representative of the selected query types, users, and time range.
+    * Query Latency <br />
+    It is a graph which displays the distribution of query latency.
+    * Longest Running Queries<br />
+    This section will include tables that show the execution time metrics for each replay and the top 100 running queries. 
 * Replay Validation <br />
-It is designed to give the customer more insight into the success and validity of a given replay. Validity is defined by success and error rates, the distribution of errors, and differences in data ingested. This section will include a stacked bar chart that shows the distribution of errors that occurred across each replay and allow insight into which errors occurred most frequently. It will also include tables that show the difference in ingestion for Spectrum and COPY.
+It is designed to give the customer more insight into the success and validity of a given replay.Validity is defined by success and error rates, the distribution of errors, and differences in data ingested.
+    * Query Errors <br />
+    Errors encountered across selected replays.
+    * Error Category Distribution <br />
+    This section will include a stacked bar chart that shows the distribution of errors that occurred across each replay and allow insight into which errors occurred most frequently.
+    * COPY Ingestion Metrics <br />
+    Aggregated execution metrics of COPY ingestion by replay.
 
