@@ -3,7 +3,7 @@ import sys
 import yaml
 import common.config as config_helper
 import common.log as log_helper
-from core.extract.extractor import Extractor
+import core.extract.extractor as extractor
 
 
 def main():
@@ -21,7 +21,7 @@ def main():
     )
     log_helper.log_version()
 
-    e = Extractor(config)
+    e = extractor.Extractor(config)
     if not e.load_driver():
         sys.exit("Failed to load driver")
 

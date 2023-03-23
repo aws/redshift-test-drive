@@ -18,9 +18,9 @@ from tqdm import tqdm
 from util import audit_logs_parsing as audit_log_parser
 from common import aws_service as aws_service_helper
 from util.log_validation import remove_line_comments
-from extract.cloudwatch_extractor import CloudwatchExtractor
-from extract.s3_extractor import S3Extractor
-from extract.local_extractor import LocalExtractor
+from core.extract.cloudwatch_extractor import CloudwatchExtractor
+from core.extract.s3_extractor import S3Extractor
+from core.extract.local_extractor import LocalExtractor
 
 logger = logging.getLogger("SimpleReplayLogger")
 
