@@ -91,12 +91,11 @@ def cw_describe_log_groups(log_group_name=None, region=None):
         response_pg_1 = cloudwatch_client.describe_log_groups()
         logs = response_pg_1
 
-        if 'nextToken' in response_pg_1.keys():
-            token = response_pg_1['nextToken']
-            while token != '':
-                response_itr = cloudwatch_client.describe_log_groups(nextToken=token)
-                logs['logGroups'].extend(response_itr['logGroups'])
-                token = response_itr['nextToken'] if 'nextToken' in response_itr.keys() else ''
+        token = response_pg_1.get('nextToken','')
+        while token != '':
+            response_itr = cloudwatch_client.describe_log_groups(nextToken=token)
+            logs['logGroups'].extend(response_itr['logGroups'])
+            token = response_itr['nextToken'] if 'nextToken' in response_itr.keys() else ''
     return logs
 
 
