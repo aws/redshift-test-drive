@@ -206,7 +206,7 @@ def later_pages(canvas, doc, report):
         4.25 * inch, 0.35 * inch, "Amazon Confidential and Trademark."
     )
     canvas.drawImage(
-        "resources/logo.png", 7 * inch, 0.25 * inch, width=80, height=45, mask=None
+        "core/replay/logo.png", 7 * inch, 0.25 * inch, width=80, height=45, mask=None
     )
     canvas.drawCentredString(4.25 * inch, 0.35 * inch, "Amazon Confidential and Trademark.")
     canvas.drawImage("core/replay/logo.png", 7 * inch, 0.25 * inch, width=80, height=45, mask=None)
