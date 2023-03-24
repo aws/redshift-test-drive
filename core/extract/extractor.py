@@ -16,11 +16,12 @@ from collections import OrderedDict
 from boto3 import client
 from tqdm import tqdm
 from util import audit_logs_parsing as audit_log_parser
-from common import aws_service as aws_service_helper
+from common import aws_service as aws_service_helper,util
 from util.log_validation import remove_line_comments
 from core.extract.cloudwatch_extractor import CloudwatchExtractor
 from core.extract.s3_extractor import S3Extractor
 from core.extract.local_extractor import LocalExtractor
+from tools.ExternalObjectReplicator.external_object_replicator import execute_stl_load_query
 
 logger = logging.getLogger("SimpleReplayLogger")
 
@@ -196,12 +197,15 @@ class Extractor:
             connections_file.close()
 
         # Save the replacements
+        (new_replacements) = self.get_copy_replacements() 
         logger.info(f"Exporting copy replacements to {output_directory}")
         replacements_string = (
             "Original location,Replacement location,Replacement IAM role\n"
         )
-        for bucket in replacements:
-            replacements_string += bucket + ",,\n"
+        replacements_location = self.config['replacement_copy_location']
+        replacement_iam_role=self.config['replacement_iam_location']
+        for bucket in new_replacements:
+            replacements_string += bucket + ','+ replacements_location + ','+ replacement_iam_role + "\n"
         if is_s3:
             aws_service_helper.s3_put_object(
                 replacements_string,
@@ -306,6 +310,21 @@ class Extractor:
             replacements,
             statements_to_be_avoided,
         )
+
+    def get_copy_replacements(self):
+       
+        replacements = set()
+        cluster_object= util.cluster_dict(self.config['source_cluster_endpoint'])
+        end_time = self.config['end_time']
+        start_time = self.config['start_time']
+        redshift_user = self.config['master_username']
+        (STL_LOAD_response,copy_objects_not_found,copy_source_location) = execute_stl_load_query(cluster_object, end_time,self.config, redshift_user, start_time)
+        for copy_record in  copy_source_location:
+            replacements.add(f"s3://{copy_record['source_bucket']}{copy_record['source_key']}")
+        return replacements
+
+
+
 
     def unload_system_table(
         self,
