@@ -258,18 +258,6 @@ class Extractor:
                     continue
 
                 query.text = remove_line_comments(query.text).strip()
-
-                if "copy " in query.text.lower() and "from 's3:" in query.text.lower():
-                    bucket = re.search(
-                        r"from 's3:\/\/[^']*", query.text, re.IGNORECASE
-                    ).group()[6:]
-                    replacements.add(bucket)
-                    query.text = re.sub(
-                        r"IAM_ROLE 'arn:aws:iam::\d+:role/\S+'",
-                        f" IAM_ROLE ''",
-                        query.text,
-                        flags=re.IGNORECASE,
-                    )
                 if "unload" in query.text.lower() and "to 's3:" in query.text.lower():
                     query.text = re.sub(
                         r"IAM_ROLE 'arn:aws:iam::\d+:role/\S+'",
