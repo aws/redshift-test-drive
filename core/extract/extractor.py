@@ -320,7 +320,7 @@ class Extractor:
         redshift_user = self.config['master_username']
         (STL_LOAD_response,copy_objects_not_found,copy_source_location) = execute_stl_load_query(cluster_object, end_time,self.config, redshift_user, start_time)
         for copy_record in  copy_source_location:
-            replacements.add(f"s3://{copy_record['source_bucket']}{copy_record['source_key']}")
+            replacements.add(f"s3://{copy_record['source_bucket']}/{copy_record['source_key'].rsplit('/', 1)[0]}/")
         return replacements
 
 
