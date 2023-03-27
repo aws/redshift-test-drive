@@ -1,18 +1,12 @@
 import unittest
 from unittest.mock import MagicMock, patch, mock_open, call
-from core.replay.connection_thread import ConnectionThread
+from core.replay.connection_thread import ConnectionThread, categorize_error, remove_comments, parse_error
 from core.replay.connections_parser import ConnectionLog
 from core.replay.transactions_parser import TransactionsParser, Transaction, Query
+import common.util
 import datetime
 import threading
 
-
-config_dict ={'tag': '', 'workload_location': 'test-location/Edited_10_Extraction_devsaba-sr-test_2023-01-23T09:46:24.784062+00:00',
-                     'target_cluster_endpoint': 'ra3-redshift-cluster-testing.cqm7bdujbnqz.us-east-1.redshift.amazonaws.com:5439/dev',
-                        'target_cluster_region': 'us-east-1', 'master_username': 'awsuser', 'nlb_nat_dns': None, 'odbc_driver': None,
-                         'default_interface': 'psql', 'time_interval_between_transactions': 'all on', 'time_interval_between_queries': 'all on',
-                          'execute_copy_statements': 'false', 'execute_unload_statements': 'false', 'replay_output': 's3://devsaba-sr-drill/replay',
-                           'analysis_output': 's3://devsaba-sr-drill/analysis','limit_concurrent_connections':'1'}
 
 open_mock = mock_open()
 open_mock_1 = mock_open(read_data="value\nanswer\n")
@@ -32,6 +26,15 @@ class TestConnectionThread(unittest.TestCase):
         global connection_log
         global conn_thread
         global transaction
+        global config_dict
+
+         
+        config_dict ={'tag': '', 'workload_location': 'test-location/Edited_10_Extraction_devsaba-sr-test_2023-01-23T09:46:24.784062+00:00',
+                     'target_cluster_endpoint': 'ra3-redshift-cluster-testing.cqm7bdujbnqz.us-east-1.redshift.amazonaws.com:5439/dev',
+                        'target_cluster_region': 'us-east-1', 'master_username': 'awsuser', 'nlb_nat_dns': None, 'odbc_driver': None,
+                         'default_interface': 'psql', 'time_interval_between_transactions': 'all on', 'time_interval_between_queries': 'all on',
+                          'execute_copy_statements': 'false', 'execute_unload_statements': 'false', 'replay_output': 's3://devsaba-sr-drill/replay',
+                           'analysis_output': 's3://devsaba-sr-drill/analysis','limit_concurrent_connections':'1','split_multi':'False'}
 
         connection_log = ConnectionLog(
             session_initiation_time=datetime.datetime(2023,2,1,10,0,0,0,tzinfo=datetime.timezone.utc),
@@ -68,7 +71,7 @@ class TestConnectionThread(unittest.TestCase):
             Query(
             start_time=datetime.datetime(2023, 2, 1, 10, 0, 45,0, tzinfo=datetime.timezone.utc),
             end_time=datetime.datetime(2023, 2, 1, 10, 0, 5,0, tzinfo=datetime.timezone.utc),
-            text="SET query_group='0000_create_user.ddl - IR-960eb458-9033-11ed-84bb-029845ae12cf.create-user.create-user.s0001.f0000.1.0';"
+            text="SET query_group='0000_create_user.ddl - IR-960eb458-9033-11ed-84bb-029845ae12cf.create-user.create-user.s0001.f0000.1.0'"
                 ),
             Query(
                 start_time=datetime.datetime(2023, 2, 1, 10, 45, 11, tzinfo=datetime.timezone.utc),
@@ -493,23 +496,314 @@ class TestConnectionThread(unittest.TestCase):
 
         value = conn_thread.get_tagged_sql(transaction[0].queries[0].text, conn_thread.process_idx, transaction[0], connection_log)
 
-        self.assertEqual(value,'/* {"xid": "272834", "query_idx": 1, "replay_start": "2023-02-01T09:45:00+00:00"} */ SET query_group=\'0000_create_user.ddl - IR-960eb458-9033-11ed-84bb-029845ae12cf.create-user.create-user.s0001.f0000.1.0\';')
+        self.assertEqual(value,'/* {"xid": "272834", "query_idx": 1, "replay_start": "2023-02-01T09:45:00+00:00"} */ SET query_group=\'0000_create_user.ddl - IR-960eb458-9033-11ed-84bb-029845ae12cf.create-user.create-user.s0001.f0000.1.0\'')
+   
+    @patch('core.replay.connection_thread.datetime')
+    @patch.object(ConnectionThread,'logger')
+    @patch.object(ConnectionThread,'save_query_stats')
+    @patch('core.replay.connection_thread.parse_error')
+    @patch.object(Query,'offset_ms') 
+    @patch.object(ConnectionThread,'get_tagged_sql')
+    @patch('core.replay.connection_thread.current_offset_ms')
+    def test_execute_transaction_query_execution_with_no_from_s3_or_to_s3(self, mock_current_offset_ms,mock_tagged_sql,mock_offset_ms,mock_parse_error,mock_save_stats,mock_log,mock_time):
 
-    # @patch.object(ConnectionThread,'get_tagged_sql')
-    # def test_execute_transaction(self, mock_tagged_sql):
+        mock_connection = MagicMock()
+        mock_cursor = MagicMock()
+        mock_cursor.close.return_value = True
+        mock_connection.close.return_value = True
+        mock_cursor.execute.side_effect = "True"
+        mock_connection.commit.return_value = mock_cursor
+        conn_thread.error_logger = []
+        mock_tagged_sql.return_value = '/* {"xid": "272834", "query_idx": 0, "replay_start": "2023-02-01T09:45:00+00:00"} */ begin;'
+        mock_offset_ms.return_value = 1000.05
+        mock_current_offset_ms.return_value = 1000
+        mock_parse_error.return_value = True
+        mock_save_stats.return_value = True
+        mock_time.datetime.now().__sub__().total_seconds.return_value = 4
 
-    #     mock_connection = MagicMock()
-    #     mock_connection.cursor.return_value = "Open"
-    #     conn_thread.error_logger = []
-    #     mock_tagged_sql.return_value = '/* {"xid": "272834", "query_idx": 0, "replay_start": "2023-02-01T09:45:00+00:00"} */ begin;'
-
-
-    #     query_patch = Query(
-    #         start_time=datetime.datetime(2023, 2, 1, 10, 0, 45,0, tzinfo=datetime.timezone.utc),
-    #         end_time=datetime.datetime(2023, 2, 1, 10, 0, 5,0, tzinfo=datetime.timezone.utc),
-    #         text="SET query_group='0000_create_user.ddl - IR-960eb458-9033-11ed-84bb-029845ae12cf.create-user.create-user.s0001.f0000.1.0';"
-    #             )
-    #     transaction[0].query = query_patch
-    #     print(transaction[0].query.text)
+        query_patch = [Query(
+            start_time=datetime.datetime(2023, 2, 1, 10, 0, 45,0, tzinfo=datetime.timezone.utc),
+            end_time=datetime.datetime(2023, 2, 1, 10, 0, 5,0, tzinfo=datetime.timezone.utc),
+            text="SET query_group='0000_create_user.ddl - IR-960eb458-9033-11ed-84bb-029845ae12cf.create-user.create-user.s0001.f0000.1.0';select 1;"
+                )]
+        transaction[0].queries = query_patch
         
-    #     conn_thread.execute_transaction(transaction[0],mock_connection)
+        conn_thread.execute_transaction(transaction[0],mock_connection)
+
+        mock_log.debug.assert_any_call("Executing [SET query_group='0000_create_user.ddl - IR-960eb458-9033-11e...] in 0.0 sec")
+        mock_log.debug.assert_any_call('Replayed DB=dev, USER=awsuser, PID=1073815777, XID:272834, Query: 1/1 (4 sec)')
+
+    @patch('core.replay.connection_thread.datetime')
+    @patch.object(ConnectionThread,'logger')
+    @patch.object(ConnectionThread,'save_query_stats')
+    @patch('core.replay.connection_thread.parse_error')
+    @patch.object(Query,'offset_ms') 
+    @patch.object(ConnectionThread,'get_tagged_sql')
+    @patch('core.replay.connection_thread.current_offset_ms')
+    def test_execute_transaction_query_execution_with_invalid_query(self, mock_current_offset_ms,mock_tagged_sql,mock_offset_ms,mock_parse_error,mock_save_stats,mock_log,mock_time):
+
+        mock_connection = MagicMock()
+        mock_cursor = MagicMock()
+        mock_cursor.close.return_value = True
+        mock_connection.close.return_value = True
+        mock_cursor.execute.side_effect = "True"
+        mock_connection.commit.return_value = mock_cursor
+        conn_thread.error_logger = []
+        mock_tagged_sql.return_value = '/* {"xid": "272834", "query_idx": 0, "replay_start": "2023-02-01T09:45:00+00:00"} */ begin;'
+        mock_offset_ms.return_value = 1000.05
+        mock_current_offset_ms.return_value = 1000
+        mock_parse_error.return_value = True
+        mock_save_stats.return_value = True
+        mock_time.datetime.now().__sub__().total_seconds.return_value = 3
+
+
+
+        query_patch = [Query(
+            start_time=datetime.datetime(2023, 2, 1, 10, 0, 45,0, tzinfo=datetime.timezone.utc),
+            end_time=datetime.datetime(2023, 2, 1, 10, 0, 5,0, tzinfo=datetime.timezone.utc),
+            text="select 1 from 's3:test-folder';"
+                )]
+        transaction[0].queries = query_patch
+        
+        conn_thread.execute_transaction(transaction[0],mock_connection)
+
+        mock_log.debug.assert_any_call('Replayed DB=dev, USER=awsuser, PID=1073815777, XID:272834, Query: 1/1 (3 sec)')
+
+    @patch('core.replay.connection_thread.datetime')
+    @patch.object(ConnectionThread,'logger')
+    @patch.object(ConnectionThread,'save_query_stats')
+    @patch('core.replay.connection_thread.parse_error')
+    @patch.object(Query,'offset_ms') 
+    @patch.object(ConnectionThread,'get_tagged_sql')
+    @patch('core.replay.connection_thread.current_offset_ms')
+    def test_execute_transaction_query_execution_with_copy_statement_true_from_s3(self, mock_current_offset_ms,mock_tagged_sql,mock_offset_ms,mock_parse_error,mock_save_stats,mock_log,mock_time):
+
+        mock_connection = MagicMock()
+        mock_cursor = MagicMock()
+        mock_cursor.close.return_value = True
+        mock_connection.close.return_value = True
+        mock_cursor.execute.side_effect = "True"
+        mock_connection.commit.return_value = mock_cursor
+        conn_thread.error_logger = []
+        mock_tagged_sql.return_value = '/* {"xid": "272834", "query_idx": 0, "replay_start": "2023-02-01T09:45:00+00:00"} */ select 1 from \'s3:test-folder\''
+        mock_offset_ms.return_value = 1000.05
+        mock_current_offset_ms.return_value = 1000
+        mock_parse_error.return_value = True
+        mock_save_stats.return_value = True
+        mock_time.datetime.now().__sub__().total_seconds.return_value = 2
+        conn_thread.config['execute_copy_statements'] = "true"
+        
+
+
+        query_patch = [Query(
+            start_time=datetime.datetime(2023, 2, 1, 10, 0, 45,0, tzinfo=datetime.timezone.utc),
+            end_time=datetime.datetime(2023, 2, 1, 10, 0, 5,0, tzinfo=datetime.timezone.utc),
+            text="select 1 from 's3:test-folder';"
+                )]
+        transaction[0].queries = query_patch
+        
+        conn_thread.execute_transaction(transaction[0],mock_connection)
+
+        mock_log.debug.assert_any_call('Replayed DB=dev, USER=awsuser, PID=1073815777, XID:272834, Query: 1/1 (2 sec)')
+
+
+    @patch('core.replay.connection_thread.datetime')
+    @patch.object(ConnectionThread,'logger')
+    @patch.object(ConnectionThread,'save_query_stats')
+    @patch('core.replay.connection_thread.parse_error')
+    @patch.object(Query,'offset_ms') 
+    @patch.object(ConnectionThread,'get_tagged_sql')
+    @patch('core.replay.connection_thread.current_offset_ms')
+    def test_execute_transaction_query_execution_with_unload_statement_true_to_s3(self, mock_current_offset_ms,mock_tagged_sql,mock_offset_ms,mock_parse_error,mock_save_stats,mock_log,mock_time):
+
+        mock_connection = MagicMock()
+        mock_cursor = MagicMock()
+        mock_cursor.close.return_value = True
+        mock_connection.close.return_value = True
+        mock_cursor.execute.side_effect = "True"
+        mock_connection.commit.return_value = mock_cursor
+        conn_thread.error_logger = []
+        mock_tagged_sql.return_value = '/* {"xid": "272834", "query_idx": 0, "replay_start": "2023-02-01T09:45:00+00:00"} */ select 1 to \'s3:test-folder\''
+        mock_offset_ms.return_value = 1000.05
+        mock_current_offset_ms.return_value = 1000
+        mock_parse_error.return_value = True
+        mock_save_stats.return_value = True
+        mock_time.datetime.now().__sub__().total_seconds.return_value = 1
+        conn_thread.config['execute_unload_statements'] = "true"
+
+
+        query_patch = [Query(
+            start_time=datetime.datetime(2023, 2, 1, 10, 0, 45,0, tzinfo=datetime.timezone.utc),
+            end_time=datetime.datetime(2023, 2, 1, 10, 0, 5,0, tzinfo=datetime.timezone.utc),
+            text="select 1 to 's3:test-folder';"
+                )]
+        transaction[0].queries = query_patch
+        
+        conn_thread.execute_transaction(transaction[0],mock_connection)
+
+        mock_log.debug.assert_any_call('Replayed DB=dev, USER=awsuser, PID=1073815777, XID:272834, Query: 1/1 (1 sec)')
+        self.assertEqual(conn_thread.thread_stats['query_success'], 1)
+        self.assertEqual(conn_thread.thread_stats['transaction_success'],1)
+
+    @patch.object(Transaction,'get_base_filename')
+    @patch('core.replay.connection_thread.datetime')
+    @patch.object(ConnectionThread,'logger')
+    @patch.object(ConnectionThread,'save_query_stats')
+    @patch('core.replay.connection_thread.parse_error')
+    @patch.object(Query,'offset_ms') 
+    @patch.object(ConnectionThread,'get_tagged_sql')
+    @patch('core.replay.connection_thread.current_offset_ms')
+    def test_execute_transaction_query_execution_with_exception(self, mock_current_offset_ms,mock_tagged_sql,mock_offset_ms,mock_parse_error,mock_save_stats,mock_log,mock_time,mock_filename):
+        mock_connection = MagicMock()
+        mock_cursor = MagicMock()
+        mock_cursor.close.return_value = True
+        mock_connection.commit.return_value = True
+        mock_cursor.execute.side_effect = AttributeError("'bool' object has no attribute 'execute'")
+        mock_connection.cursor.return_value = mock_cursor
+        conn_thread.error_logger = []
+        mock_tagged_sql.return_value = '/* {"xid": "272834", "query_idx": 0, "replay_start": "2023-02-01T09:45:00+00:00"} */ select 1 to \'s3:test-folder\''
+        mock_offset_ms.return_value = 1000.05
+        mock_current_offset_ms.return_value = 1000
+        mock_parse_error.return_value = True
+        mock_save_stats.return_value = True
+        mock_time.datetime.now().__sub__().total_seconds.return_value = 1
+        conn_thread.config['execute_unload_statements'] = "true"
+        mock_filename.return_value = 'dev-awsuser-1073815777-272834'
+
+
+        query_patch = [Query(
+            start_time=datetime.datetime(2023, 2, 1, 10, 0, 45,0, tzinfo=datetime.timezone.utc),
+            end_time=datetime.datetime(2023, 2, 1, 10, 0, 5,0, tzinfo=datetime.timezone.utc),
+            text="select 1 to 's3:test-folder';"
+                )]
+        transaction[0].queries = query_patch
+        
+        conn_thread.execute_transaction(transaction[0],mock_connection)
+
+        mock_log.debug.assert_any_call("Failed DB=dev, USER=awsuser, PID=1073815777, XID:272834, Query: 1/1: 'bool' object has no attribute 'execute'")
+        self.assertEqual(conn_thread.thread_stats['query_error'], 1)
+        self.assertEqual(conn_thread.thread_stats['transaction_error'],1)
+        self.assertEqual(conn_thread.thread_stats['transaction_error_log']['dev-awsuser-1073815777-272834'],[['/* {"xid": "272834", "query_idx": 0, "replay_start": "2023-02-01T09:45:00+00:00"} */ select 1 to \'s3:test-folder\'', "'bool' object has no attribute 'execute'"]])
+
+    @patch('core.replay.connection_thread.time')
+    @patch('core.replay.connection_thread.datetime')
+    @patch.object(ConnectionThread,'logger')
+    @patch.object(ConnectionThread,'save_query_stats')
+    @patch('core.replay.connection_thread.parse_error')
+    @patch.object(Query,'offset_ms') 
+    @patch.object(ConnectionThread,'get_tagged_sql')
+    @patch('core.replay.connection_thread.current_offset_ms')
+    def test_execute_transaction_query_execution_multi_statements(self, mock_current_offset_ms,mock_tagged_sql,mock_offset_ms,mock_parse_error,mock_save_stats,mock_log,mock_time,mock_timesleep):
+
+        mock_connection = MagicMock()
+        mock_cursor = MagicMock()
+        mock_cursor.close.return_value = True
+        mock_connection.close.return_value = True
+        mock_cursor.execute.side_effect = "True"
+        mock_connection.commit.return_value = mock_cursor
+        conn_thread.error_logger = []
+        mock_tagged_sql.return_value = '/* {"xid": "272834", "query_idx": 0, "replay_start": "2023-02-01T09:45:00+00:00"} */ begin;'
+        mock_offset_ms.return_value = 1011
+        mock_current_offset_ms.return_value = 1000
+        mock_parse_error.return_value = True
+        mock_save_stats.return_value = True
+        mock_time.datetime.now().__sub__().total_seconds.return_value = 4
+        conn_thread.config['split_multi'] = 'True'
+
+
+        query_patch = [Query(
+            start_time=datetime.datetime(2023, 2, 1, 10, 0, 45,0, tzinfo=datetime.timezone.utc),
+            end_time=datetime.datetime(2023, 2, 1, 10, 0, 5,0, tzinfo=datetime.timezone.utc),
+            text="SET query_group='0000_create_user.ddl - IR-960eb458-9033-11ed-84bb-029845ae12cf.create-user.create-user.s0001.f0000.1.0';select 1;"
+                )]
+        transaction[0].queries = query_patch
+        
+        conn_thread.execute_transaction(transaction[0],mock_connection)
+
+        mock_timesleep.sleep.assert_called_once_with(0.011)
+        self.assertEqual(transaction[0].queries[0].text,"begin;set query_group='0000_create_user.ddl - ir-960eb458-9033-11ed-84bb-029845ae12cf.create-user.create-user.s0001.f0000.1.0';select 1;commit;")
+        self.assertEqual(conn_thread.thread_stats['multi_statements'],1)
+        self.assertEqual(conn_thread.thread_stats['executed_queries'],4)
+        mock_log.debug.assert_any_call('Replayed DB=dev, USER=awsuser, PID=1073815777, XID:272834, Query: 1/1, Multistatement: 4/4 (4 sec)')
+
+class TestCategorizeError(unittest.TestCase):
+
+    def test_categorize_error_with_error(self):
+
+        err_code = '42601'
+
+        value = categorize_error(err_code)
+        self.assertEqual(value,"Syntax Error or Access Rule Violation")
+
+    def test_categorize_error_unknown_error(self):
+
+        err_code = '99601'
+
+        value = categorize_error(err_code)
+        self.assertEqual(value,"Uncategorized Error")
+
+    
+class TestRemoveComments(unittest.TestCase):
+
+    def setUp(self):
+        global string
+        string = "begin;create  /* 0000_create_user.ddl.0 !cf:ir-960eb458-9033-11ed-84bb-029845ae12cf.create-user.create-user.s0001.f0000.1.0:cf! */user rsperf password '***' createuser;commit;"
+    
+    def test_remove_comments(self):
+        
+        val = remove_comments(string)
+        
+        self.assertEqual(val,"begin;create  user rsperf password '***' createuser;commit;")
+
+
+class TestParseError(unittest.TestCase):
+
+    @patch('core.replay.connection_thread.categorize_error')
+    @patch('core.replay.connection_thread.remove_comments')
+    def test_parse_error(self,mock_query_text,mock_error):
+
+        mock_error.return_value = 'Syntax Error or Access Rule Violation'
+        mock_query_text.return_value = "begin;create  user rsperf password '***' createuser;commit;"
+        error = "{'S': 'ERROR', 'C': '42601', 'M': 'password must contain at least 8 characters', 'F': '../src/pg/src/backend/commands/user.c', 'L': '146', 'R': 'CheckPasswordFormat'}"
+        user = 'awsuser'
+        db = 'dev'
+        query_text = "begin;create  /* 0000_create_user.ddl.0 !cf:ir-960eb458-9033-11ed-84bb-029845ae12cf.create-user.create-user.s0001.f0000.1.0:cf! */user rsperf password '***' createuser;commit;"
+
+        err = parse_error(error,user,db,query_text)
+
+        self.assertEqual(err['code'],'42601')
+        self.assertEqual(err['message'],'password must contain at least 8 characters')
+        self.assertEqual(err['severity'],'ERROR')
+        self.assertEqual(err['category'],'Syntax Error or Access Rule Violation')
+    
+    @patch('core.replay.connection_thread.categorize_error')
+    @patch('core.replay.connection_thread.remove_comments')
+    def test_parse_error_with_value_D(self,mock_query_text,mock_error):
+
+        mock_error.return_value = 'Syntax Error or Access Rule Violation'
+        mock_query_text.return_value = "begin;create  user rsperf password '***' createuser;commit;"
+        error = "{'S': 'ERROR', 'C': '42601', 'M': 'password must contain at least 8 characters', 'F': '../src/pg/src/backend/commands/user.c', 'L': '146', 'R': 'CheckPasswordFormat','D':'context:this is a test; query: select 1;'}"
+        user = 'awsuser'
+        db = 'dev'
+        query_text = "begin;create  /* 0000_create_user.ddl.0 !cf:ir-960eb458-9033-11ed-84bb-029845ae12cf.create-user.create-user.s0001.f0000.1.0:cf! */user rsperf password '***' createuser;commit;"
+
+        err = parse_error(error,user,db,query_text)
+
+        self.assertEqual(err['detail'],'this is a test;')
+
+    # @patch('core.replay.connection_thread.str')
+    # @patch('core.replay.connection_thread.categorize_error')
+    # @patch('core.replay.connection_thread.remove_comments')
+    # def test_parse_error_with_value_D_exception(self,mock_query_text,mock_error,mock_split):
+
+    #     mock_error.return_value = 'Syntax Error or Access Rule Violation'
+    #     mock_query_text.return_value = "begin;create  user rsperf password '***' createuser;commit;"
+    #     mock_split.strip.side_effect = SyntaxError("there is an test error")
+    #     error = "{'S': 'ERROR', 'C': '42601', 'M': 'password must contain at least 8 characters', 'F': '../src/pg/src/backend/commands/user.c', 'L': '146', 'R': 'CheckPasswordFormat','D': 'context'}"
+    #     user = 'awsuser'
+    #     db = 'dev'
+    #     query_text = "begin;create  /* 0000_create_user.ddl.0 !cf:ir-960eb458-9033-11ed-84bb-029845ae12cf.create-user.create-user.s0001.f0000.1.0:cf! */user rsperf password '***' createuser;commit;"
+
+    #     err = parse_error(error,user,db,query_text)
+
+    #     self.assertEqual(err['detail'],'this is a test;')
