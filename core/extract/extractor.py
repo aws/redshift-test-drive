@@ -18,9 +18,10 @@ from tqdm import tqdm
 from util import audit_logs_parsing as audit_log_parser
 from common import aws_service as aws_service_helper
 from util.log_validation import remove_line_comments
-from extract.cloudwatch_extractor import CloudwatchExtractor
-from extract.s3_extractor import S3Extractor
-from extract.local_extractor import LocalExtractor
+from core.extract.cloudwatch_extractor import CloudwatchExtractor
+from core.extract.s3_extractor import S3Extractor
+from core.extract.local_extractor import LocalExtractor
+
 
 logger = logging.getLogger("SimpleReplayLogger")
 
@@ -152,18 +153,18 @@ class Extractor:
             aws_service_helper.s3_upload(archive_filename, bucket_name, dest)
 
         # save the statements which will not be replayed
-        with open("statements_to_be_avoided.txt", "wb") as file:
-            file.write(
-                json.dumps(list(statements_to_be_avoided), indent=2).encode("utf-8")
-            )
-
-        if is_s3:
-            dest = output_prefix + "/statemnts_not_replayed.txt"
-            logger.info(f"Transferring all the statements not replayed  to {dest}")
-            aws_service_helper.s3_upload(
-                "statements_to_be_avoided.txt", bucket_name, dest
-            )
-
+        if len(statements_to_be_avoided)>0:
+            with open("external_statements_avoided.txt", "wb") as file:
+                file.write(
+                    json.dumps(list(statements_to_be_avoided), indent=2).encode("utf-8")
+                )
+            if is_s3:
+                dest = output_prefix + "/external_statements_avoided.txt"
+                logger.info(f"Transferring all the statements not replayed  to {dest}")
+                aws_service_helper.s3_upload(
+                    "external_statements_avoided.txt", bucket_name, dest
+                )
+                
         logger.info(
             f"Generating {len(missing_audit_log_connections)} missing connections."
         )
@@ -201,8 +202,10 @@ class Extractor:
         replacements_string = (
             "Original location,Replacement location,Replacement IAM role\n"
         )
+        replacements_location = self.config['replacement_copy_location']
+        replacement_iam_role=self.config['replacement_iam_location']
         for bucket in replacements:
-            replacements_string += bucket + ",,\n"
+            replacements_string += bucket + ','+ replacements_location + ','+ replacement_iam_role + "\n"
         if is_s3:
             aws_service_helper.s3_put_object(
                 replacements_string,
