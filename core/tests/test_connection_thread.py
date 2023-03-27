@@ -9,7 +9,7 @@ import threading
 
 
 open_mock = mock_open()
-open_mock_1 = mock_open(read_data="value\nanswer\n")
+
 
 def mock_execute_transactions(self,connection):
     return True
@@ -98,7 +98,7 @@ class TestConnectionThread(unittest.TestCase):
     @patch.object(ConnectionThread,'execute_transactions',mock_execute_transactions)
     @patch('core.replay.connection_thread.db_connect')
     @patch('core.replay.connection_thread.ReplayPrep')
-    def test_initiate_connection_along_with_run_test_1_connection_true(self,mock_ReplayPrep,mock_dbconnect,mock_offset,mock_log,mock_time):
+    def test_initiate_connection_along_with_run_test_connection_true(self,mock_ReplayPrep,mock_dbconnect,mock_offset,mock_log,mock_time):
 
         mock_conn = MagicMock()
         mock_conn.close.return_value = True
@@ -123,7 +123,7 @@ class TestConnectionThread(unittest.TestCase):
     @patch.object(ConnectionThread,'execute_transactions',mock_execute_transactions)
     @patch('core.replay.connection_thread.db_connect')
     @patch('core.replay.connection_thread.ReplayPrep')
-    def test_initiate_connection_along_with_run_test_2_connection_false(self,mock_ReplayPrep,mock_dbconnect,mock_offset,mock_time,mock_log):
+    def test_initiate_connection_along_with_run_test_connection_false(self,mock_ReplayPrep,mock_dbconnect,mock_offset,mock_time,mock_log):
         
         mock_ReplayPrep.get_connection_credentials.return_value = True
         mock_dbconnect.return_value = None
@@ -143,7 +143,7 @@ class TestConnectionThread(unittest.TestCase):
     @patch.object(ConnectionThread,'execute_transactions',mock_execute_transactions)
     @patch('core.replay.connection_thread.db_connect')
     @patch('core.replay.connection_thread.ReplayPrep')
-    def test_initiate_connection_along_with_run_test_3_run_except_clause(self,mock_ReplayPrep,mock_dbconnect,mock_offset,mock_log,mock_time):
+    def test_initiate_connection_along_with_run_test_run_except_clause(self,mock_ReplayPrep,mock_dbconnect,mock_offset,mock_log,mock_time):
         
         mock_ReplayPrep.get_connection_credentials.return_value = True
         mock_dbconnect.return_value = True
@@ -161,7 +161,7 @@ class TestConnectionThread(unittest.TestCase):
     @patch.object(ConnectionThread,'execute_transactions',mock_execute_transactions)
     @patch('core.replay.connection_thread.db_connect')
     @patch('core.replay.connection_thread.ReplayPrep.get_connection_credentials')
-    def test_initiate_connection_along_with_run_test_4_credentials_except(self,mock_ReplayPrep,mock_dbconnect,mock_offset,mock_log,mock_time):
+    def test_initiate_connection_along_with_run_test_credentials_except(self,mock_ReplayPrep,mock_dbconnect,mock_offset,mock_log,mock_time):
         
         mock_ReplayPrep.return_value = {'password':'123'}
         mock_dbconnect.side_effect = ImportError
@@ -178,7 +178,7 @@ class TestConnectionThread(unittest.TestCase):
     @patch.object(ConnectionThread,'execute_transactions',mock_execute_transactions)
     @patch('core.replay.connection_thread.db_connect')
     @patch('core.replay.connection_thread.ReplayPrep.get_connection_credentials')
-    def test_initiate_connection_along_with_run_test_5_semaphore_true(self,mock_ReplayPrep,mock_dbconnect,mock_offset,mock_log):
+    def test_initiate_connection_along_with_run_test_semaphore_true(self,mock_ReplayPrep,mock_dbconnect,mock_offset,mock_log):
 
         mock_conn = MagicMock()
         mock_conn.close.return_value = True
@@ -204,7 +204,7 @@ class TestConnectionThread(unittest.TestCase):
     @patch.object(ConnectionThread,'execute_transactions',mock_execute_transactions)
     @patch('core.replay.connection_thread.db_connect')
     @patch('core.replay.connection_thread.ReplayPrep')
-    def test_initiate_connection_along_with_run_test_6_application_name_given(self,mock_ReplayPrep,mock_dbconnect,mock_offset,mock_log):
+    def test_initiate_connection_along_with_run_test_application_name_given(self,mock_ReplayPrep,mock_dbconnect,mock_offset,mock_log):
 
         mock_conn = MagicMock()
         mock_conn.close.return_value = True
@@ -225,7 +225,7 @@ class TestConnectionThread(unittest.TestCase):
     @patch.object(ConnectionThread,'execute_transactions',mock_execute_transactions)
     @patch('core.replay.connection_thread.db_connect')
     @patch('core.replay.connection_thread.ReplayPrep')
-    def test_initiate_connection_along_with_run_test_7_application_odbc(self,mock_ReplayPrep,mock_dbconnect,mock_offset,mock_log):
+    def test_initiate_connection_along_with_run_test_application_odbc(self,mock_ReplayPrep,mock_dbconnect,mock_offset,mock_log):
 
         mock_conn = MagicMock()
         mock_conn.close.return_value = True
@@ -251,7 +251,7 @@ class TestConnectionThread(unittest.TestCase):
     @patch.object(ConnectionThread,'execute_transactions',mock_execute_transactions)
     @patch('core.replay.connection_thread.db_connect')
     @patch('core.replay.connection_thread.ReplayPrep')
-    def test_initiate_connection_along_with_run_test_8_odbc_drive_none(self,mock_ReplayPrep,mock_dbconnect,mock_offset,mock_log):
+    def test_initiate_connection_along_with_run_test_odbc_drive_none(self,mock_ReplayPrep,mock_dbconnect,mock_offset,mock_log):
 
         mock_conn = MagicMock()
         mock_conn.close.return_value = True
@@ -272,7 +272,7 @@ class TestConnectionThread(unittest.TestCase):
 
     @patch.object(Transaction,'start_time')
     @patch.object(ConnectionThread,'execute_transaction',mock_execute_transaction)
-    def test_execute_transactions_1_first_if_in_loop(self,mock_time):
+    def test_execute_transactions_first_if_in_loop(self,mock_time):
 
         mock_num_connections = MagicMock()
         mock_num_connections.return_value.value = 1
@@ -286,7 +286,7 @@ class TestConnectionThread(unittest.TestCase):
     @patch.object(Transaction,'end_time')
     @patch.object(Transaction,'start_time')
     @patch.object(ConnectionThread,'execute_transaction',mock_execute_transaction)
-    def test_execute_transactions_2_first_else_in_loop(self,mock_start_time,mock_end_time):
+    def test_execute_transactions_first_else_in_loop(self,mock_start_time,mock_end_time):
 
         mock_num_connections = MagicMock()
         mock_num_connections.return_value.value = 1
@@ -303,7 +303,7 @@ class TestConnectionThread(unittest.TestCase):
     @patch.object(Transaction,'start_time')
     @patch.object(ConnectionThread,'logger')
     @patch.object(ConnectionThread,'execute_transaction',mock_execute_transaction)
-    def test_execute_transactions_3_second_if_in_loop(self,mock_log,mock_start_time,mock_end_time):
+    def test_execute_transactions_second_if_in_loop(self,mock_log,mock_start_time,mock_end_time):
 
         mock_num_connections = MagicMock()
         mock_num_connections.return_value.value = 1
@@ -385,7 +385,7 @@ class TestConnectionThread(unittest.TestCase):
         mock_log.warning.assert_called()
 
     @patch.object(ConnectionThread,'execute_transaction',mock_execute_transaction)
-    def test_execute_transactions_4_outer_else(self):
+    def test_execute_transactions_outer_else(self):
 
         mock_num_connections = MagicMock()
         mock_num_connections.return_value.value = 1
@@ -471,25 +471,26 @@ class TestConnectionThread(unittest.TestCase):
         
         open_mock.assert_has_calls(calls, any_order=True)
 
-    # @patch('core.replay.connection_thread.open')
-    # @patch('core.replay.connection_thread.Path')
-    # def test_save_query_stats_fp_not_zero(self,mock_path,open_mock):
+    @patch('core.replay.connection_thread.open')
+    @patch('core.replay.connection_thread.Path')
+    def test_save_query_stats_fp_not_zero(self,mock_path,op_mock):
 
-    #     conn_thread.perf_lock = threading.Lock()
-    #     mock_path.mkdir.return_value = "value"
-        
-    #     open_mock = mock_open(read_data='hello\nI am pc\n')
+        conn_thread.perf_lock = threading.Lock()
+        mock_path.mkdir.return_value = "value"
+        mock_fp = MagicMock()
+        op_mock.return_value.__enter__.return_value = mock_fp
+        mock_fp.tell.return_value = 0
 
-    #     conn_thread.save_query_stats(datetime.datetime(2023,2,1,10,0,0,0,tzinfo=datetime.timezone.utc),
-    #                                  datetime.datetime(2023,2,1,10,0,4,0, tzinfo=datetime.timezone.utc),1,2)
+        conn_thread.save_query_stats(datetime.datetime(2023,2,1,10,0,0,0,tzinfo=datetime.timezone.utc),
+                                     datetime.datetime(2023,2,1,10,0,4,0, tzinfo=datetime.timezone.utc),1,2)
 
-    #     calls = [call('simplereplay_logs/2023-02-01T09:45:00+00:00/1_times.csv',"a+"),
-    #              call().__enter__(),
-    #              call().tell(),
-    #              call().write('1,1-2,2023-02-01 10:00:00+00:00,2023-02-01 10:00:04+00:00,4.000000,0\n'),
-    #              call().__exit__(None,None,None)]
-    #     print(open_mock.mock_calls)
-        # open_mock.assert_has_calls(calls, any_order=True)
+        calls = [call('simplereplay_logs/2023-02-01T09:45:00+00:00/1_times.csv',"a+"),
+                 call().__enter__(),
+                 call().__enter__().tell(),
+                 call().__enter__().write('# process,query,start_time,end_time,elapsed_sec,rows\n'),
+                 call().__enter__().write('1,1-2,2023-02-01 10:00:00+00:00,2023-02-01 10:00:04+00:00,4.000000,0\n'),
+                 call().__exit__(None,None,None)]
+        op_mock.assert_has_calls(calls, any_order=True)
 
     
     def test_get_tagged_sql(self):
@@ -790,20 +791,3 @@ class TestParseError(unittest.TestCase):
         err = parse_error(error,user,db,query_text)
 
         self.assertEqual(err['detail'],'this is a test;')
-
-    # @patch('core.replay.connection_thread.str')
-    # @patch('core.replay.connection_thread.categorize_error')
-    # @patch('core.replay.connection_thread.remove_comments')
-    # def test_parse_error_with_value_D_exception(self,mock_query_text,mock_error,mock_split):
-
-    #     mock_error.return_value = 'Syntax Error or Access Rule Violation'
-    #     mock_query_text.return_value = "begin;create  user rsperf password '***' createuser;commit;"
-    #     mock_split.strip.side_effect = SyntaxError("there is an test error")
-    #     error = "{'S': 'ERROR', 'C': '42601', 'M': 'password must contain at least 8 characters', 'F': '../src/pg/src/backend/commands/user.c', 'L': '146', 'R': 'CheckPasswordFormat','D': 'context'}"
-    #     user = 'awsuser'
-    #     db = 'dev'
-    #     query_text = "begin;create  /* 0000_create_user.ddl.0 !cf:ir-960eb458-9033-11ed-84bb-029845ae12cf.create-user.create-user.s0001.f0000.1.0:cf! */user rsperf password '***' createuser;commit;"
-
-    #     err = parse_error(error,user,db,query_text)
-
-    #     self.assertEqual(err['detail'],'this is a test;')
