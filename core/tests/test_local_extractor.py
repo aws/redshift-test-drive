@@ -8,7 +8,7 @@ class LocalExtractorTestCases(unittest.TestCase):
     def test_extract_locally(self):
         with patch("os.listdir") as mock_list_dir:
             with patch("gzip.open") as mock_gzip_open:
-                with patch("extract.extract_parser.parse_log") as mock_parse_log:
+                with patch("core.extract.extract_parser.parse_log") as mock_parse_log:
                     mock_list_dir.return_value = [
                         "start_node.log.gz",
                         "useractivity.log.gz",
