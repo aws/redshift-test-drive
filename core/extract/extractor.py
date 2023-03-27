@@ -202,10 +202,8 @@ class Extractor:
         replacements_string = (
             "Original location,Replacement location,Replacement IAM role\n"
         )
-        replacements_location = self.config['replacement_copy_location']
-        replacement_iam_role=self.config['replacement_iam_location']
         for bucket in replacements:
-            replacements_string += bucket + ','+ replacements_location + ','+ replacement_iam_role + "\n"
+            replacements_string += bucket + ','+ self.config['replacement_copy_location'] + ','+ self.config['replacement_iam_location'] + "\n"
         if is_s3:
             aws_service_helper.s3_put_object(
                 replacements_string,
