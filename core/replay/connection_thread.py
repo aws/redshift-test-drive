@@ -259,13 +259,13 @@ class ConnectionThread(threading.Thread):
             if time_until_start_ms > 10:
                 time.sleep(time_until_start_ms / 1000.0)
 
-            if self.config.get("split_multi", True):
+            if self.config.get("split_multi", "true").lower() == "true":
                 formatted_query = query.text.lower()
                 if not formatted_query.startswith(("begin", "start")):
                     query_begin = "begin;" + formatted_query
                 if not formatted_query.endswith(("commit", "end")):
-                    query = query_begin + "commit;"
-                split_statements = sqlparse.split(query)
+                    query.text = query_begin + "commit;"
+                split_statements = sqlparse.split(query.text)
                 split_statements = [_ for _ in split_statements if _ != ";"]
             else:
                 split_statements = [query.text]
@@ -441,18 +441,14 @@ def parse_error(error, user, db, query_text):
 
     if "D" in raw_error_string:
         detail_string = raw_error_string["D"]
-        try:
-            detail = (
-                detail_string[
-                    detail_string.find("context:") : detail_string.find("query")
-                ]
-                .split(":", maxsplit=1)[-1]
-                .strip()
-            )
-            err_entry["detail"] = detail
-        except Exception as e:
-            print(e)
-            err_entry["detail"] = ""
+        detail = (
+            detail_string[
+                detail_string.find("context:") : detail_string.find("query")
+            ]
+            .split(":", maxsplit=1)[-1]
+            .strip()
+        )
+        err_entry["detail"] = detail
 
     err_entry["code"] = raw_error_string["C"]
     err_entry["message"] = raw_error_string["M"]
