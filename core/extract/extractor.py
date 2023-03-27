@@ -154,15 +154,15 @@ class Extractor:
 
         # save the statements which will not be replayed
         if len(statements_to_be_avoided)>0:
-            with open("external_statements_avoided.txt", "wb") as file:
+            with open("sql_statements_skipped.txt", "wb") as file:
                 file.write(
                     json.dumps(list(statements_to_be_avoided), indent=2).encode("utf-8")
                 )
             if is_s3:
-                dest = output_prefix + "/external_statements_avoided.txt"
+                dest = output_prefix + "/sql_statements_skipped.txt"
                 logger.info(f"Transferring all the statements not replayed  to {dest}")
                 aws_service_helper.s3_upload(
-                    "external_statements_avoided.txt", bucket_name, dest
+                    "sql_statements_skipped.txt", bucket_name, dest
                 )
                 
         logger.info(
