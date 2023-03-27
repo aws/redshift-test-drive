@@ -62,7 +62,7 @@ git clone https://github.com/awslabs/amazon-redshift-utils.git
 In Simple Replay root directory, you will find the file requirements.txt. Run the following command
 
 ```
-sudo pip3 install -r requirements.txt
+make setup
 ```
 
 2.5 Install ODBC Driver for Linux
@@ -129,7 +129,7 @@ This script extracts query and connection info from User Activity Log (audit) an
 Once the above configuration parameters are set in extraction.yaml, the workload from the source cluster can be extracted using the following command:
 
 ```
-python3 extract.py extract/extract.yaml
+make extract
 ```
 
 ### Output
@@ -171,6 +171,13 @@ Takes an extracted workload and replays it against a target cluster. Target clus
     * Specify the value in ```nlb_nat_dns```
     * Value still must be provided for ```target_cluster_endpoint```
 * One can optionally setup Secrets Manager which maps all individual users from extract to a single admin user. See "Setting up Secrets Manager" section for detailed steps.
+
+### Replay for generating Analysis Report 
+
+Replay also supports generation of pdf reports which enhances auditing in the Simple Replay process to extract information about the errors that occurred, the validity of the run, and the performance of the replay.
+
+
+
 
 #### Authorizing Access to Redshift using AWS Secrets Manager 
 Follow below steps to setup the integration between Simple Replay and AWS Secrets Manager. It can also be used to execute workloads which rely on Redshift's native IDP integration with non-IAM identity providers ( https://docs.aws.amazon.com/redshift/latest/mgmt/redshift-iam-access-control-native-idp.html )
@@ -221,7 +228,7 @@ Note: Setting up secrets manager is not required, but an optional step
 ### Command
 
 ```
-python3 replay.py replay.yaml
+make replay
 ```
 
 ### Output
@@ -229,60 +236,15 @@ python3 replay.py replay.yaml
 * Any errors from replay will be saved to workload_location provided in the `replay.yaml`
 * Any output from UNLOADs will be saved to the replay_output provided in the `replay.yaml`
 * Any system tables logs will be saved to the replay_output provided in the `replay.yaml`
-
-## Replay Analysis 
-
-Replay Analysis utility enhances auditing in the Simple Replay process to extract information about the errors that occurred, the validity of the run, and the performance of the replay.
-
-This is also a user interface in which customers can choose multiple replays to analyze, validate, and compare using the extracted audit logs.
-
-### Running Replay Analysis utility
-
-To execute replay analysis utility, the following two parameters must be specified in the replay.yaml
-
-* analysis_output 
-* analysis_iam_role
-
-### Prerequisites
-
-Only requirement to run Replay Analysis is to have Node.js pre installed
-
-### Command
-To run the utility, run the following command
-
-```
-python3 replay_analysis.py
-````
-The script will automatically install the required node modules and will start the front and back end.
-
-This will automatically open the webpage in the default browser.
-
-### Additional arguments
-
-| Command   | Description |
-| ----------- | ----------- |
-| `python3 replay_analysis.py --bucket s3bucket`      | This command lists all the replays in the bucket       |
-| `python3 replay_analysis.py --bucket s3bucket --replay_id1 replayid`   |   This command provides the output of each individual replay by providing the pre-signed urls   |
-| `python3 replay_analysis.py --bucket s3bucket --replay_id1 replayid --sql`   | This command provides links to each of the raw data files unloaded from Redshift   |
-
-Alternate shorthand notations for the arguments  
-| Argument     | Notation |
-| ----------- | ----------- |
-| `--bucket`      |  `-b`      |
-| `--replay_id1`   | `-r1`       |
-| `--sql`   | `-s`       |
-
-### Output
-Once the replay is executed, Replay will create an analysis folder in the s3 location specified in the analysis output.\
-The folder structure is as follows
-
-* out
-  - info.json: Cluster id, run start time, run end time, instance type, node count
-  - replayid_report.pdf  
-* raw_data
-  - raw csv files containing UNLOADed data
-* aggregated_data
-  - formatted csv files as the data appears in the report
+* The analysis report will be saved to the analysis_output under analysis folder on s3
+The analysis folder structure is as follows :
+   * out
+      - info.json: Cluster id, run start time, run end time, instance type, node count
+     - replayid_report.pdf  
+  * raw_data
+    - raw csv files containing UNLOADed data
+  * aggregated_data
+    - formatted csv files as the data appears in the report
 <br>
 <br>
 
