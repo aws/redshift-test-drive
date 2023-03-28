@@ -7,7 +7,7 @@ from boto3 import client
 
 from common.util import matches_filters
 
-logger = logging.getLogger("SimpleReplayLogger")
+logger = logging.getLogger("WorkloadReplicatorLogger")
 
 
 def parse_connections(

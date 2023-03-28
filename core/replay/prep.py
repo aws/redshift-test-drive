@@ -18,7 +18,7 @@ from common.util import (
 )
 from common.aws_service import get_secret, redshift_get_cluster_credentials
 
-logger = logging.getLogger("SimpleReplayLogger")
+logger = logging.getLogger("WorkloadReplicatorLogger")
 
 
 # exception thrown if any filters are invalid

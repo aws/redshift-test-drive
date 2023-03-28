@@ -6,7 +6,7 @@ import logging
 import boto3
 from botocore.exceptions import ClientError
 
-logger = logging.getLogger("SimpleReplayLogger")
+logger = logging.getLogger("WorkloadReplicatorLogger")
 
 
 def redshift_describe_logging_status(source_cluster_endpoint):

@@ -72,9 +72,9 @@ def main():
     log_helper.init_logging(
         "replay.log",
         dir=f"core/logs/replay/",
-        level = level,
-        preamble = yaml.dump(g_config),
-        backup_count = g_config.get("backup_count", 2),
+        level=level,
+        preamble=yaml.dump(g_config),
+        backup_count=g_config.get("backup_count", 2),
         script_type='replay',
     )
     log_helper.log_version()

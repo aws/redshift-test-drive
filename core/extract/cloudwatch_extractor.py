@@ -84,7 +84,7 @@ class CloudwatchExtractor:
                         )
                         continue
 
-                    with tempfile.TemporaryDirectory(suffix="SimpleReplay") as tempdir:
+                    with tempfile.TemporaryDirectory(suffix="TestDrive") as tempdir:
                         with gzip.open(f"{tempdir}/{log_type}.gz", "wt") as gzip_file:
                             gzip_file.write("\n".join(log_list))
 

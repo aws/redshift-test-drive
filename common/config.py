@@ -6,7 +6,7 @@ import yaml
 import sys
 from dateutil import parser
 
-logger = logging.getLogger("SimpleReplayLogger")
+logger = logging.getLogger("WorkloadReplicatorLogger")
 
 
 def get_config_file_from_args():

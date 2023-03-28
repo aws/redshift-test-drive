@@ -43,5 +43,5 @@ external_schemas: ""
 # Set the amount of logging
 log_level: info
 
-# Number of simplereplay logfiles to maintain
+# Number of TestDrive logfiles to maintain
 backup_count: 1

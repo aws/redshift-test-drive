@@ -108,7 +108,7 @@ class TestWorker(unittest.TestCase):
         mock_thread,
     ):
         mock_queue = MagicMock()
-        mock_log.debug.return_value = logging.getLogger("SimpleReplayWorkerLogger")
+        mock_log.debug.return_value = logging.getLogger("WorkloadReplicatorWorkerLogger")
 
         mock_init_logging.return_value = True
         mock_finished_thread.return_value = True
@@ -170,7 +170,7 @@ class TestWorker(unittest.TestCase):
         mock_init_stats,
     ):
         mock_queue = MagicMock()
-        mock_log.debug.return_value = logging.getLogger("SimpleReplayWorkerLogger")
+        mock_log.debug.return_value = logging.getLogger("WorkloadReplicatorWorkerLogger")
 
         mock_init_logging.return_value = True
         mock_finished_thread.return_value = True
@@ -224,7 +224,7 @@ class TestWorker(unittest.TestCase):
     ):
         mock_queue = MagicMock()
         mock_acquire = MagicMock()
-        mock_log.debug.return_value = logging.getLogger("SimpleReplayWorkerLogger")
+        mock_log.debug.return_value = logging.getLogger("WorkloadReplicatorWorkerLogger")
 
         mock_init_logging.return_value = True
         mock_finished_thread.return_value = True
@@ -286,7 +286,7 @@ class TestWorker(unittest.TestCase):
         mock_time,
     ):
         mock_queue = MagicMock()
-        mock_log.debug.return_value = logging.getLogger("SimpleReplayWorkerLogger")
+        mock_log.debug.return_value = logging.getLogger("WorkloadReplicatorWorkerLogger")
 
         mock_init_logging.return_value = True
         mock_finished_thread.return_value = True
@@ -345,7 +345,7 @@ class TestWorker(unittest.TestCase):
         mock_thread,
     ):
         mock_queue = MagicMock()
-        mock_log.debug.return_value = logging.getLogger("SimpleReplayWorkerLogger")
+        mock_log.debug.return_value = logging.getLogger("WorkloadReplicatorWorkerLogger")
 
         mock_init_logging.return_value = True
         mock_finished_thread.return_value = True

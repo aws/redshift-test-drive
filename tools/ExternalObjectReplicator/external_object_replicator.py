@@ -1,4 +1,3 @@
-import sys
 import dateutil
 import yaml
 import threading
@@ -11,10 +10,10 @@ import common.config
 from tools.ExternalObjectReplicator.util.glue_util import clone_glue_catalog
 from common.aws_service import redshift_execute_query
 import tools.ExternalObjectReplicator.util.copy_util as copy_util
-from tools.ExternalObjectReplicator.util.copy_util import clone_objects_to_s3, get_s3_folder_size, check_file_existence
+from tools.ExternalObjectReplicator.util.copy_util import get_s3_folder_size, check_file_existence
 from common.log import init_logging, log_version
 
-logger = logging.getLogger("SimpleReplayLogger")
+logger = logging.getLogger("ExternalObjectReplicatorLogger")
 
 g_disable_progress_bar = None
 global_lock = threading.Lock()
@@ -145,6 +144,7 @@ def main():
         preamble=yaml.dump(file_config),
         backup_count=file_config.get("backup_count", 2),
         script_type="external object replicator",
+        logger_name="ExternalObjectReplicatorLogger"
     )
     log_version()
 
