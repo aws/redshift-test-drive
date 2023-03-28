@@ -9,9 +9,15 @@ source_cluster_endpoint: ""
 # Required only if source_cluster_endpoint is given.
 master_username: "awsuser"
 
+
 # Required. Start and end time of the workload to be extracted, e.g. 2020-06-14T21:41:16+00:00
 start_time: ""
 end_time: ""
+
+#Replacement s3 location and IAM roles for copy files 
+replacement_copy_location: ""
+replacement_iam_location: ""
+
 
 # Required only if extraction using ODBC is preferred and installed. Otherwise, Python driver is used.
 odbc_driver: ""
@@ -21,8 +27,11 @@ odbc_driver: ""
 # another location.
 log_location: ""
 
+
 #Required only if log location for cloudwatch logs is specified
 region: ""
+
+
 
 # Location of the SQL file containing queries to unload system tables
 unload_system_table_queries: "unload_system_tables.sql"

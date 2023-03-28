@@ -96,7 +96,6 @@ def _parse_start_node_log(file, logs, databases, start_time, end_time):
     datetime_pattern = re.compile(r"'\d+-\d+-\d+ \d+:\d+:\d+ UTC")
 
     for line in file.readlines():
-
         if datetime_pattern.match(line):
             if start_node_log.xid and is_valid_log(
                 start_node_log, start_time, end_time

@@ -20,7 +20,7 @@ def mock_redshift_describe_logging_status(endpoint):
 
 
 class ExtractorTestCases(unittest.TestCase):
-    @patch("extract.cloudwatch_extractor")
+    @patch("core.extract.cloudwatch_extractor")
     def test_cw_extraction_serverless_source_cluster_endpoint(self, mock_cw_extractor):
         e = Extractor(
             {"source_cluster_endpoint": "redshift-serverless"},
@@ -29,19 +29,19 @@ class ExtractorTestCases(unittest.TestCase):
         e.get_extract("/aws/", "2021-08-15T15:50", "2021-08-15T18:55")
         assert mock_cw_extractor.get_extract_from_cloudwatch.called
 
-    @patch("extract.cloudwatch_extractor")
+    @patch("core.extract.cloudwatch_extractor")
     def test_cw_extraction_log_location_in_config_cloudwatch(self, mock_cw_extractor):
         e = Extractor({"log_location": "/aws/"}, cloudwatch_extractor=mock_cw_extractor)
         e.get_extract("/aws/", "2021-08-15T15:50", "2021-08-15T18:55")
         assert mock_cw_extractor.get_extract_from_cloudwatch.called
 
-    @patch("extract.s3_extractor")
+    @patch("core.extract.s3_extractor")
     def test_cw_extraction_log_location_interpreted_s3(self, mock_s3_extractor):
         e = Extractor({}, s3_extractor=mock_s3_extractor)
         e.get_extract("s3://bucket/key", "2021-08-15T15:50", "2021-08-15T18:55")
         assert mock_s3_extractor.get_extract_from_s3.called
 
-    @patch("extract.cloudwatch_extractor")
+    @patch("core.extract.cloudwatch_extractor")
     def test_cw_extraction_log_location_interpreted_cloudwatch(self, mock_cw_extractor):
         e = Extractor({}, cloudwatch_extractor=mock_cw_extractor)
         e.get_extract("cloudwatch", "2021-08-15T15:50", "2021-08-15T18:55")
