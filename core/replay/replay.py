@@ -71,7 +71,7 @@ def main():
     level = logging.getLevelName(g_config.get("log_level", "INFO").upper())
     log_helper.init_logging(
         "replay.log",
-        dir=f"simplereplay_logs/replay_log-{replay_id}",
+        dir=f"core/logs/replay/",
         level = level,
         preamble = yaml.dump(g_config),
         backup_count = g_config.get("backup_count", 2),

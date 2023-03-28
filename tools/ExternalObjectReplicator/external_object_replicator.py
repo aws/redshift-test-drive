@@ -140,7 +140,7 @@ def main():
     level = logging.getLevelName(file_config.get("log_level", "INFO").upper())
     init_logging(
         "external_replicator.log",
-        dir="external_replicator_logs",
+        dir="tool/ExternalObjectReplicator/logs",
         level=level,
         preamble=yaml.dump(file_config),
         backup_count=file_config.get("backup_count", 2),

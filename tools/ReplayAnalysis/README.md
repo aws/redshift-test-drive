@@ -1,7 +1,7 @@
 # Replay Analysis README
 
 ## Introduction
-The Replay analysis web app is used to analyze and compare replays. The goal of this tool is to facilitate understanding of Simple Replay results and simplify analysis results for customers to make the right decisions for their use of Redshift.
+The Replay analysis web app is used to analyze and compare replays. The goal of this tool is to facilitate understanding of Workload Replicator results and simplify analysis results for customers to make the right decisions for their use of Redshift.
 
 ## Preparation
 ### Prerequisites

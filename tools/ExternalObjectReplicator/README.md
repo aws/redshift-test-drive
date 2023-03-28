@@ -23,8 +23,8 @@ serverless endpoint in a future release.
 
 1. Create an EC2 instance
     1. Recommended EC2 instance type: **m5.8xlarge**, 32GB of SSD storage, Amazon Linux AMI
-    2. The cluster must be accessible from where External object replicator is being run. This may entail modifying the security group inbound rules or running Simple Replay on the same VPC as the Redshift replica cluster. 
-2. Install Simple Replay and libraries dependencies on the provided EC2 machine
+    2. The cluster must be accessible from where External object replicator is being run. This may entail modifying the security group inbound rules or running Workload Replicator on the same VPC as the Redshift replica cluster. 
+2. Install Workload Replicator and libraries dependencies on the provided EC2 machine
 
 In the newly created EC2 machine:
 
@@ -42,7 +42,7 @@ sudo yum install python3-pip
 sudo yum install gcc gcc-c++ python3 python3-devel unixODBC unixODBC-devel
 ```
 
-2.3 Clone Simple Replay scripts
+2.3 Clone Workload Replicator scripts
 
    ```
    git clone https://github.com/awslabs/amazon-redshift-utils.git
@@ -50,10 +50,10 @@ sudo yum install gcc gcc-c++ python3 python3-devel unixODBC unixODBC-devel
 
 2.4 Install Python libraries 
 
-If you have executed Simple Replay and installed packages in requirements.txt, skip this step and go to 2.5
+If you have executed Workload Replicator and installed packages in requirements.txt, skip this step and go to 2.5
 
-If you are running External Object Replicator on its own, and you have not executed Simple Replay before, do the following:
-Navigate to Simple Replay root directory and run the following command:
+If you are running External Object Replicator on its own, and you have not executed Workload Replicator before, do the following:
+Navigate to Workload Replicator root directory and run the following command:
 
 ```
 sudo pip3 install -r requirements.txt
@@ -82,7 +82,7 @@ aws configure
 
 * External Object Replicator currently only supports Redshift Provisioned cluster
 * External Object Replicator will replicate any files copied using the COPY command or a MANIFEST file, and Spectrum tables queried within the starttime and endtime provided in the external_replicator.yaml (See below).
-* The source cluster should be accessible from wherever External Object Replicator is being run. This may entail modifying the security group inbound rules to include “My IP”, or running Simple Replay on an EC2 instance in the same VPC.
+* The source cluster should be accessible from wherever External Object Replicator is being run. This may entail modifying the security group inbound rules to include “My IP”, or running Workload Replicator on an EC2 instance in the same VPC.
 
 ### Configuration file parameters for `extraction.yaml` :
 
