@@ -154,17 +154,23 @@ class Extractor:
 
         # save the statements which will not be replayed
         if len(statements_to_be_avoided)>0:
-            with open("sql_statements_skipped.txt", "wb") as file:
-                file.write(
-                    json.dumps(list(statements_to_be_avoided), indent=2).encode("utf-8")
-                )
-            if is_s3:
-                dest = output_prefix + "/sql_statements_skipped.txt"
-                logger.info(f"Transferring all the statements not replayed  to {dest}")
-                aws_service_helper.s3_upload(
-                    "sql_statements_skipped.txt", bucket_name, dest
-                )
-                
+            logger.info(f"Exporting sql statements to be avoided")
+        replacements_string = ("SQL Statements\n")
+
+        for sql_statement in statements_to_be_avoided:
+            replacements_string += sql_statement + "\n"
+        if is_s3:
+            aws_service_helper.s3_put_object(
+                replacements_string,
+                bucket_name,
+                output_prefix + "/sql_statements_skipped.txt",
+            )
+        else:
+            replacements_file = open(output_directory + "/sql_statements_skipped.txt", "w")
+            replacements_file.write(replacements_string)
+            replacements_file.close()
+
+        
         logger.info(
             f"Generating {len(missing_audit_log_connections)} missing connections."
         )
@@ -202,8 +208,9 @@ class Extractor:
         replacements_string = (
             "Original location,Replacement location,Replacement IAM role\n"
         )
+
         for bucket in replacements:
-            replacements_string += bucket + ','+ self.config['replacement_copy_location'] + ','+ self.config['replacement_iam_location'] + "\n"
+            replacements_string += bucket + ','+ self.config.get('replacement_copy_location', '') + ','+ self.config.get('replacement_iam_location', '') + "\n"
         if is_s3:
             aws_service_helper.s3_put_object(
                 replacements_string,
