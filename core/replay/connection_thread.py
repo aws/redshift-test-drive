@@ -264,8 +264,8 @@ class ConnectionThread(threading.Thread):
                 if not formatted_query.startswith(("begin", "start")):
                     query_begin = "begin;" + formatted_query
                 if not formatted_query.endswith(("commit", "end")):
-                    query = query_begin + "commit;"
-                split_statements = sqlparse.split(query)
+                    query.text = query_begin + "commit;"
+                split_statements = sqlparse.split(query.text)
                 split_statements = [_ for _ in split_statements if _ != ";"]
             else:
                 split_statements = [query.text]
@@ -307,7 +307,7 @@ class ConnectionThread(threading.Thread):
                     ):  ## removed condition to exclude bind variables
                         cursor.execute(sql_text)
                     else:
-                        status = "Not "
+                        status = "Not a valid query"
                     exec_end = datetime.datetime.now(tz=datetime.timezone.utc)
                     exec_sec = (exec_end - exec_start).total_seconds()
 
