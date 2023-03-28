@@ -222,7 +222,7 @@ class TestReportGen(unittest.TestCase):
                                            mock_get_secret):
         mock_get_cluster_credentials.return_value = self.rs_client_response
         mock_db_connect.side_effect = Exception
-        with self.assertLogs('SimpleReplayLogger', level='DEBUG') as mock_log:
+        with self.assertLogs('WorkloadReplicatorLogger', level='DEBUG') as mock_log:
             with self.assertRaises(SystemExit):
                 with report_gen.initiate_connection(username=self.user, cluster=self.provisioned_cluster):
                     mock_get_cluster_credentials.assert_called_once_with("someregion", "someuser", "somedb", "someid")
@@ -245,7 +245,7 @@ class TestReportGen(unittest.TestCase):
     def test_initiate_connection_redshift_conn_error(self, mock_get_cluster_credentials, mock_db_connect):
         mock_get_cluster_credentials.return_value = self.rs_client_response
         mock_db_connect.side_effect = redshift_connector.error.Error
-        with self.assertLogs('SimpleReplayLogger', level='DEBUG') as mock_log:
+        with self.assertLogs('WorkloadReplicatorLogger', level='DEBUG') as mock_log:
             with self.assertRaises(SystemExit):
                 with report_gen.initiate_connection(username=self.user, cluster=self.provisioned_cluster):
                     mock_get_cluster_credentials.assert_called_once_with("someregion", "someuser", "somedb", "someid")
@@ -259,7 +259,7 @@ class TestReportGen(unittest.TestCase):
     def test_initiate_connection_no_response(self, mock_get_cluster_credentials, mock_db_connect):
         mock_get_cluster_credentials.return_value = None
         mock_db_connect.side_effect = redshift_connector.error.Error
-        with self.assertLogs('SimpleReplayLogger', level='DEBUG') as mock_log:
+        with self.assertLogs('WorkloadReplicatorLogger', level='DEBUG') as mock_log:
             with self.assertRaises(SystemExit):
                 with report_gen.initiate_connection(username=self.user, cluster=self.provisioned_cluster):
                     mock_get_cluster_credentials.assert_called_once_with("someregion", "someuser", "somedb", "someid")
@@ -270,7 +270,7 @@ class TestReportGen(unittest.TestCase):
     def test_initiate_connection_no_password(self, mock_get_cluster_credentials, mock_db_connect):
         mock_get_cluster_credentials.return_value = {"DbUser": self.user, "DbPassword": None}
         mock_db_connect.side_effect = redshift_connector.error.Error
-        with self.assertLogs('SimpleReplayLogger', level='DEBUG') as mock_log:
+        with self.assertLogs('WorkloadReplicatorLogger', level='DEBUG') as mock_log:
             with self.assertRaises(SystemExit):
                 with report_gen.initiate_connection(username=self.user, cluster=self.provisioned_cluster):
                     mock_get_cluster_credentials.assert_called_once_with("someregion", "someuser", "somedb", "someid")

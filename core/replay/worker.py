@@ -13,7 +13,7 @@ from core.replay.stats import collect_stats, init_stats
 
 
 class ReplayWorker:
-    logger = logging.getLogger("SimpleReplayWorkerLogger")
+    logger = logging.getLogger("WorkloadReplicatorLogger")
 
     def __init__(
         self,

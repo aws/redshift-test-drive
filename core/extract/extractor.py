@@ -23,7 +23,7 @@ from core.extract.s3_extractor import S3Extractor
 from core.extract.local_extractor import LocalExtractor
 
 
-logger = logging.getLogger("SimpleReplayLogger")
+logger = logging.getLogger("WorkloadReplicatorLogger")
 
 
 class Extractor:
