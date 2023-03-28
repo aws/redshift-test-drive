@@ -18,7 +18,7 @@ def log_version():
 
 def init_logging(
     filename,
-    dir="simplereplay_logs",
+    dir="core/logs/extract",
     level=logging.DEBUG,
     backup_count=2,
     preamble="",
