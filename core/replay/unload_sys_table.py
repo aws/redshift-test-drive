@@ -3,7 +3,7 @@ from common.util import db_connect
 import re
 import logging
 
-logger = logging.getLogger("SimpleReplayLogger")
+logger = logging.getLogger("WorkloadReplicatorLogger")
 
 
 class UnloadSysTable:

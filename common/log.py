@@ -8,7 +8,7 @@ log_date_format = "%Y-%m-%d %H:%M:%S"
 
 def log_version():
     """Read the VERSION file and log it"""
-    logger = logging.getLogger("SimpleReplayLogger")
+    logger = logging.getLogger("WorkloadReplicatorLogger")
     try:
         with open("VERSION", "r") as fp:
             logger.info(f"Version {fp.read().strip()}")
@@ -23,7 +23,7 @@ def init_logging(
     backup_count=2,
     preamble="",
     script_type="extract",
-    logger_name="SimpleReplayLogger",
+    logger_name="WorkloadReplicatorLogger",
 ):
     """Initialize logging to stdio"""
     logger = logging.getLogger(logger_name)

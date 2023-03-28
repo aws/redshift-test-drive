@@ -34,7 +34,7 @@ g_serverless_cluster_endpoint_pattern = (
     r"(.+)\.(.+)\.(.+).redshift-serverless(-dev)?\.amazonaws\.com:[0-9]{4}\/(.)+"
 )
 
-logger = logging.getLogger("SimpleReplayLogger")
+logger = logging.getLogger("WorkloadReplicatorLogger")
 
 
 # exception thrown if cluster doesn't exist

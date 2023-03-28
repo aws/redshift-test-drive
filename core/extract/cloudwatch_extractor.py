@@ -6,7 +6,7 @@ import sys
 import common.aws_service as aws_service_helper
 from core.extract.extract_parser import parse_log
 
-logger = logging.getLogger("SimpleReplayLogger")
+logger = logging.getLogger("WorkloadReplicatorLogger")
 
 
 class CloudwatchExtractor:

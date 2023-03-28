@@ -10,7 +10,7 @@ from worker import ReplayWorker
 
 from stats import init_stats, collect_stats, display_stats, print_stats
 
-logger = logging.getLogger("SimpleReplayLogger")
+logger = logging.getLogger("WorkloadReplicatorLogger")
 
 
 # Needs to be in global scope since multiprocessing cannot pickle objects

@@ -1,6 +1,6 @@
 import logging
 
-logger = logging.getLogger("SimpleReplayLogger")
+logger = logging.getLogger("WorkloadReplicatorLogger")
 
 
 def percent(num, den):

@@ -199,7 +199,7 @@ def replay_pdf_generator(
     @param summary: str list, replay output summary from replay.py
     """
 
-    logger = logging.getLogger("SimpleReplayLogger")
+    logger = logging.getLogger("WorkloadReplicatorLogger")
     s3_client = boto3.client("s3")
     cluster = util.cluster_dict(cluster_endpoint, is_serverless, start_time, end_time)
     cluster["is_serverless"] = is_serverless
@@ -260,7 +260,7 @@ def initiate_connection(username, cluster):
     """
 
     response = None
-    logger = logging.getLogger("SimpleReplayLogger")
+    logger = logging.getLogger("WorkloadReplicatorLogger")
     secret_keys = ["admin_username", "admin_password"]
 
     if cluster.get("is_serverless"):
@@ -341,7 +341,7 @@ def unload(unload_location, iam_role, cluster, user, replay):
     @return: str List, query file names
     """
 
-    logger = logging.getLogger("SimpleReplayLogger")
+    logger = logging.getLogger("WorkloadReplicatorLogger")
 
     directory = r"core/sql"
 
@@ -397,7 +397,7 @@ def get_raw_data(report, bucket, replay_path, query):
     @param query: str, query name
     """
 
-    logger = logging.getLogger("SimpleReplayLogger")
+    logger = logging.getLogger("WorkloadReplicatorLogger")
     try:
         response = aws_service_helper.s3_client_get_object(bucket=bucket.get("bucket_name"),
                                                     key=f"{replay_path}/raw_data/{query}000")
@@ -426,7 +426,7 @@ def read_data(table_name, df, report_columns, report):
     @return: DataFrame of formatted data
     """
 
-    logger = logging.getLogger("SimpleReplayLogger")
+    logger = logging.getLogger("WorkloadReplicatorLogger")
 
     if df.empty:
         logger.error("Data is empty. Failed to generate report.")
@@ -485,7 +485,7 @@ def create_presigned_url(bucket_name, object_name):
     @return:
     """
 
-    logger = logging.getLogger("SimpleReplayLogger")
+    logger = logging.getLogger("WorkloadReplicatorLogger")
 
     try:
         response = aws_service_helper.s3_generate_presigned_url(client_method="get_object",
@@ -508,7 +508,7 @@ def analysis_summary(bucket_url, replay):
     @param replay: str, replay id
     """
 
-    logger = logging.getLogger("SimpleReplayLogger")
+    logger = logging.getLogger("WorkloadReplicatorLogger")
 
     bucket = util.bucket_dict(bucket_url)
     logger.info(f"Simple Replay Workload Analysis: {replay}")
