@@ -20,7 +20,7 @@ For more details about this utility please check https://aws.amazon.com/blogs/bi
 
 The first step is to enable audit logging in the Redshift production cluster. We’ll need all 3 types of logs: connection logs, user logs and user activity logs.
 
-1. Using AWS Console, enable audit logging in the cluster specifying an S3 bucket location to save the log files  https://docs.aws.amazon.com/redshift/latest/mgmt/db-auditing.html
+1. Using AWS Console, enable audit logging in the cluster specifying an S3 bucket location or cloudwatch location to save the log files   https://docs.aws.amazon.com/redshift/latest/mgmt/db-auditing.html
 2. Change the parameter group `enable_user_activity_logging` to “true”.
 3. Reboot the cluster
 4. Take a snapshot of the source cluster prior to execution of the workload to be captured. This snapshot will be used to restore the target cluster, ensuring the target cluster is in the same state as the source cluster.
