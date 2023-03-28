@@ -1,18 +1,18 @@
-# Simple Replay README
+# Workload Replicator README
 
 ## Introduction
 
-Customers are always trying to reproduce issues or workloads from clusters or to do what-if scenarios. A customer can easily clone a production cluster, but replicating the workload is more complicated. Simple Replay was created to bridge that gap. Simple Replay V2 enhances existing Simple Replay tool by providing following additional functionalities: 
+Customers are always trying to reproduce issues or workloads from clusters or to do what-if scenarios. A customer can easily clone a production cluster, but replicating the workload is more complicated. Workload Replicator was created to bridge that gap. Workload Replicator V2 enhances existing Workload Replicator tool by providing following additional functionalities: 
 
 * Ability to mimic COPY and UNLOAD workloads. 
 * Ability to execute the transactions and queries in the same time interval as executed in the source cluster. 
 
-This enables the replay to be as close to the source run. It is **strongly recommended** to run Simple Replay from a cloud EC2 instance.  
+This enables the replay to be as close to the source run. It is **strongly recommended** to run Workload Replicator from a cloud EC2 instance.  
 
-If you want to experiment with different Amazon Redshift cluster configurations to evaluate and compare how your workload performs you can use Amazon Redshift Node Configuration Comparison utility (https://github.com/aws-samples/amazon-redshift-config-compare) which invokes Simple Replay utility. It provides ability to configure the necessary resources and will automatically execute the workload across N number of clusters.
+If you want to experiment with different Amazon Redshift cluster configurations to evaluate and compare how your workload performs you can use Amazon Redshift Node Configuration Comparison utility (https://github.com/aws-samples/amazon-redshift-config-compare) which invokes Workload Replicator utility. It provides ability to configure the necessary resources and will automatically execute the workload across N number of clusters.
 For more details about this utility please check https://aws.amazon.com/blogs/big-data/compare-different-node-types-for-your-workload-using-amazon-redshift/
 
-**NOTE:** Simple Replay now supports both Redshift Provisioned and Serverless. But Amazon Redshift Node Configuration Comparison utility currently supports only Redshift Provisioned clusters; support for Serverless is coming soon.
+**NOTE:** Workload Replicator now supports both Redshift Provisioned and Serverless. But Amazon Redshift Node Configuration Comparison utility currently supports only Redshift Provisioned clusters; support for Serverless is coming soon.
 
 ## Preparation
 
@@ -27,12 +27,12 @@ The first step is to enable audit logging in the Redshift production cluster. We
 
 It may take around three hours for the audit logs to be delivered to S3.
 
-### Step 2 - Simple Replay setup
+### Step 2 - Workload Replicator setup
 
 1. Create an EC2 instance
     1. Recommended EC2 instance type: **m5.8xlarge**, 32GB of SSD storage, Amazon Linux AMI
-    2. The cluster must be accessible from where Simple Replay is being run. This may entail modifying the security group inbound rules or running Simple Replay on the same VPC as the Redshift replica cluster. 
-2. Install Simple Replay and libraries dependencies on the provided EC2 machine
+    2. The cluster must be accessible from where Workload Replicator is being run. This may entail modifying the security group inbound rules or running Workload Replicator on the same VPC as the Redshift replica cluster. 
+2. Install Workload Replicator and libraries dependencies on the provided EC2 machine
 
 In the newly created EC2 machine:
 
@@ -51,7 +51,7 @@ sudo yum install python3-pip
 sudo yum install gcc gcc-c++ python3 python3-devel unixODBC unixODBC-devel
 ```
 
-2.3 Clone Simple Replay scripts. Check if `git` is installed by doing ``which git``. If git binary cannot be found, then do ``yum install git`` before proceeding.
+2.3 Clone Workload Replicator scripts. Check if `git` is installed by doing ``which git``. If git binary cannot be found, then do ``yum install git`` before proceeding.
 
 ```
 git clone https://github.com/awslabs/amazon-redshift-utils.git
@@ -59,7 +59,7 @@ git clone https://github.com/awslabs/amazon-redshift-utils.git
 
 2.4 Install Python libraries
 
-In Simple Replay root directory, you will find the file requirements.txt. Run the following command
+In Workload Replicator root directory, you will find the file requirements.txt. Run the following command
 
 ```
 make setup
@@ -80,8 +80,8 @@ Check if AWS CLI is configured in the machine. If it’s not configured, follow 
 aws configure
 ```
             * Provided IAM user should have Redshift and S3 permissions. If temporary IAM credentials are being used, ensure they do not expire before the replay ends.
-            * The IAM user needs to have permission to read the Audit logs S3 bucket configured in Step 1. This is required for the Extraction step of Simple Replay.
-            * The IAM user needs to have Redshift::GetClusterCredentials and redshift:DescribeLoggingStatus This is required for the Replay step of Simple Replay
+            * The IAM user needs to have permission to read the Audit logs S3 bucket configured in Step 1. This is required for the Extraction step of Workload Replicator.
+            * The IAM user needs to have Redshift::GetClusterCredentials and redshift:DescribeLoggingStatus This is required for the Replay step of Workload Replicator
 
 ### Step 3 - COPY and UNLOAD setup
 
@@ -93,7 +93,7 @@ Create a temporary S3 bucket where UNLOAD will spill data to S3.
 
 1. IAM role for S3 COPY and UNLOAD commands
 
-Create an IAM role with read access to S3 buckets where COPY will read from. Add write access to the temporary S3 bucket created in the previous step. Make sure the IAM role has a trust relationship with Redshift. This role will be attached to the replica cluster before running Simple Replay.
+Create an IAM role with read access to S3 buckets where COPY will read from. Add write access to the temporary S3 bucket created in the previous step. Make sure the IAM role has a trust relationship with Redshift. This role will be attached to the replica cluster before running Workload Replicator.
 
 More information on https://docs.aws.amazon.com/redshift/latest/mgmt/copy-unload-iam-role.html
 
@@ -102,10 +102,10 @@ More information on https://docs.aws.amazon.com/redshift/latest/mgmt/copy-unload
 This script extracts query and connection info from User Activity Log (audit) and Connection Log (audit).
 
 * Extraction process supports both Redshift Provisioned cluster and Serverless endpoint
-* If the source cluster end point is provided as input in the YAML file, Simple Replay will automatically determine the location to extract the audit logs from, either it is S3 or Cloudwatch. Cloudwatch Audit Logs are now supported for both Provisioned Cluster and Serverless  
+* If the source cluster end point is provided as input in the YAML file, Workload Replicator will automatically determine the location to extract the audit logs from, either it is S3 or Cloudwatch. Cloudwatch Audit Logs are now supported for both Provisioned Cluster and Serverless  
 * Customer can provide the s3 bucket or local directory in YAML file as log location if they choose not to provide the source cluster endpoint
-* Simple Replay will extract starttime and endtime for each query from the system table automatically if the source cluster end point is provided as input in the YAML file. Recordtime from audit logs will be used otherwise. 
-* The source cluster should be accessible from wherever Simple Replay is being run. This may entail modifying the security group inbound rules to include “My IP”, or running Simple Replay on an EC2 instance in the same VPC.
+* Workload Replicator will extract starttime and endtime for each query from the system table automatically if the source cluster end point is provided as input in the YAML file. Recordtime from audit logs will be used otherwise. 
+* The source cluster should be accessible from wherever Workload Replicator is being run. This may entail modifying the security group inbound rules to include “My IP”, or running Workload Replicator on an EC2 instance in the same VPC.
 
 ### Configuration file parameters for `extraction.yaml` :
 
@@ -115,7 +115,7 @@ This script extracts query and connection info from User Activity Log (audit) an
 | start_time                                                                                                                                  |Required    | Start time of the workload to be extracted. If not provided process will extract workload from all the audit logs files available. [Default timezone is UTC, if timezone is not given in start_time then the value of start_time will be converted to UTC timezone based on Machine's current timezone]                                                                                                                                                                                                                                                                                     |“2020-07-24T09:31:00+00:00”  |
 | end_time                                                                                                                                    |Required    | End time of the workload to be extracted. If not provided process will extract workload from all the audit logs files available.  [Default timezone is UTC, if timezone is not given in end_time then the value of end_time will be converted to UTC timezone based on Machine's current timezone]                                                                                                                                                                                                                                                                                          |“2020-07-26T21:45:00+00:00”  |
 | Source cluster information and log location (Either the source cluster endpoint and admin user name OR the log location has to be provided) |
-| source_cluster_endpoint                                                                                                                     |Optional    | If provided, Simple Replay will use [`describe-logging-status`](https://awscli.amazonaws.com/v2/documentation/api/latest/reference/redshift/describe-logging-status.html) to automatically retrieve the S3 audit log location. Additionally, Simple Replay will query [SVL_STATEMENTTEXT](https://docs.aws.amazon.com/redshift/latest/dg/r_SVL_STATEMENTTEXT.html) to retrieve query start and end times. If this endpoint isn’t provided, or if the query cannot be found in SVL_STATEMENTTEXT, the record time present in the audit logs will be used for the query’s start and end times. |"<redshift-cluster-name>.<identifier>.<region>.redshift.amazonaws.com:<port>\<databasename>"  |
+| source_cluster_endpoint                                                                                                                     |Optional    | If provided, Workload Replicator will use [`describe-logging-status`](https://awscli.amazonaws.com/v2/documentation/api/latest/reference/redshift/describe-logging-status.html) to automatically retrieve the S3 audit log location. Additionally, Workload Replicator will query [SVL_STATEMENTTEXT](https://docs.aws.amazon.com/redshift/latest/dg/r_SVL_STATEMENTTEXT.html) to retrieve query start and end times. If this endpoint isn’t provided, or if the query cannot be found in SVL_STATEMENTTEXT, the record time present in the audit logs will be used for the query’s start and end times. |"<redshift-cluster-name>.<identifier>.<region>.redshift.amazonaws.com:<port>\<databasename>"  |
 | master_username                                                                                                                             |Optional    | Required only if source_cluster_endpoint is provided.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |"awsuser"  |
 | log_location                                                                                                                                |Optional    | Required if source_cluster_endpoint is not provided, since audit log location is inferred from the cluster or customer wants to use a local location pointing at the downloaded S3 audit logs.                                                                                                                                                                                                                                                                                                                                                                                              |""  |
 | region                                                                                                                                      |Required    | Required if log location is provided for serverless.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |""  |
@@ -135,7 +135,7 @@ make extract
 
 ### Output
 
-Simple Replay extract process produces the following outputs in the 
+Workload Replicator extract process produces the following outputs in the 
 
 * sqls.json.gz
     * Contains the extracted SQL scripts.
@@ -155,21 +155,21 @@ Takes an extracted workload and replays it against a target cluster. Target clus
 #### Replay on Provisioned 
 
 * Restore the target cluster from the source cluster snapshot.
-* The cluster must be accessible from wherever Simple Replay is being run.
-    This may entail modifying the security group inbound rules to include “My IP”, or running Simple Replay on an EC2 instance in the same VPC.
+* The cluster must be accessible from wherever Workload Replicator is being run.
+    This may entail modifying the security group inbound rules to include “My IP”, or running Workload Replicator on an EC2 instance in the same VPC.
 * To execute COPY commands, the `execute_copy_statements` parameter must be set to `"true"`, and the “Replacement IAM role” column in the copy_replacements.csv file must have an IAM role for each row.
 * Any UNLOAD/COPY command within stored procedures must be altered manually or removed to skip execution.
 
 #### Replay on Serverless
 
 * Restore the Serverless target cluster from the source cluster snapshot.
-* Simple Replay provides 2 different options to connect to target Redshift Serverless Cluster:
+* Workload Replicator provides 2 different options to connect to target Redshift Serverless Cluster:
   * Target Cluster Endpoint: 
-    * Cluster must be accessible from the system on which you're running Simple Replay from 
-    * This may entail modifying the security group inbound rules to include “My IP”, or running Simple Replay on an EC2 instance in the same VPC.
+    * Cluster must be accessible from the system on which you're running Workload Replicator from 
+    * This may entail modifying the security group inbound rules to include “My IP”, or running Workload Replicator on an EC2 instance in the same VPC.
     * Specify the value in ```target_cluster_endpoint```
   * NLB / NAT: 
-    * This option provides ability to run the Simple Replay from outside of your Cluster's VPC.
+    * This option provides ability to run the Workload Replicator from outside of your Cluster's VPC.
     * Provide NLB / NAT endpoint that has access to the Redshift Cluster.
     * Specify the value in ```nlb_nat_dns```
     * Value still must be provided for ```target_cluster_endpoint```
@@ -177,13 +177,13 @@ Takes an extracted workload and replays it against a target cluster. Target clus
 
 ### Replay for generating Analysis Report 
 
-Replay also supports generation of pdf reports which enhances auditing in the Simple Replay process to extract information about the errors that occurred, the validity of the run, and the performance of the replay.
+Replay also supports generation of pdf reports which enhances auditing in the Workload Replicator process to extract information about the errors that occurred, the validity of the run, and the performance of the replay.
 
 
 
 
 #### Authorizing Access to Redshift using AWS Secrets Manager 
-Follow below steps to setup the integration between Simple Replay and AWS Secrets Manager. It can also be used to execute workloads which rely on Redshift's native IDP integration with non-IAM identity providers ( https://docs.aws.amazon.com/redshift/latest/mgmt/redshift-iam-access-control-native-idp.html )
+Follow below steps to setup the integration between Workload Replicator and AWS Secrets Manager. It can also be used to execute workloads which rely on Redshift's native IDP integration with non-IAM identity providers ( https://docs.aws.amazon.com/redshift/latest/mgmt/redshift-iam-access-control-native-idp.html )
 
 Note: Setting up secrets manager is not required, but an optional step
 
@@ -193,7 +193,7 @@ Note: Setting up secrets manager is not required, but an optional step
   * admin_username
   * admin_password
 * Provide value of this Secrets Manager in ```secret_name``` in ```replay.yaml``` 
-* Confirm that the Role attached to EC2 from where Simple Replay is being executed has GetSecretValue policy attached to it. It is needed for Secrets Manager. Attaching just this policy is a guideline that follows security advice of granting least required privilege 
+* Confirm that the Role attached to EC2 from where Workload Replicator is being executed has GetSecretValue policy attached to it. It is needed for Secrets Manager. Attaching just this policy is a guideline that follows security advice of granting least required privilege 
 
 ### Configuration file parameters for `replay.yaml`:
 
@@ -220,7 +220,7 @@ Note: Setting up secrets manager is not required, but an optional step
 | log_level                                   |Required    | Default will be INFO. DEBUG can be used for additional logging.                                                                                                                                                                                                                                                   | debug                                                                                                                                                                                                |
 | num_workers                                 |Optional    | Number of processes to use to parallelize the work. If omitted or null, uses one process per cpu - 1.                                                                                                                                                                                                             | “”                                                                                                                                                                                                   |
 | connection_tolerance_sec                    |Optional    | Output warnings if connections are not within this number of seconds from their expected time.                                                                                                                                                                                                                    | “300”                                                                                                                                                                                                |
-| backup_count                                |Optional    | Number of simplereplay logfiles to maintain                                                                                                                                                                                                                                                                       | 1                                                                                                                                                                                                    |
+| backup_count                                |Optional    | Number of Workload Replicator logfiles to maintain                                                                                                                                                                                                                                                                       | 1                                                                                                                                                                                                    |
 | drop_return                                 |Optional    | Discard the returned data from select statements at the driver level to avoid OOMs on EC2                                                                                                                                                                                                                         | true                                                                                                                                                                                                 |
 | limit_concurrent_connections                |Optional    | To throtle the number of concurrent connections in the replay.                                                                                                                                                                                                                                                    | “300”                                                                                                                                                                                                |
 | split_multi                                 |Optional    | To split the multi statement SQLs to address limitation with redshift_connector driver.                                                                                                                                                                                                                           | true                                                                                                                                                                                                 |
