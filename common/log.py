@@ -57,6 +57,35 @@ def init_logging(
     logger.addHandler(fh)
     logger.info("== Initializing logfile ==")
 
+def init_logging_redshift_connector(
+        filename,
+        dir,
+        level=logging.DEBUG,
+        backup_count=2,
+        script_type='RedshiftConnector',
+        logger_name='RedshiftConnector',
+):
+    conn_logger = logging.getLogger(logger_name)
+    conn_logger.setLevel(level)
+    logging.Formatter.converter = time.gmtime
+    conn_ch = logging.StreamHandler()
+    conn_ch.setLevel(level)
+    conn_ch.setFormatter(get_log_formatter())
+    conn_logger.addHandler(conn_ch)
+
+    os.makedirs(dir,exist_ok=True)
+    filename = f"{dir}/{filename}"
+    file_exists = os.path.isfile(filename)
+    conn_fh = logging.handlers.RotatingFileHandler(filename,backupCount=backup_count)
+
+    if file_exists:
+        conn_fh.doRollover()
+    
+    conn_fh.setLevel(level)
+    conn_fh.setFormatter(get_log_formatter())
+    conn_logger.info(f"Logging to {filename}")
+    conn_logger.addHandler(conn_fh)
+    conn_logger.info(f"== Initializing {script_type} logfile ==")
 
 def get_log_formatter():
     """Define the log format, with the option to prepend process and job/thread to each message"""

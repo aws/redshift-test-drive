@@ -2,12 +2,12 @@
 tag: ""
 
 # Directory location of extracted workload, relative to current directory
-workload_location: ""
+workload_location: "test-location/Edited_Extraction_devsaba-sr-test_2023-01-23T09:46:24.784062+00:00"
 
 # Endpoint and username of target cluster to replay queries on
-target_cluster_endpoint: ""
-target_cluster_region: ""
-master_username: ""
+target_cluster_endpoint: "ra3-redshift-cluster-testing.cqm7bdujbnqz.us-east-1.redshift.amazonaws.com:5439/dev"
+target_cluster_region: "us-east-1"
+master_username: "awsuser"
 
 # NLB or NAT endpoint for Simple Replay to connect to. This NLB or NAT should have connectivity to target_cluster_endpoint
 nlb_nat_dns: ""
@@ -36,23 +36,23 @@ execute_copy_statements: "false"
 execute_unload_statements: "false"
 
 # Optional - Where the UNLOADs and system table unload goes.
-replay_output: ""
+replay_output: "s3://devsaba-sr-drill/replay"
 
 # Optional - Where the analysis data and summary report will be uploaded.  Example:  s3://bucket_name/path
-analysis_output: ""
+analysis_output: "s3://devsaba-sr-drill/analysis"
 
 # Optional - Leaving this blank means UNLOADs will not be replayed. IAM role for UNLOADs to be performed with.
-unload_iam_role: ""
+unload_iam_role: "arn:aws:iam::254137219717:role/RedshiftFullAccess"
 
 # Optional - Leaving this blank means analysis will not be run. IAM role for analysis needs UNLOAD access.
-analysis_iam_role: ""
+analysis_iam_role: "arn:aws:iam::254137219717:role/RedshiftFullAccess"
 
 # Location of the SQL file containing queries to unload system tables
 unload_system_table_queries: "core/replay/unload_system_tables.sql"
 
 # IAM role to UNLOAD system tables from source cluster to S3 location for later
 # analysis
-target_cluster_system_table_unload_iam_role: ""
+target_cluster_system_table_unload_iam_role: "arn:aws:iam::254137219717:role/RedshiftFullAccess"
 
 # Include filters will work as "db AND user AND pid". Exclude filters will work as "db OR user OR pid".
 # In case of multiple values for any specific filter, please enclose each in single quotes
@@ -72,6 +72,9 @@ filters:
 
 # Set the amount of logging
 log_level: "INFO"
+
+# Set log level for Redshift connector
+log_level_for_redshift_connector: "INFO"
 
 # number of proceses to use to parallelize the work. If omitted or null, uses
 # one process per cpu - 1 

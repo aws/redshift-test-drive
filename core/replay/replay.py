@@ -77,6 +77,16 @@ def main():
         backup_count = g_config.get("backup_count", 2),
         script_type='replay',
     )
+
+    redshift_connector_level = logging.getLevelName(g_config.get("log_level_for_redshift_connector","INFO").upper())
+    log_helper.init_logging_redshift_connector(
+        "redshift_connector.log",
+        dir=f"core/logs/redshift_connector",
+        level = redshift_connector_level,
+        backup_count = g_config.get("backup_count",2),
+        script_type ='RedshiftConnector',
+    )
+
     log_helper.log_version()
 
     if not g_config["replay_output"]:

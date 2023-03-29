@@ -21,6 +21,7 @@ from common.util import (
 
 class ConnectionThread(threading.Thread):
     logger = logging.getLogger("SimpleReplayWorkerLogger")
+    conn_logger = logging.getLogger("RedshiftConnector")
 
     def __init__(
         self,
@@ -129,6 +130,9 @@ class ConnectionThread(threading.Thread):
                 self.logger.debug(
                     f"Connected using {interface} for PID: {self.connection_log.pid}"
                 )
+                self.conn_logger.info(
+                    f"Connected using {interface} for PID: {self.connection_log.pid}"
+                )
                 self.num_connections.value += 1
             except Exception as err:
                 hashed_cluster_url = copy.deepcopy(credentials)
@@ -137,17 +141,25 @@ class ConnectionThread(threading.Thread):
                     f"({self.job_id + 1}) Failed to initiate connection for {self.connection_log.database_name}-"
                     f"{self.connection_log.username}-{self.connection_log.pid} ({hashed_cluster_url}): {err}"
                 )
+                self.conn_logger.info(
+                    f"({self.job_id + 1}) Failed to initiate connection for {self.connection_log.database_name}-"
+                    f"{self.connection_log.username}-{self.connection_log.pid} ({hashed_cluster_url}): {err}"
+                )
+
                 self.thread_stats["connection_error_log"][
                     f"{self.connection_log.database_name}-{self.connection_log.username}-{self.connection_log.pid}"
                 ] = f"{self.connection_log}\n\n{err}"
             yield conn
         except Exception as e:
             self.logger.error(f"Exception in connect: {e}")
+            self.conn_logger.info(f"Exception in connect: {e}")
         finally:
             self.logger.debug(f"Context closing for pid: {self.connection_log.pid}")
+            self.conn_logger.info(f"Context closing for pid: {self.connection_log.pid}")
             if conn is not None:
                 conn.close()
                 self.logger.debug(f"Disconnected for PID: {self.connection_log.pid}")
+                self.conn_logger.info(f"Disconnected for PID: {self.connection_log.pid}")
             self.num_connections.value -= 1
             if self.connection_semaphore is not None:
                 self.logger.debug(
@@ -168,6 +180,10 @@ class ConnectionThread(threading.Thread):
                         ).total_seconds()
                         if disconnect_offset_sec > current_offset_ms(self.replay_start):
                             self.logger.debug(
+                                f"Waiting to disconnect {disconnect_offset_sec} sec (pid "
+                                f"{self.connection_log.pid})"
+                            )
+                            self.conn_logger.info(
                                 f"Waiting to disconnect {disconnect_offset_sec} sec (pid "
                                 f"{self.connection_log.pid})"
                             )
@@ -255,6 +271,9 @@ class ConnectionThread(threading.Thread):
             self.logger.debug(
                 f"Executing [{truncated_query}] in {time_until_start_ms / 1000.0:.1f} sec"
             )
+            self.conn_logger.info(
+                f"Executing [{truncated_query}] in {time_until_start_ms / 1000.0:.1f} sec"
+            )
 
             if time_until_start_ms > 10:
                 time.sleep(time_until_start_ms / 1000.0)
@@ -314,14 +333,23 @@ class ConnectionThread(threading.Thread):
                     self.logger.debug(
                         f"{status}Replayed DB={transaction.database_name}, USER={transaction.username}, PID={transaction.pid}, XID:{transaction.xid}, Query: {idx + 1}/{len(transaction.queries)}{substatement_txt} ({exec_sec} sec)"
                     )
+
+                    self.conn_logger.info(
+                        f"{status}Replayed DB={transaction.database_name}, USER={transaction.username}, PID={transaction.pid}, XID:{transaction.xid}, Query: {idx + 1}/{len(transaction.queries)}{substatement_txt} ({exec_sec} sec)"
+                    )
                     success = success & True
                 except Exception as err:
                     success = False
                     errors.append([sql_text, str(err)])
-                    self.logger.debug(
+                    self.logger.error(
                         f"Failed DB={transaction.database_name}, USER={transaction.username}, PID={transaction.pid}, "
                         f"XID:{transaction.xid}, Query: {idx + 1}/{len(transaction.queries)}{substatement_txt}: {err}"
                     )
+                    self.conn_logger.info(
+                        f"Failed DB={transaction.database_name}, USER={transaction.username}, PID={transaction.pid}, "
+                        f"XID:{transaction.xid}, Query: {idx + 1}/{len(transaction.queries)}{substatement_txt}: {err}"
+                    )
+
                     self.error_logger.append(
                         parse_error(
                             err,
