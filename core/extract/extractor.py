@@ -239,7 +239,6 @@ class Extractor:
                 if self.config.get("external_schemas", None):
                     external_schemas = self.config["external_schemas"]
                     if any(schema in query.text for schema in external_schemas):
-                        print(f"Statement to be avoided {query.text}")
                         statements_to_be_avoided.add(query.text)
                         continue
                 # query -> sql query details, access query.text for sql
