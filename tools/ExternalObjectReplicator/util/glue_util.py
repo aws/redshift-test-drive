@@ -8,7 +8,7 @@ import common.aws_service as aws_helper
 from tqdm import tqdm
 from common.util import bucket_dict
 
-logger = logging.getLogger("SimpleReplayLogger")
+logger = logging.getLogger("ExternalObjectReplicatorLogger")
 
 
 def clone_glue_catalog(records, dest_location, region):

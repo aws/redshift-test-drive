@@ -29,7 +29,7 @@ agg_data_paragraph: "The <font face='Courier'>aggregated_data</font> directory i
 
 notes_header: "Workload Notes"
 notes_paragraph: >
-  SimpleReplay attempts to replay the source cluster workload as faithfully as possible on the target cluster.
+  Redshift Test Drive attempts to replay the source cluster workload as faithfully as possible on the target cluster.
   However, the replayed workload may differ from the original workload in the following ways:
 notes:
   - "The percentiles in this report exclude DDLs, Utility statements, and any leader node-only catalog queries."

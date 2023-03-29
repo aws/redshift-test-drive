@@ -20,7 +20,7 @@ from common.util import (
 
 
 class ConnectionThread(threading.Thread):
-    logger = logging.getLogger("SimpleReplayWorkerLogger")
+    logger = logging.getLogger("WorkloadReplicatorWorkerLogger")
 
     def __init__(
         self,
@@ -207,7 +207,7 @@ class ConnectionThread(threading.Thread):
     def save_query_stats(self, starttime, endtime, xid, query_idx):
         with self.perf_lock:
             sr_dir = (
-                self.config.get("logging_dir", "simplereplay_logs")
+                self.config.get("logging_dir", "core/logs/replay/")
                 + "/"
                 + self.replay_start.isoformat()
             )

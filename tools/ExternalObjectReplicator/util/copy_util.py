@@ -7,7 +7,7 @@ from tqdm import tqdm
 from common.util import bucket_dict
 
 
-logger = logging.getLogger("SimpleReplayLogger")
+logger = logging.getLogger("ExternalObjectReplicatorLogger")
 
 
 def copy_parallel(dest_bucket, dest_prefix, source_location, obj_type):

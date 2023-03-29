@@ -53,8 +53,8 @@ class ReplayWorker:
         # Logging needs to be separately initialized so that the worker can log to a separate log file
         init_logging(
             f"replay_worker-{self.process_idx}",
-            dir=f"simplereplay_logs/replay_log-{self.replay_id}",
-            logger_name="SimpleReplayWorkerLogger",
+            dir=f"core/logs/replay_worker_log-{self.replay_id}",
+            logger_name="WorkloadReplicatorLogger",
             level=self.config.get("log_level", "INFO"),
             script_type=f"replay worker - {self.process_idx}",
         )

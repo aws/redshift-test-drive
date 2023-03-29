@@ -1,13 +1,12 @@
 import re
 
 import boto3
-import logging
 import logging.handlers
 import redshift_connector
 from urllib.parse import urlparse
 import datetime
 
-logger = logging.getLogger("SimpleReplayLogger")
+logger = logging.getLogger("WorkloadReplicatorLogger")
 
 LOG_DATE_FORMAT = "%Y-%m-%d %H:%M:%S"
 serverless_cluster_endpoint_pattern = (
@@ -25,9 +24,6 @@ def db_connect(
     odbc_driver=None,
     drop_return=False,
 ):
-    """Connect to the database using the method specified by interface (either psql or odbc)
-    :param drop_return: if True, don't store returned value.
-    """
     if interface == "psql":
         conn = redshift_connector.connect(
             user=username, password=password, host=host, port=port, database=database
@@ -84,8 +80,6 @@ def cluster_dict(endpoint, is_serverless=False, start_time=None, end_time=None):
     if end_time is not None:
         cluster["end_time"] = end_time
 
-    logger = logging.getLogger("SimpleReplayLogger")
-
     if not is_serverless:
         rs_client = boto3.client("redshift", region_name=cluster.get("region"))
         try:
@@ -127,7 +121,6 @@ def cluster_dict(endpoint, is_serverless=False, start_time=None, end_time=None):
 
 
 def bucket_dict(bucket_url):
-    logger = logging.getLogger("SimpleReplayLogger")
     bucket, path = None, None
     try:
         parsed = urlparse(bucket_url)

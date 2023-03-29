@@ -141,7 +141,7 @@ def assume_role():
     try:
         response = sts_client.assume_role(
             RoleArn=request.args.get("arn"),
-            RoleSessionName="SimpleReplayAnalysisSession",
+            RoleSessionName="TestDriveAnalysisSession",
         )
     except Exception as e:
         return jsonify({"success": False, "message": e.__str__()}), 403
