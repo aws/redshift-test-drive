@@ -1,8 +1,7 @@
 import unittest
 from unittest.mock import patch, mock_open, call
-from replay.summarizer import summarize, export_errors
+from core.replay.summarizer import summarize, export_errors
 import datetime
-
 
 aggregated_stats = {
     "connection_diff_sec": 1.734,
@@ -49,14 +48,12 @@ connection_logs = [20, 23, 43, 52]
 error_file = mock_open()
 
 
-def mock_export_errors(
-    connection_error_log, transaction_error_log, error_location, replay_id
-):
+def mock_export_errors(connection_error_log, transaction_error_log, error_location, replay_id):
     return True
 
 
 class TestSummarizer(unittest.TestCase):
-    @patch("replay.summarizer.export_errors")
+    @patch("core.replay.summarizer.export_errors")
     def test_summarize(self, mock_export_errors):
         mock_export_errors.return_value = True
         response = summarize(
@@ -72,7 +69,7 @@ class TestSummarizer(unittest.TestCase):
 
         self.assertEqual(len(response), 5)
 
-    @patch("replay.summarizer.export_errors", mock_export_errors)
+    @patch("core.replay.summarizer.export_errors", mock_export_errors)
     def test_summarize_zeroDivisionError(self):
         transaction_count = 0
         response = summarize(
@@ -86,9 +83,7 @@ class TestSummarizer(unittest.TestCase):
             replay_end_time,
         )
 
-        self.assertEqual(
-            response[1], "Encountered 1 connection errors and 1 transaction errors"
-        )
+        self.assertEqual(response[1], "Encountered 1 connection errors and 1 transaction errors")
 
     def test_export_errors_connection_transaction_errors_equals_zero(self):
         response = export_errors({}, {}, config["workload_location"], replay_id)
@@ -138,8 +133,8 @@ class TestSummarizer(unittest.TestCase):
         error_file.assert_has_calls(calls)
 
     @patch("botocore.client.BaseClient._make_api_call")
-    @patch("replay.summarizer.aws_service_helper.s3_put_object")
-    @patch("replay.summarizer.os")
+    @patch("core.replay.summarizer.aws_service_helper.s3_put_object")
+    @patch("core.replay.summarizer.os")
     def test_export_errors_workloc_s3(self, mock_os, mock_s3, mock_client):
         config["workload_location"] = "s3://test-location"
 
@@ -170,8 +165,8 @@ class TestSummarizer(unittest.TestCase):
         )
 
     @patch("botocore.client.BaseClient._make_api_call")
-    @patch("replay.summarizer.aws_service_helper.s3_put_object")
-    @patch("replay.summarizer.os")
+    @patch("core.replay.summarizer.aws_service_helper.s3_put_object")
+    @patch("core.replay.summarizer.os")
     def test_export_errors_workloc_s3_with_prefix(self, mock_os, mock_s3, mock_client):
         config["workload_location"] = "s3://test-location/test"
 

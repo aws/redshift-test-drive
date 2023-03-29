@@ -48,18 +48,14 @@ class TestGetLogsInRange(unittest.TestCase):
         pass
 
     def test_get_logs_in_range_startRangeSpecified(self):
-        with open(
-            os.path.join(CURRENT_DIR, "support_files/audit_objects.json"), "r"
-        ) as fp:
+        with open(os.path.join(CURRENT_DIR, "support_files/audit_objects.json"), "r") as fp:
             audit_objects = json.load(fp)
             # start range specified
             files = get_logs_in_range(audit_objects, ts("2021-07-18T00:53"), None)
             self.assertEqual(len(files), len(audit_objects))
 
     def test_get_logs_in_range_startRangeSpecifiedWithSecondFile(self):
-        with open(
-            os.path.join(CURRENT_DIR, "support_files/audit_objects.json"), "r"
-        ) as fp:
+        with open(os.path.join(CURRENT_DIR, "support_files/audit_objects.json"), "r") as fp:
             audit_objects = json.load(fp)
             # start range using second file
             files = get_logs_in_range(audit_objects, ts("2021-07-18T01:53:01"), None)
@@ -70,9 +66,7 @@ class TestGetLogsInRange(unittest.TestCase):
             )
 
     def test_get_logs_in_range_startRangeSpecifiedUsingLastFile(self):
-        with open(
-            os.path.join(CURRENT_DIR, "support_files/audit_objects.json"), "r"
-        ) as fp:
+        with open(os.path.join(CURRENT_DIR, "support_files/audit_objects.json"), "r") as fp:
             audit_objects = json.load(fp)
 
             # start range using last file
@@ -80,9 +74,7 @@ class TestGetLogsInRange(unittest.TestCase):
             self.assertEqual(len(files), 0)
 
     def test_get_logs_in_range_bothStartAndEndTimeSpecified(self):
-        with open(
-            os.path.join(CURRENT_DIR, "support_files/audit_objects.json"), "r"
-        ) as fp:
+        with open(os.path.join(CURRENT_DIR, "support_files/audit_objects.json"), "r") as fp:
             audit_objects = json.load(fp)
             # both specified
             files = get_logs_in_range(
@@ -95,9 +87,7 @@ class TestGetLogsInRange(unittest.TestCase):
             )
 
     def test_get_logs_in_range_beforeRange(self):
-        with open(
-            os.path.join(CURRENT_DIR, "support_files/audit_objects.json"), "r"
-        ) as fp:
+        with open(os.path.join(CURRENT_DIR, "support_files/audit_objects.json"), "r") as fp:
             audit_objects = json.load(fp)
 
             # before range
@@ -107,9 +97,7 @@ class TestGetLogsInRange(unittest.TestCase):
             self.assertEqual(len(files), 0)
 
     def test_get_logs_in_range_afterRange(self):
-        with open(
-            os.path.join(CURRENT_DIR, "support_files/audit_objects.json"), "r"
-        ) as fp:
+        with open(os.path.join(CURRENT_DIR, "support_files/audit_objects.json"), "r") as fp:
             audit_objects = json.load(fp)
             # after range
             files = get_logs_in_range(
@@ -118,9 +106,7 @@ class TestGetLogsInRange(unittest.TestCase):
             self.assertEqual(len(files), 0)
 
     def test_get_logs_in_range_allFilesRead_noTimeRangeSpecified(self):
-        with open(
-            os.path.join(CURRENT_DIR, "support_files/audit_objects.json"), "r"
-        ) as fp:
+        with open(os.path.join(CURRENT_DIR, "support_files/audit_objects.json"), "r") as fp:
             audit_objects = json.load(fp)
             # all files read if no time range specified
             files = get_logs_in_range(audit_objects, None, None)

@@ -35,58 +35,82 @@ cluster_obj = {
 
 external_table_response = {"Records": ""}
 
-class MainTest(unittest.TestCase):
 
+class MainTest(unittest.TestCase):
     @patch("common.config.get_config_file_from_args", return_value=config_file)
     @patch("common.util.cluster_dict", return_value=cluster_obj)
-    @patch("tools.ExternalObjectReplicator.external_object_replicator.execute_svl_query", return_value=({"TotalNumRows": 1}, None, None, None))
-    @patch("tools.ExternalObjectReplicator.external_object_replicator.execute_stl_load_query",
-           return_value=({"TotalNumRows": 1}, None, None))
-    @patch('builtins.input', return_value=2)
-    def test_main_not_proceed(self, mock_input, mock_execute_stl_load_query, mock_execute_svl_query, mock_cluster_dict,
-                           mock_get_config_file_from_args):
+    @patch(
+        "tools.ExternalObjectReplicator.external_object_replicator.execute_svl_query",
+        return_value=({"TotalNumRows": 1}, None, None, None),
+    )
+    @patch(
+        "tools.ExternalObjectReplicator.external_object_replicator.execute_stl_load_query",
+        return_value=({"TotalNumRows": 1}, None, None),
+    )
+    @patch("builtins.input", return_value=2)
+    def test_main_not_proceed(
+        self,
+        mock_input,
+        mock_execute_stl_load_query,
+        mock_execute_svl_query,
+        mock_cluster_dict,
+        mock_get_config_file_from_args,
+    ):
         with self.assertRaises(SystemExit) as context:
             eor.main()
-        mock_execute_stl_load_query.assert_called_once_with(cluster_obj,
-                                                                dateutil.parser.parse(
-                                                                    config_file["end_time"]).astimezone(
-                                                                    dateutil.tz.tzutc()),
-                                                                config_file, "someuser",
-                                                                dateutil.parser.parse(
-                                                                    config_file["start_time"]).astimezone(
-                                                                    dateutil.tz.tzutc()))
-        mock_execute_svl_query.assert_called_once_with(cluster_obj,
-                                                           dateutil.parser.parse(config_file["end_time"]).astimezone(
-                                                               dateutil.tz.tzutc()),
-                                                           config_file, "someuser",
-                                                           dateutil.parser.parse(config_file["start_time"]).astimezone(
-                                                               dateutil.tz.tzutc()))
+        mock_execute_stl_load_query.assert_called_once_with(
+            cluster_obj,
+            dateutil.parser.parse(config_file["end_time"]).astimezone(dateutil.tz.tzutc()),
+            config_file,
+            "someuser",
+            dateutil.parser.parse(config_file["start_time"]).astimezone(dateutil.tz.tzutc()),
+        )
+        mock_execute_svl_query.assert_called_once_with(
+            cluster_obj,
+            dateutil.parser.parse(config_file["end_time"]).astimezone(dateutil.tz.tzutc()),
+            config_file,
+            "someuser",
+            dateutil.parser.parse(config_file["start_time"]).astimezone(dateutil.tz.tzutc()),
+        )
 
     @patch("common.config.get_config_file_from_args", return_value=config_file)
     @patch("tools.ExternalObjectReplicator.util.copy_util.clone_objects_to_s3", return_value=None)
     @patch("tools.ExternalObjectReplicator.util.glue_util.clone_glue_catalog", return_value=None)
     @patch("common.util.cluster_dict", return_value=cluster_obj)
-    @patch("tools.ExternalObjectReplicator.external_object_replicator.execute_svl_query", return_value=({"TotalNumRows": 1}, None, external_table_response, None))
-    @patch("tools.ExternalObjectReplicator.external_object_replicator.execute_stl_load_query",
-           return_value=({"TotalNumRows": 1}, None, None))
-    @patch('builtins.input', return_value=1)
-    def test_main_proceed(self, mock_input, mock_execute_stl_load_query, mock_execute_svl_query, mock_cluster_dict,
-                          mock_clone_glue_catalog, mock_clone_objects_to_s3,  mock_get_config_file_from_args):
+    @patch(
+        "tools.ExternalObjectReplicator.external_object_replicator.execute_svl_query",
+        return_value=({"TotalNumRows": 1}, None, external_table_response, None),
+    )
+    @patch(
+        "tools.ExternalObjectReplicator.external_object_replicator.execute_stl_load_query",
+        return_value=({"TotalNumRows": 1}, None, None),
+    )
+    @patch("builtins.input", return_value=1)
+    def test_main_proceed(
+        self,
+        mock_input,
+        mock_execute_stl_load_query,
+        mock_execute_svl_query,
+        mock_cluster_dict,
+        mock_clone_glue_catalog,
+        mock_clone_objects_to_s3,
+        mock_get_config_file_from_args,
+    ):
         eor.main()
-        mock_execute_stl_load_query.assert_called_once_with(cluster_obj,
-                                                            dateutil.parser.parse(
-                                                                config_file["end_time"]).astimezone(
-                                                                dateutil.tz.tzutc()),
-                                                            config_file, "someuser",
-                                                            dateutil.parser.parse(
-                                                                config_file["start_time"]).astimezone(
-                                                                dateutil.tz.tzutc()))
-        mock_execute_svl_query.assert_called_once_with(cluster_obj,
-                                                       dateutil.parser.parse(config_file["end_time"]).astimezone(
-                                                           dateutil.tz.tzutc()),
-                                                       config_file, "someuser",
-                                                       dateutil.parser.parse(config_file["start_time"]).astimezone(
-                                                           dateutil.tz.tzutc()))
+        mock_execute_stl_load_query.assert_called_once_with(
+            cluster_obj,
+            dateutil.parser.parse(config_file["end_time"]).astimezone(dateutil.tz.tzutc()),
+            config_file,
+            "someuser",
+            dateutil.parser.parse(config_file["start_time"]).astimezone(dateutil.tz.tzutc()),
+        )
+        mock_execute_svl_query.assert_called_once_with(
+            cluster_obj,
+            dateutil.parser.parse(config_file["end_time"]).astimezone(dateutil.tz.tzutc()),
+            config_file,
+            "someuser",
+            dateutil.parser.parse(config_file["start_time"]).astimezone(dateutil.tz.tzutc()),
+        )
 
 
 if __name__ == "__main__":

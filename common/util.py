@@ -14,6 +14,7 @@ serverless_cluster_endpoint_pattern = (
     r"(.+)\.(.+)\.(.+).redshift-serverless(-dev)?\.amazonaws\.com:[0-9]{4}\/(.)+"
 )
 
+
 def db_connect(
     interface="psql",
     host=None,
@@ -47,14 +48,17 @@ def db_connect(
         if drop_return:
             raise Exception("drop_return not supported for odbc")
 
-        odbc_connection_str = "Driver={}; Server={}; Database={}; IAM=1; DbUser={}; DbPassword={}; Port={}".format(
-            odbc_driver, host, database, username, password, port
+        odbc_connection_str = (
+            "Driver={}; Server={}; Database={}; IAM=1; DbUser={}; DbPassword={}; Port={}".format(
+                odbc_driver, host, database, username, password, port
+            )
         )
         conn = pyodbc.connect(odbc_connection_str)
     else:
         raise ValueError(f"Unknown Interface {interface}")
     conn.autocommit = True
     return conn
+
 
 def cluster_dict(endpoint, is_serverless=False, start_time=None, end_time=None):
     """Create a object-like dictionary from cluster endpoint"""
@@ -97,9 +101,7 @@ def cluster_dict(endpoint, is_serverless=False, start_time=None, end_time=None):
             cluster["num_nodes"] = "N/A"
             cluster["instance"] = "N/A"
     else:
-        rs_client = boto3.client(
-            "redshift-serverless", region_name=cluster.get("region")
-        )
+        rs_client = boto3.client("redshift-serverless", region_name=cluster.get("region"))
         try:
             response = rs_client.get_workgroup(workgroupName=workgroup_name)
 
@@ -176,16 +178,12 @@ def get_connection_key(database_name, username, pid):
 
 def is_serverless(config):
     return bool(
-        re.fullmatch(
-            serverless_cluster_endpoint_pattern, config["target_cluster_endpoint"]
-        )
+        re.fullmatch(serverless_cluster_endpoint_pattern, config["target_cluster_endpoint"])
     )
 
 
 def current_offset_ms(ref_time):
-    return (
-        datetime.datetime.now(tz=datetime.timezone.utc) - ref_time
-    ).total_seconds() * 1000.0
+    return (datetime.datetime.now(tz=datetime.timezone.utc) - ref_time).total_seconds() * 1000.0
 
 
 # exception thrown if credentials can't be retrieved

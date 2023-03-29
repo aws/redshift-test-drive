@@ -3,7 +3,7 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch, Mock, mock_open
 
-from extract.extractor import Extractor
+from core.extract.extractor import Extractor
 
 from core.util.audit_logs_parsing import Log
 
@@ -54,9 +54,6 @@ class ExtractorTestCases(unittest.TestCase):
                 "start_time": "2022-11-16T00:00:00",
                 "end_time": "2022-11-18T00:00:00",
             }
-        )
-        now_iso_format = (
-            datetime.datetime.now().replace(tzinfo=datetime.timezone.utc).isoformat()
         )
 
         (
@@ -144,9 +141,7 @@ class ExtractorTestCases(unittest.TestCase):
         assert log_location == "s3://Test/T"
 
     def test_get_parameters_for_log_extraction_no_log_location_specified(self):
-        e = Extractor(
-            {"start_time": "2022-11-16T00:00:00", "end_time": "2022-11-18T00:00:00"}
-        )
+        e = Extractor({"start_time": "2022-11-16T00:00:00", "end_time": "2022-11-18T00:00:00"})
         with self.assertRaises(SystemExit):
             (
                 extraction_name,

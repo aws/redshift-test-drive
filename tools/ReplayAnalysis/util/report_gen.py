@@ -53,9 +53,7 @@ def pdf_gen(report, summary=None):
 
         # title and subtitle and cluster info table
         elems.append(Paragraph(docs["title"], style["Title"]))
-        elems.append(
-            Paragraph(sub_yaml_vars(report, docs["subtitle"]), style["Heading4"])
-        )
+        elems.append(Paragraph(sub_yaml_vars(report, docs["subtitle"]), style["Heading4"]))
         cluster_info = pd.DataFrame.from_dict(report.cluster_details, orient="index")
         elems.append(
             Table(
@@ -90,9 +88,7 @@ def pdf_gen(report, summary=None):
 
         # access data section
         elems.append(Paragraph(docs["data_header"], style["Heading4"]))
-        elems.append(
-            Paragraph(sub_yaml_vars(report, docs["data_paragraph"]), style["Normal"])
-        )
+        elems.append(Paragraph(sub_yaml_vars(report, docs["data_paragraph"]), style["Normal"]))
         elems.append(
             ListFlowable(
                 [ListItem(Paragraph(x, style["Normal"])) for x in docs["raw_data"]],
@@ -100,11 +96,7 @@ def pdf_gen(report, summary=None):
             )
         )
         elems.append(Spacer(0, 5))
-        elems.append(
-            Paragraph(
-                sub_yaml_vars(report, docs["agg_data_paragraph"]), style["Normal"]
-            )
-        )
+        elems.append(Paragraph(sub_yaml_vars(report, docs["agg_data_paragraph"]), style["Normal"]))
 
         # notes section
         elems.append(Paragraph(docs["notes_header"], style["Heading4"]))
@@ -132,9 +124,7 @@ def pdf_gen(report, summary=None):
 
         desc = Paragraph(docs["graph"].get("paragraph"), style["Normal"])
         data = [[Image(image_path, width=300, height=200, hAlign="LEFT"), desc]]
-        elems.append(
-            Table(data, style=TableStyle([("VALIGN", (0, 0), (-1, -1), "MIDDLE")]))
-        )
+        elems.append(Table(data, style=TableStyle([("VALIGN", (0, 0), (-1, -1), "MIDDLE")])))
         elems.append(Spacer(0, 5))
 
         # cluster metrics table

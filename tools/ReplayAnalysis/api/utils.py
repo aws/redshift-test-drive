@@ -63,9 +63,7 @@ def list_replays(bucket_url, session):
     for x in resp["CommonPrefixes"]:
         try:
             s3.Object(bucket.get("bucket_name"), f'{x.get("Prefix")}info.json').load()
-            content_object = s3.Object(
-                bucket.get("bucket_name"), f'{x.get("Prefix")}info.json'
-            )
+            content_object = s3.Object(bucket.get("bucket_name"), f'{x.get("Prefix")}info.json')
             file_content = content_object.get()["Body"].read().decode("utf-8")
             json_content = json.loads(file_content)
             json_content["bucket"] = bucket.get("bucket_name")
@@ -139,32 +137,20 @@ def filter_data(data, replay, query_types=None, users=None, duration=None):
 
     if duration is not None and duration != [0, 0]:
         if {"start_diff", "end_diff"}.issubset(data.columns):
-            start = replay_data[
-                replay_data["start_diff"].between(duration[0], duration[1])
-            ]
+            start = replay_data[replay_data["start_diff"].between(duration[0], duration[1])]
             end = replay_data[replay_data["end_diff"].between(duration[0], duration[1])]
             replay_data = pd.concat(
                 [start, end], join="inner", ignore_index=True
             ).drop_duplicates()
 
         elif {"time_diff"}.issubset(data.columns):
-            replay_data = replay_data[
-                replay_data["start_diff"].between(duration[0], duration[1])
-            ]
+            replay_data = replay_data[replay_data["start_diff"].between(duration[0], duration[1])]
 
         else:
-            start_x = replay_data[
-                replay_data["start_diff_x"].between(duration[0], duration[1])
-            ]
-            start_y = replay_data[
-                replay_data["start_diff_y"].between(duration[0], duration[1])
-            ]
-            end_x = replay_data[
-                replay_data["end_diff_x"].between(duration[0], duration[1])
-            ]
-            end_y = replay_data[
-                replay_data["end_diff_y"].between(duration[0], duration[1])
-            ]
+            start_x = replay_data[replay_data["start_diff_x"].between(duration[0], duration[1])]
+            start_y = replay_data[replay_data["start_diff_y"].between(duration[0], duration[1])]
+            end_x = replay_data[replay_data["end_diff_x"].between(duration[0], duration[1])]
+            end_y = replay_data[replay_data["end_diff_y"].between(duration[0], duration[1])]
             replay_data = pd.concat(
                 [start_x, start_y, end_x, end_y], join="inner", ignore_index=True
             ).drop_duplicates()
