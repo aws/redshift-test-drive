@@ -219,6 +219,11 @@ class Extractor:
             bar_format=self.bar_format,
         ):
             for idx, query in enumerate(queries):
+                if self.config.get("external_schemas", None):
+                    external_schemas = self.config["external_schemas"]
+                    if any(schema in query.text for schema in external_schemas):
+                        statements_to_be_avoided.add(query.text)
+                        continue
                 # query -> sql query details, access query.text for sql
                 try:
                     if query.xid not in sql_json["transactions"]:
@@ -268,15 +273,7 @@ class Extractor:
                     if not query.text.endswith(";"):
                         query.text += ";"
 
-                if self.config["external_schemas"]:
-                    external_schemas = self.config["external_schemas"]
-                    if any(schema in query.text for schema in external_schemas):
-                        print(f"Statement to be appended {query.text}")
-                        statements_to_be_avoided.add(query.text)
-                    else:
-                        query_info["text"] = query.text
-                else:
-                    query_info["text"] = query.text
+                query_info["text"] = query.text
 
                 sql_json["transactions"][query.xid]["queries"].append(query_info)
                 if not hash((query.database_name, query.username, query.pid)) in last_connections:
