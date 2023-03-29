@@ -48,7 +48,7 @@ unload_iam_role: ""
 analysis_iam_role: ""
 
 # Location of the SQL file containing queries to unload system tables
-unload_system_table_queries: "unload_system_tables.sql"
+unload_system_table_queries: "core/replay/unload_system_tables.sql"
 
 # IAM role to UNLOAD system tables from source cluster to S3 location for later
 # analysis
