@@ -49,9 +49,7 @@ def summarize(
         error_location,
         replay_id,
     )
-    replay_summary.append(
-        f"Replay finished in {replay_end_time - replay_start_timestamp}."
-    )
+    replay_summary.append(f"Replay finished in {replay_end_time - replay_start_timestamp}.")
     for line in replay_summary:
         logger.info(line)
     logger.info(
@@ -60,9 +58,7 @@ def summarize(
     return replay_summary
 
 
-def export_errors(
-    connection_errors, transaction_errors, workload_location, replay_name
-):
+def export_errors(connection_errors, transaction_errors, workload_location, replay_name):
     """Save any errors that occurred during replay to a local directory or s3"""
 
     if len(connection_errors) == len(transaction_errors) == 0:
@@ -73,12 +69,8 @@ def export_errors(
         f"Saving {len(connection_errors)} connection errors, {len(transaction_errors)} transaction_errors"
     )
 
-    connection_error_location = (
-        workload_location + "/" + replay_name + "/connection_errors"
-    )
-    transaction_error_location = (
-        workload_location + "/" + replay_name + "/transaction_errors"
-    )
+    connection_error_location = workload_location + "/" + replay_name + "/connection_errors"
+    transaction_error_location = workload_location + "/" + replay_name + "/transaction_errors"
     logger.info(f"Exporting connection errors to {connection_error_location}/")
     logger.info(f"Exporting transaction errors to {transaction_error_location}/")
 
@@ -101,9 +93,7 @@ def export_errors(
                 )
             else:
                 key_loc = "%s/connection_errors/%s.txt" % (replay_name, filename)
-            aws_service_helper.s3_put_object(
-                bucket_name, connection_error_text, key_loc
-            )
+            aws_service_helper.s3_put_object(bucket_name, connection_error_text, key_loc)
         else:
             error_file = open(connection_error_location + "/" + filename + ".txt", "w")
             error_file.write(connection_error_text)

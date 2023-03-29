@@ -2,9 +2,9 @@ from datetime import datetime, timezone
 from unittest import TestCase
 from unittest.mock import Mock
 
-from extract import extract_parser
+from core.extract import extract_parser
 
-from core.util.audit_logs_parsing import Log, ConnectionLog
+from core.util.audit_logs_parsing import ConnectionLog
 
 pid = "12324"
 xid = "123142412"
@@ -33,7 +33,6 @@ class ExtractParserTestCases(TestCase):
         for key, value in logs.items():
             self.assertEqual(len(value), 1)
             log = value[0]
-            #self.assertTrue(isinstance(log, Log))
             self.assertEqual(log.xid, xid)
             self.assertEqual(log.pid, pid)
             self.assertEqual(log.text, "SELECT * FROM TEST_TABLE LIMIT 10;")

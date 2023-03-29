@@ -1,13 +1,14 @@
+import datetime
 import unittest
 from unittest.mock import patch, Mock
 
-from extract.s3_extractor import S3Extractor
+from core.extract.s3_extractor import S3Extractor
 
 
 def mock_s3_get_bucket_contents(bucket, prefix):
     return [
-        {"Key": "s3://bucket/connectionlog"},
-        {"Key": "s3://bucket/useractivitylog"},
+        {"Key": "s3://bucket/cluster_connectionlog_2021-08-15T15:00.gz"},
+        {"Key": "s3://bucket/cluster_useractivitylog_2021-08-15T19:00.gz"},
     ]
 
 
@@ -35,14 +36,17 @@ def mock_parse_log(
 
 
 class S3ExtractorTestCases(unittest.TestCase):
-    @patch("util.log_validation.get_logs_in_range", mock_get_logs_in_range)
+    @patch("core.extract.s3_extractor.get_logs_in_range", mock_get_logs_in_range)
     @patch("common.aws_service.s3_get_bucket_contents", mock_s3_get_bucket_contents)
     @patch("common.aws_service.s3_get_object", mock_s3_get_object)
-    @patch("extract.extract_parser", mock_parse_log)
+    @patch("core.extract.extract_parser", mock_parse_log)
     def test_get_extract_from_s3(self):
         s3_extractor = S3Extractor({})
         s3_extractor.get_extract_from_s3(
-            "test_bucket", "test", "2021-08-15T15:50", "2021-08-15T18:55"
+            "test_bucket",
+            "test",
+            datetime.datetime.fromisoformat("2021-08-15T15:50").utcoffset(),
+            datetime.datetime.fromisoformat("2021-08-15T18:55").utcoffset(),
         )
 
 

@@ -12,14 +12,16 @@ app = Flask(__name__)
 
 # global variables maintained during each analysis session
 boto3_session = None  # boto3 session object for making requests
-selected_replays = (
-    None  # List of dictionaries, each replay dict = replay/info.json from S3
+selected_replays = None  # List of dictionaries, each replay dict = replay/info.json from S3
+selected_query_data = (
+    None  # Pandas dataframe, with sysqueryhistory data compiled from each selected replay
 )
-selected_query_data = None  # Pandas dataframe, with sysqueryhistory data compiled from each selected replay
 selected_error_data = (
     None  # Pandas dataframe, with replayerrors data compiled from each selected replay
 )
-selected_copy_data = None  # df with sysloadhistory data joined with sysqueryhistory from each selected replay
+selected_copy_data = (
+    None  # df with sysloadhistory data joined with sysqueryhistory from each selected replay
+)
 
 
 @app.after_request
@@ -96,9 +98,7 @@ def request_s3_data(filename):
         df["query_text"] = df["query_text"].apply(lambda x: remove_comments(x))
 
     if "load" in filename and selected_query_data is not None:
-        df = pd.merge(
-            left=df, right=selected_query_data, on=["query_id", "sid"], how="inner"
-        )
+        df = pd.merge(left=df, right=selected_query_data, on=["query_id", "sid"], how="inner")
 
     # export df to csv locally for debugging
     df.to_csv(f"{filename}.csv")
@@ -211,9 +211,7 @@ def time_range():
     users = selected_query_data["user_name"].unique()
     time_max = 0
     for replay in selected_replays:
-        dur_s = sum(
-            x * int(t) for x, t in zip([3600, 60, 1], replay["duration"].split(":"))
-        )
+        dur_s = sum(x * int(t) for x, t in zip([3600, 60, 1], replay["duration"].split(":")))
         if dur_s > time_max:
             time_max = dur_s
     return (
@@ -243,9 +241,7 @@ def compare_throughput():
 
         replay_data = filter_data(selected_query_data, replay, q_types, users)
 
-        replay_data["time"] = replay_data["end_diff"].apply(
-            lambda x: 1000 * int(x / 1000)
-        )
+        replay_data["time"] = replay_data["end_diff"].apply(lambda x: 1000 * int(x / 1000))
         if not replay_data.empty:
             data = {
                 "rel_time": replay_data.groupby(by="time").size().index,
@@ -291,9 +287,7 @@ def agg_metrics():
         metrics = metrics.append(entry, ignore_index=True)
 
     return (
-        jsonify(
-            {"success": True, "data": json.loads(metrics.to_json(orient="records"))}
-        ),
+        jsonify({"success": True, "data": json.loads(metrics.to_json(orient="records"))}),
         201,
     )
 
@@ -335,9 +329,7 @@ def top_queries():
     global selected_query_data
 
     if selected_query_data is not None:
-        selected_query_data = selected_query_data.sort_values(
-            by="elapsed_time", ascending=False
-        )
+        selected_query_data = selected_query_data.sort_values(by="elapsed_time", ascending=False)
         return (
             jsonify(
                 {
@@ -354,9 +346,7 @@ def top_queries():
         df = df.sort_values(by="elapsed_time", ascending=False)
 
         return (
-            jsonify(
-                {"success": True, "data": json.loads(df.to_json(orient="records"))}
-            ),
+            jsonify({"success": True, "data": json.loads(df.to_json(orient="records"))}),
             201,
         )
 
@@ -417,9 +407,7 @@ def err_table():
     df = request_s3_data("replayerrors000")
     if df is not None:
         return (
-            jsonify(
-                {"success": True, "data": json.loads(df.to_json(orient="records"))}
-            ),
+            jsonify({"success": True, "data": json.loads(df.to_json(orient="records"))}),
             201,
         )
 
@@ -494,9 +482,7 @@ def copy_agg():
     if selected_copy_data.empty:
         return jsonify({"success": True, "data": []}), 201
 
-    metrics = pd.DataFrame(
-        columns=["sid", "loaded_rows", "loaded_bytes", "source_file_count"]
-    )
+    metrics = pd.DataFrame(columns=["sid", "loaded_rows", "loaded_bytes", "source_file_count"])
 
     for replay in selected_replays:
         df = filter_data(selected_copy_data, replay, users=users, duration=duration)
@@ -514,9 +500,7 @@ def copy_agg():
         metrics = metrics.append(entry, ignore_index=True)
 
     return (
-        jsonify(
-            {"success": True, "data": json.loads(metrics.to_json(orient="records"))}
-        ),
+        jsonify({"success": True, "data": json.loads(metrics.to_json(orient="records"))}),
         201,
     )
 

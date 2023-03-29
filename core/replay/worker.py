@@ -29,7 +29,6 @@ class ReplayWorker:
         total_connections,
         error_logger,
         replay_id,
-
     ):
         self.peak_connections = peak_connections
         self.num_connections = num_connections
@@ -46,7 +45,6 @@ class ReplayWorker:
         self.error_logger = error_logger
         self.replay_id = replay_id
 
-
     def replay(self):
         """Worker process to distribute the work among several processes.  Each
         worker pulls a connection off the queue, waits until its time to start
@@ -58,7 +56,7 @@ class ReplayWorker:
             dir=f"core/logs/replay_worker_log-{self.replay_id}",
             logger_name="WorkloadReplicatorLogger",
             level=self.config.get("log_level", "INFO"),
-            script_type=f"replay worker - {self.process_idx}"
+            script_type=f"replay worker - {self.process_idx}",
         )
 
         # map thread to stats dict
@@ -99,15 +97,11 @@ class ReplayWorker:
                         self.connection_semaphore.release()
 
                     elapsed = (
-                        int(time.time() - last_empty_queue_time)
-                        if last_empty_queue_time
-                        else 0
+                        int(time.time() - last_empty_queue_time) if last_empty_queue_time else 0
                     )
                     # take into account the initial timeout
                     elapsed += timeout_sec
-                    empty_queue_timeout_sec = self.config.get(
-                        "empty_queue_timeout_sec", 120
-                    )
+                    empty_queue_timeout_sec = self.config.get("empty_queue_timeout_sec", 120)
                     self.logger.debug(
                         f"No jobs for {elapsed} seconds (timeout {empty_queue_timeout_sec})"
                     )
@@ -130,14 +124,11 @@ class ReplayWorker:
 
                 # how much time has elapsed since the replay started
                 time_elapsed_ms = (
-                    datetime.datetime.now(tz=datetime.timezone.utc)
-                    - self.replay_start_time
+                    datetime.datetime.now(tz=datetime.timezone.utc) - self.replay_start_time
                 ).total_seconds() * 1000.0
 
                 # what is the time offset of this connection job relative to the first event
-                connection_offset_ms = job["connection"].offset_ms(
-                    self.first_event_time
-                )
+                connection_offset_ms = job["connection"].offset_ms(self.first_event_time)
                 delay_sec = (connection_offset_ms - time_elapsed_ms) / 1000.0
 
                 self.logger.debug(
@@ -178,20 +169,16 @@ class ReplayWorker:
                 connection_thread.start()
                 connection_threads[connection_thread] = thread_stats
 
-                self.join_finished_threads(
-                    connection_threads, self.worker_stats, wait=False
-                )
+                self.join_finished_threads(connection_threads, self.worker_stats, wait=False)
 
                 connections_processed += 1
 
-            self.logger.debug(
-                f"Waiting for {len(connection_threads)} connections to finish..."
-            )
+            self.logger.debug(f"Waiting for {len(connection_threads)} connections to finish...")
             self.join_finished_threads(connection_threads, self.worker_stats, wait=True)
         except Exception as e:
             self.logger.error(f"Process {self.process_idx} threw exception: {e}")
             self.logger.debug("".join(traceback.format_exception(*sys.exc_info())))
-            
+
         if connections_processed:
             self.logger.debug(
                 f"Max connection offset for this process: {self.worker_stats['connection_diff_sec']:.3f} sec"
@@ -204,9 +191,7 @@ class ReplayWorker:
         finished_threads = []
         for t in connection_threads:
             if not t.is_alive() or wait:
-                self.logger.debug(
-                    f"Joining thread {t.connection_log.session_initiation_time}"
-                )
+                self.logger.debug(f"Joining thread {t.connection_log.session_initiation_time}")
                 t.join()
                 collect_stats(worker_stats, connection_threads[t])
                 finished_threads.append(t)

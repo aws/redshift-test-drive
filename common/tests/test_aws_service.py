@@ -22,9 +22,7 @@ class AWSServiceTestCases(TestCase):
         s = Stubber(redshift_client)
         s.add_response("describe_logging_status", {})
         s.activate()
-        response = aws_service_helper.redshift_describe_logging_status(
-            "test.t.us-east-1"
-        )
+        response = aws_service_helper.redshift_describe_logging_status("test.t.us-east-1")
         assert response == {}
         s.deactivate()
 
@@ -58,9 +56,7 @@ class AWSServiceTestCases(TestCase):
     @patch("boto3.client", mock_cw_client)
     def test_cw_get_paginated_logs(self):
         s = Stubber(cw_client)
-        s.add_response(
-            "filter_log_events", {"nextToken": "abc", "events": [{"message": "ABC"}]}
-        )
+        s.add_response("filter_log_events", {"nextToken": "abc", "events": [{"message": "ABC"}]})
         s.add_response("filter_log_events", {"events": [{"message": "DEF"}]})
         s.activate()
         response = aws_service_helper.cw_get_paginated_logs(
@@ -88,7 +84,6 @@ class AWSServiceTestCases(TestCase):
         assert objects == [{}, {}]
         s.deactivate()
 
-
     @patch("boto3.client", mock_s3_client)
     def test_s3_client_get_object(self):
         s = Stubber(s3_client)
@@ -99,7 +94,7 @@ class AWSServiceTestCases(TestCase):
         s.deactivate()
 
     @patch("boto3.resource")
-    def test_s3_resource_put_object(self,mock_s3_resource):
+    def test_s3_resource_put_object(self, mock_s3_resource):
         mock_object = MagicMock()
         mock_put = MagicMock()
         mock_s3_resource.return_value.Object = mock_object
@@ -113,5 +108,5 @@ class AWSServiceTestCases(TestCase):
         mock_generate_url = Mock()
         mock_s3_client.return_value.generate_presigned_url = mock_generate_url
         mock_generate_url.return_value = {}
-        aws_call = aws_service_helper.s3_generate_presigned_url("clientmethod","bucket", "key")
+        aws_call = aws_service_helper.s3_generate_presigned_url("clientmethod", "bucket", "key")
         assert aws_call == {}

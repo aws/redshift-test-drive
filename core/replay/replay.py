@@ -57,15 +57,13 @@ def main():
     replay_start_timestamp = datetime.datetime.now(tz=datetime.timezone.utc)
     logger.info(f"Replay start time: {replay_start_timestamp}")
 
-    id_hash = hashlib.sha1(
-        replay_start_timestamp.isoformat().encode("UTF-8")
-    ).hexdigest()[:5]
+    id_hash = hashlib.sha1(replay_start_timestamp.isoformat().encode("UTF-8")).hexdigest()[:5]
     if g_config.get("tag", "") != "":
-        replay_id = f'{replay_start_timestamp.isoformat()}_{cluster.get("id")}_{g_config["tag"]}_{id_hash}'
-    else:
         replay_id = (
-            f'{replay_start_timestamp.isoformat()}_{cluster.get("id")}_{id_hash}'
+            f'{replay_start_timestamp.isoformat()}_{cluster.get("id")}_{g_config["tag"]}_{id_hash}'
         )
+    else:
+        replay_id = f'{replay_start_timestamp.isoformat()}_{cluster.get("id")}_{id_hash}'
 
     # Setup Logging
     level = logging.getLevelName(g_config.get("log_level", "INFO").upper())
@@ -75,7 +73,7 @@ def main():
         level=level,
         preamble=yaml.dump(g_config),
         backup_count=g_config.get("backup_count", 2),
-        script_type='replay',
+        script_type="replay",
     )
     log_helper.log_version()
 

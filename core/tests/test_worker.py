@@ -16,12 +16,8 @@ peak_connections = 1
 connection_semaphore = None
 worker_stats = {"connection_diff_sec": float(234584)}
 queue = "queue"
-first_event_time = datetime.datetime(
-    2022, 2, 23, 10, 00, 00, tzinfo=datetime.timezone.utc
-)
-replay_start_time = datetime.datetime(
-    2022, 2, 23, 10, 30, 00, tzinfo=datetime.timezone.utc
-)
+first_event_time = datetime.datetime(2022, 2, 23, 10, 00, 00, tzinfo=datetime.timezone.utc)
+replay_start_time = datetime.datetime(2022, 2, 23, 10, 30, 00, tzinfo=datetime.timezone.utc)
 process_idx = 0
 config = {
     "tag": "",
@@ -87,7 +83,6 @@ connection = ConnectionLog(
 
 
 class TestWorker(unittest.TestCase):
-
     @patch("core.replay.worker.threading")
     @patch.object(ConnectionLog, "offset_ms")
     @patch("core.replay.worker.datetime")
@@ -138,7 +133,7 @@ class TestWorker(unittest.TestCase):
             config,
             total_connections,
             error_logger,
-            replay_id
+            replay_id,
         )
 
         worker.replay()
@@ -151,9 +146,7 @@ class TestWorker(unittest.TestCase):
         )
         mock_log.debug.assert_any_call("Got termination signal, finishing up.")
         mock_log.debug.assert_any_call("Waiting for 1 connections to finish...")
-        mock_log.debug.assert_any_call(
-            "Max connection offset for this process: 234584.000 sec"
-        )
+        mock_log.debug.assert_any_call("Max connection offset for this process: 234584.000 sec")
         mock_log.debug.assert_any_call("Process 0 finished")
 
     @patch("core.replay.worker.init_stats")
@@ -193,7 +186,7 @@ class TestWorker(unittest.TestCase):
             config,
             total_connections,
             error_logger,
-            replay_id
+            replay_id,
         )
 
         worker.replay()
@@ -254,7 +247,7 @@ class TestWorker(unittest.TestCase):
             config,
             total_connections,
             error_logger,
-            replay_id
+            replay_id,
         )
 
         worker.replay()
@@ -317,7 +310,7 @@ class TestWorker(unittest.TestCase):
             config,
             total_connections,
             error_logger,
-            replay_id
+            replay_id,
         )
 
         worker.replay()
@@ -375,7 +368,7 @@ class TestWorker(unittest.TestCase):
             config,
             total_connections,
             error_logger,
-            replay_id
+            replay_id,
         )
 
         worker.replay()
@@ -394,9 +387,7 @@ class TestWorker(unittest.TestCase):
         connection.transactions = transaction
 
         mock_queue.get.side_effect = [{"job_id": 0, "connection": connection}, False]
-        replay_start_time = datetime.datetime(
-            2023, 1, 1, 0, 0, 0, tzinfo=datetime.timezone.utc
-        )
+        replay_start_time = datetime.datetime(2023, 1, 1, 0, 0, 0, tzinfo=datetime.timezone.utc)
 
         worker = ReplayWorker(
             process_idx,
@@ -410,7 +401,7 @@ class TestWorker(unittest.TestCase):
             config,
             total_connections,
             error_logger,
-            replay_id
+            replay_id,
         )
         connection_threads = {}
         thread_stats = init_stats({})
