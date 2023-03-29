@@ -155,20 +155,20 @@ class Extractor:
         # save the statements which will not be replayed
         if len(statements_to_be_avoided)>0:
             logger.info(f"Exporting sql statements to be avoided")
-        replacements_string = ("SQL Statements\n")
+            replacements_string = ("SQL Statements\n")
 
-        for sql_statement in statements_to_be_avoided:
-            replacements_string += sql_statement + "\n"
-        if is_s3:
-            aws_service_helper.s3_put_object(
-                replacements_string,
-                bucket_name,
-                output_prefix + "/sql_statements_skipped.txt",
-            )
-        else:
-            replacements_file = open(output_directory + "/sql_statements_skipped.txt", "w")
-            replacements_file.write(replacements_string)
-            replacements_file.close()
+            for sql_statement in statements_to_be_avoided:
+                replacements_string += sql_statement + "\n"
+            if is_s3:
+                aws_service_helper.s3_put_object(
+                    replacements_string,
+                    bucket_name,
+                    output_prefix + "/sql_statements_skipped.txt",
+                )
+            else:
+                replacements_file = open(output_directory + "/sql_statements_skipped.txt", "w")
+                replacements_file.write(replacements_string)
+                replacements_file.close()
 
         
         logger.info(
