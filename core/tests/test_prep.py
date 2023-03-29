@@ -156,9 +156,7 @@ class TestValidateAndNormalizeFilters(unittest.TestCase):
         config2 = yaml.safe_load(normalized_filters)
         self.assertDictEqual(
             config2["filters"],
-            ReplayPrep.validate_and_normalize_filters(
-                ConnectionLog, config1["filters"]
-            ),
+            ReplayPrep.validate_and_normalize_filters(ConnectionLog, config1["filters"]),
         )
 
     def test_empty_filter_validation(self):
@@ -179,72 +177,94 @@ class TestValidateAndNormalizeFilters(unittest.TestCase):
             ReplayPrep.validate_and_normalize_filters(ConnectionLog, config1),
         )
 
+
 class TestGetConnectionCredentials(unittest.TestCase):
     def test_get_connection_credentials_from_cache(self):
         prep = ReplayPrep({})
         credentials = {"password": "test"}
         prep.credentials_cache["testUsername"] = {
             "last_update": datetime.datetime.now(tz=datetime.timezone.utc),
-            "target_cluster_urls": credentials
+            "target_cluster_urls": credentials,
         }
         result = prep.get_connection_credentials("testUsername")
         self.assertEqual(result, credentials)
 
     @patch("core.replay.prep.get_secret")
     def test_get_connection_credentials_serverless_from_secrets_manager(self, mock_get_secret):
-        mock_get_secret.return_value = {"admin_username": "testAdmin", "admin_password": "testPassword"}
-        prep = ReplayPrep({
-            "target_cluster_endpoint": "test.111222333222.us-east-1.redshift-serverless.amazonaws.com:5439/dev",
-            "secret_name": "test_secret",
-            "odbc_driver": "test",
-            "nlb_nat_dns": None,
-            "target_cluster_region": "us-east-1"
-        })
+        mock_get_secret.return_value = {
+            "admin_username": "testAdmin",
+            "admin_password": "testPassword",
+        }
+        prep = ReplayPrep(
+            {
+                "target_cluster_endpoint": "test.111222333222.us-east-1.redshift-serverless.amazonaws.com:5439/dev",
+                "secret_name": "test_secret",
+                "odbc_driver": "test",
+                "nlb_nat_dns": None,
+                "target_cluster_region": "us-east-1",
+            }
+        )
         result = prep.get_connection_credentials("testUsername")
-        self.assertEqual(result['psql'], {
-            "username": "testAdmin",
-            "password": "testPassword",
-            "host": "test.111222333222.us-east-1.redshift-serverless.amazonaws.com",
-            "port": "5439",
-            "database": "dev"
-        })
+        self.assertEqual(
+            result["psql"],
+            {
+                "username": "testAdmin",
+                "password": "testPassword",
+                "host": "test.111222333222.us-east-1.redshift-serverless.amazonaws.com",
+                "port": "5439",
+                "database": "dev",
+            },
+        )
 
     @patch("core.replay.prep.redshift_get_cluster_credentials")
     def test_get_connection_credentials_serverless_from_redshift_api(self, mock_get_cluster_creds):
         mock_get_cluster_creds.return_value = {"DbUser": "testAdmin", "DbPassword": "testPassword"}
-        prep = ReplayPrep({
-            "target_cluster_endpoint": "test.111222333222.us-east-1.redshift-serverless.amazonaws.com:5439/dev",
-            "secret_name": None,
-            "odbc_driver": "test",
-            "nlb_nat_dns": None,
-            "target_cluster_region": "us-east-1"
-        })
+        prep = ReplayPrep(
+            {
+                "target_cluster_endpoint": "test.111222333222.us-east-1.redshift-serverless.amazonaws.com:5439/dev",
+                "secret_name": None,
+                "odbc_driver": "test",
+                "nlb_nat_dns": None,
+                "target_cluster_region": "us-east-1",
+            }
+        )
         result = prep.get_connection_credentials("testUsername")
-        self.assertEqual(result['psql'], {
-            "username": "testAdmin",
-            "password": "testPassword",
-            "host": "test.111222333222.us-east-1.redshift-serverless.amazonaws.com",
-            "port": "5439",
-            "database": "dev"
-        })
+        self.assertEqual(
+            result["psql"],
+            {
+                "username": "testAdmin",
+                "password": "testPassword",
+                "host": "test.111222333222.us-east-1.redshift-serverless.amazonaws.com",
+                "port": "5439",
+                "database": "dev",
+            },
+        )
 
     @patch("core.replay.prep.redshift_get_cluster_credentials")
-    def test_get_connection_credentials_provisioned_from_redshift_api(self, mock_get_cluster_creds):
+    def test_get_connection_credentials_provisioned_from_redshift_api(
+        self, mock_get_cluster_creds
+    ):
         mock_get_cluster_creds.return_value = {"DbUser": "testAdmin", "DbPassword": "testPassword"}
-        prep = ReplayPrep({
-            "target_cluster_endpoint": "test.111222333222.us-east-1.redshift.amazonaws.com:5439/dev",
-            "odbc_driver": "test",
-            "nlb_nat_dns": None,
-            "target_cluster_region": "us-east-1"
-        })
+        prep = ReplayPrep(
+            {
+                "target_cluster_endpoint": "test.111222333222.us-east-1.redshift.amazonaws.com:5439/dev",
+                "odbc_driver": "test",
+                "nlb_nat_dns": None,
+                "target_cluster_region": "us-east-1",
+            }
+        )
         result = prep.get_connection_credentials("testUsername")
-        self.assertEqual(result['psql'], {
-            "username": "testAdmin",
-            "password": "testPassword",
-            "host": "test.111222333222.us-east-1.redshift.amazonaws.com",
-            "port": "5439",
-            "database": "dev"
-        })
+        self.assertEqual(
+            result["psql"],
+            {
+                "username": "testAdmin",
+                "password": "testPassword",
+                "host": "test.111222333222.us-east-1.redshift.amazonaws.com",
+                "port": "5439",
+                "database": "dev",
+            },
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

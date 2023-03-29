@@ -38,9 +38,7 @@ class CopyUtilTestCases(unittest.TestCase):
     def test_check_file_existence_object_not_found(self, mock_objects_not_found):
         response = {
             "ColumnMetadata": [{}],
-            "Records": [
-                [{"stringValue": "s3://source-test-bucket/test/test_data/file.parquet"}]
-            ],
+            "Records": [[{"stringValue": "s3://source-test-bucket/test/test_data/file.parquet"}]],
             "TotalNumRows": 1,
             "ResponseMetadata": {},
         }
@@ -48,9 +46,7 @@ class CopyUtilTestCases(unittest.TestCase):
         mock_objects_not_found.return_value = [
             {
                 "Key": "test/test_data/file.parquet",
-                "LastModified": datetime.datetime(
-                    2020, 11, 12, 19, 2, 18, tzinfo=tzutc()
-                ),
+                "LastModified": datetime.datetime(2020, 11, 12, 19, 2, 18, tzinfo=tzutc()),
                 "ETag": "abcd567899hkhkjh",
                 "Size": 5491,
             }
@@ -69,12 +65,8 @@ class CopyUtilTestCases(unittest.TestCase):
             "ColumnMetadata": [{}],
             "Records": [
                 [
-                    {
-                        "stringValue": "s3://source-test-bucket/test/test_data/file.parquet"
-                    },
-                    {
-                        "stringValue": "s3://source-test-bucket/test/test_data/file.parquet"
-                    },
+                    {"stringValue": "s3://source-test-bucket/test/test_data/file.parquet"},
+                    {"stringValue": "s3://source-test-bucket/test/test_data/file.parquet"},
                 ]
             ],
             "TotalNumRows": 1,
@@ -102,9 +94,7 @@ class CopyUtilTestCases(unittest.TestCase):
                 "e_tag": '"ee6e0785cb0b431c90d1c006807ae4ee"',
                 "size": "5.36 KB",
                 "bytes": 5491,
-                "last_modified": datetime.datetime(
-                    2019, 10, 8, 12, 5, 6, tzinfo=tzutc()
-                ),
+                "last_modified": datetime.datetime(2019, 10, 8, 12, 5, 6, tzinfo=tzutc()),
             }
         ]
         objects_not_found = [
@@ -117,9 +107,7 @@ class CopyUtilTestCases(unittest.TestCase):
         dest_prefix = "copy_files/"
 
         mock_copy_parallel.return_value = {}
-        copy_util.clone_objects_to_s3(
-            target_dest, obj_type, source_location, objects_not_found
-        )
+        copy_util.clone_objects_to_s3(target_dest, obj_type, source_location, objects_not_found)
         self.assertTrue(mock_s3_upload.called)
         self.assertEqual(mock_s3_upload.call_count, 1)
 
@@ -135,9 +123,7 @@ class CopyUtilTestCases(unittest.TestCase):
                 "e_tag": '"ee6e0785cb0b431c90d1c006807ae4ee"',
                 "size": "5.36 KB",
                 "bytes": 5491,
-                "last_modified": datetime.datetime(
-                    2019, 10, 8, 12, 5, 6, tzinfo=tzutc()
-                ),
+                "last_modified": datetime.datetime(2019, 10, 8, 12, 5, 6, tzinfo=tzutc()),
             }
         ]
         objects_not_found = [
@@ -150,17 +136,13 @@ class CopyUtilTestCases(unittest.TestCase):
         dest_prefix = "copy_files/"
 
         mock_copy_parallel.return_value = {}
-        copy_util.clone_objects_to_s3(
-            target_dest, obj_type, source_location, objects_not_found
-        )
+        copy_util.clone_objects_to_s3(target_dest, obj_type, source_location, objects_not_found)
         self.assertTrue(mock_s3_upload.called)
         self.assertEqual(mock_s3_upload.call_count, 1)
 
     @patch("common.aws_service.s3_upload")
     @patch("tools.ExternalObjectReplicator.util.copy_util.copy_parallel")
-    def test_clone_s3_objects_object_found_empty(
-        self, mock_s3_upload, mock_copy_parallel
-    ):
+    def test_clone_s3_objects_object_found_empty(self, mock_s3_upload, mock_copy_parallel):
         target_dest = "simple-replay-test/test"
         obj_type = "copyfiles"
         source_location = [
@@ -170,9 +152,7 @@ class CopyUtilTestCases(unittest.TestCase):
                 "e_tag": '"ee6e0785cb0b431c90d1c006807ae4ee"',
                 "size": "5.36 KB",
                 "bytes": 5491,
-                "last_modified": datetime.datetime(
-                    2019, 10, 8, 12, 5, 6, tzinfo=tzutc()
-                ),
+                "last_modified": datetime.datetime(2019, 10, 8, 12, 5, 6, tzinfo=tzutc()),
             }
         ]
         objects_not_found = [
@@ -185,9 +165,7 @@ class CopyUtilTestCases(unittest.TestCase):
         dest_prefix = "copy_files/"
 
         mock_copy_parallel.return_value = {}
-        copy_util.clone_objects_to_s3(
-            target_dest, obj_type, source_location, objects_not_found
-        )
+        copy_util.clone_objects_to_s3(target_dest, obj_type, source_location, objects_not_found)
         self.assertTrue(mock_s3_upload.called)
         self.assertEqual(mock_s3_upload.call_count, 1)
 

@@ -20,7 +20,7 @@ from common.util import (
 
 
 class ConnectionThread(threading.Thread):
-    logger = logging.getLogger("SimpleReplayWorkerLogger")
+    logger = logging.getLogger("WorkloadReplicatorWorkerLogger")
 
     def __init__(
         self,
@@ -70,8 +70,7 @@ class ConnectionThread(threading.Thread):
         ).total_seconds()
         connection_diff_sec = elapsed_sec - expected_elapsed_sec
         connection_duration_sec = (
-            self.connection_log.disconnection_time
-            - self.connection_log.session_initiation_time
+            self.connection_log.disconnection_time - self.connection_log.session_initiation_time
         ).total_seconds()
 
         self.logger.debug(
@@ -97,8 +96,7 @@ class ConnectionThread(threading.Thread):
         if "psql" in self.connection_log.application_name.lower():
             interface = "psql"
         elif (
-            "odbc" in self.connection_log.application_name.lower()
-            and self.odbc_driver is not None
+            "odbc" in self.connection_log.application_name.lower() and self.odbc_driver is not None
         ):
             interface = "odbc"
         elif self.default_interface == "odbc" and self.odbc_driver is None:
@@ -163,8 +161,7 @@ class ConnectionThread(threading.Thread):
                     self.execute_transactions(connection)
                     if self.connection_log.time_interval_between_transactions is True:
                         disconnect_offset_sec = (
-                            self.connection_log.disconnection_time
-                            - self.first_event_time
+                            self.connection_log.disconnection_time - self.first_event_time
                         ).total_seconds()
                         if disconnect_offset_sec > current_offset_ms(self.replay_start):
                             self.logger.debug(
@@ -175,9 +172,7 @@ class ConnectionThread(threading.Thread):
                 else:
                     self.logger.warning("Failed to connect")
         except Exception as e:
-            self.logger.error(
-                f"Exception thrown for pid {self.connection_log.pid}: {e}"
-            )
+            self.logger.error(f"Exception thrown for pid {self.connection_log.pid}: {e}")
             traceback.print_exc(file=sys.stderr)
 
     def execute_transactions(self, connection):
@@ -190,8 +185,7 @@ class ConnectionThread(threading.Thread):
                 # or use this to preserve the time between transactions
                 if idx == 0:
                     time_until_start_ms = (
-                        transaction.start_time()
-                        - self.connection_log.session_initiation_time
+                        transaction.start_time() - self.connection_log.session_initiation_time
                     ).total_seconds() * 1000.0
                 else:
                     prev_transaction = self.connection_log.transactions[idx - 1]
@@ -213,7 +207,7 @@ class ConnectionThread(threading.Thread):
     def save_query_stats(self, starttime, endtime, xid, query_idx):
         with self.perf_lock:
             sr_dir = (
-                self.config.get("logging_dir", "simplereplay_logs")
+                self.config.get("logging_dir", "core/logs/replay/")
                 + "/"
                 + self.replay_start.isoformat()
             )
@@ -246,9 +240,9 @@ class ConnectionThread(threading.Thread):
 
         transaction_query_idx = 0
         for idx, query in enumerate(transaction.queries):
-            time_until_start_ms = query.offset_ms(
-                self.first_event_time
-            ) - current_offset_ms(self.replay_start)
+            time_until_start_ms = query.offset_ms(self.first_event_time) - current_offset_ms(
+                self.replay_start
+            )
             truncated_query = (
                 query.text[:60] + "..." if len(query.text) > 60 else query.text
             ).replace("\n", " ")
@@ -283,9 +277,7 @@ class ConnectionThread(threading.Thread):
 
                 substatement_txt = ""
                 if len(split_statements) > 1:
-                    substatement_txt = (
-                        f", Multistatement: {s_idx + 1}/{len(split_statements)}"
-                    )
+                    substatement_txt = f", Multistatement: {s_idx + 1}/{len(split_statements)}"
 
                 exec_start = datetime.datetime.now(tz=datetime.timezone.utc)
                 exec_end = None
@@ -331,9 +323,7 @@ class ConnectionThread(threading.Thread):
                         )
                     )
 
-                self.save_query_stats(
-                    exec_start, exec_end, transaction.xid, transaction_query_idx
-                )
+                self.save_query_stats(exec_start, exec_end, transaction.xid, transaction_query_idx)
             if success:
                 self.thread_stats["query_success"] += 1
             else:
@@ -350,9 +340,7 @@ class ConnectionThread(threading.Thread):
             self.thread_stats["transaction_success"] += 1
         else:
             self.thread_stats["transaction_error"] += 1
-            self.thread_stats["transaction_error_log"][
-                transaction.get_base_filename()
-            ] = errors
+            self.thread_stats["transaction_error_log"][transaction.get_base_filename()] = errors
 
 
 def categorize_error(err_code):
@@ -427,9 +415,7 @@ def remove_comments(string):
 
 def parse_error(error, user, db, query_text):
     err_entry = {
-        "timestamp": datetime.datetime.now(tz=datetime.timezone.utc).isoformat(
-            timespec="seconds"
-        ),
+        "timestamp": datetime.datetime.now(tz=datetime.timezone.utc).isoformat(timespec="seconds"),
         "user": user,
         "db": db,
         "query_text": remove_comments(query_text),
@@ -443,9 +429,7 @@ def parse_error(error, user, db, query_text):
         detail_string = raw_error_string["D"]
         try:
             detail = (
-                detail_string[
-                    detail_string.find("context:") : detail_string.find("query")
-                ]
+                detail_string[detail_string.find("context:") : detail_string.find("query")]
                 .split(":", maxsplit=1)[-1]
                 .strip()
             )

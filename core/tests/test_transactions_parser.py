@@ -1,7 +1,7 @@
 import unittest
 import datetime
 from dateutil.tz import tzutc
-from unittest.mock import MagicMock, patch, call
+from unittest.mock import patch
 from core.replay.transactions_parser import TransactionsParser, Transaction, Query
 
 config = {
@@ -64,7 +64,6 @@ sql_json = {
     }
 }
 
-
 replay_id = "2023-02-07T19:17:11.472063+00:00_cluster-testing"
 
 transaction_dict = {
@@ -123,20 +122,14 @@ class TestTransactionParser(unittest.TestCase):
             queries,
             transaction_key,
         )
-        mock_time = True
         mock_retrieve_json.return_value = sql_json
 
         parser = TransactionsParser(config, replay_id)
-        queries = Query(start_time_q, end_time_q, q["text"])
 
         class_object = parser.parse_transactions()
 
-        mock_copy_repl.assert_called_once_with(
-            'testdata/extract'
-        )
-        mock_retrieve_json.assert_called_once_with(
-            'testdata/extract/SQLs.json.gz'
-        )
+        mock_copy_repl.assert_called_once_with("testdata/extract")
+        mock_retrieve_json.assert_called_once_with("testdata/extract/SQLs.json.gz")
         mock_parse_trans.assert_called_with(
             {
                 "xid": "2612672",
@@ -201,9 +194,7 @@ class TestTransactionParser(unittest.TestCase):
 
         parser.parse_transactions()
 
-        mock_retrieve_json.assert_called_once_with(
-            'testdata/extract/SQLs.json.gz'
-        )
+        mock_retrieve_json.assert_called_once_with("testdata/extract/SQLs.json.gz")
         mock_parse_trans.assert_called_with(
             {
                 "xid": "2612672",
@@ -261,9 +252,7 @@ class TestTransactionParser(unittest.TestCase):
 
         parser.parse_transactions()
 
-        mock_retrieve_json.assert_called_once_with(
-            'testdata/extract/SQLs.json.gz'
-        )
+        mock_retrieve_json.assert_called_once_with("testdata/extract/SQLs.json.gz")
         mock_parse_trans.assert_called_with(
             {
                 "xid": "2612672",
@@ -362,9 +351,7 @@ class TestTransactionParser(unittest.TestCase):
 
     @patch("core.replay.transactions_parser.random")
     @patch.object(TransactionsParser, "get_copy_replacement")
-    def test_parse_transaction_copy_statements_password(
-        self, mock_copy_replacements, mock_random
-    ):
+    def test_parse_transaction_copy_statements_password(self, mock_copy_replacements, mock_random):
         replacements = {
             "s3://location/catalog_page/": [
                 "s3://test-location",
@@ -460,9 +447,7 @@ class TestTransactionParser(unittest.TestCase):
         )
 
     def test_get_unload_replacements_credentials(self):
-        query_text = (
-            "unload ('select * from venue') to 's3://mybucket/unload/' credentials '';"
-        )
+        query_text = "unload ('select * from venue') to 's3://mybucket/unload/' credentials '';"
         replay_output = config["replay_output"]
         replay_name = replay_id
         unload_iam_role = config["unload_iam_role"]
@@ -478,7 +463,9 @@ class TestTransactionParser(unittest.TestCase):
         )
 
     def test_get_unload_replacements_with_credentials(self):
-        query_text = "unload ('select * from venue') to 's3://mybucket/unload/' with credentials as '';"
+        query_text = (
+            "unload ('select * from venue') to 's3://mybucket/unload/' with credentials as '';"
+        )
         replay_output = config["replay_output"]
         replay_name = replay_id
         unload_iam_role = config["unload_iam_role"]
@@ -494,9 +481,7 @@ class TestTransactionParser(unittest.TestCase):
         )
 
     def test_get_unload_replacements_iam_role(self):
-        query_text = (
-            "unload ('select * from venue') to 's3://mybucket/unload/' iam_role '';"
-        )
+        query_text = "unload ('select * from venue') to 's3://mybucket/unload/' iam_role '';"
         replay_output = config["replay_output"]
         replay_name = replay_id
         unload_iam_role = config["unload_iam_role"]

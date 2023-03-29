@@ -169,6 +169,4 @@ yarn-error.log*
 
 api/*.csv
 
-
-simplereplay_logs/
 statements_to_be_avoided.txt

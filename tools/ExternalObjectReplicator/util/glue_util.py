@@ -8,7 +8,7 @@ import common.aws_service as aws_helper
 from tqdm import tqdm
 from common.util import bucket_dict
 
-logger = logging.getLogger("SimpleReplayLogger")
+logger = logging.getLogger("ExternalObjectReplicatorLogger")
 
 
 def clone_glue_catalog(records, dest_location, region):
@@ -38,9 +38,7 @@ def clone_glue_catalog(records, dest_location, region):
             database_copy(new_glue_db, original_glue_db, original_glue_table, region)
             checked_db_list.append(original_glue_db)
             new_glue_db_list.append(new_glue_db)
-        glue_table_copy(
-            original_glue_db, new_glue_db, original_glue_table, dest_location, region
-        )
+        glue_table_copy(original_glue_db, new_glue_db, original_glue_table, dest_location, region)
     logger.debug(f"New Glue database created: {new_glue_db_list}.")
     logger.info("== Finished cloning Glue databases and tables ==")
     return new_glue_db_list
@@ -71,9 +69,7 @@ def database_copy(new_glue_db, original_glue_db, original_glue_table, region):
     return original_glue_db, new_glue_db, original_glue_table
 
 
-def glue_table_copy(
-    original_glue_db, new_glue_db, original_glue_table, dest_location, region
-):
+def glue_table_copy(original_glue_db, new_glue_db, original_glue_table, dest_location, region):
     """
     CHeck if glue table exists in the new glue database, if not create the table structure along with the partitions
     @param original_glue_db:
@@ -98,18 +94,14 @@ def glue_table_copy(
         index_response = aws_helper.glue_get_partition_indexes(
             database=original_glue_db, table=original_glue_table, region=region
         )
-        orig_s3_loc = table_get_response["Table"]["StorageDescriptor"][
-            "Location"
-        ].split("/")
+        orig_s3_loc = table_get_response["Table"]["StorageDescriptor"]["Location"].split("/")
         new_s3_loc = f"{dest_bucket}/spectrumfiles/{'/'.join(orig_s3_loc[2:])}"
         table_input = (
             {
                 "Name": table_get_response["Table"]["Name"],
                 "Description": "For use with Redshfit candidate release testing",
                 "StorageDescriptor": {
-                    "Columns": table_get_response["Table"]["StorageDescriptor"][
-                        "Columns"
-                    ],
+                    "Columns": table_get_response["Table"]["StorageDescriptor"]["Columns"],
                     "Location": new_s3_loc,
                 },
                 "PartitionKeys": table_get_response["Table"]["PartitionKeys"],
@@ -119,11 +111,7 @@ def glue_table_copy(
             aws_helper.glue_create_table(
                 new_database=new_glue_db,
                 table_input=table_input.update(
-                    {
-                        'PartitionIndexes"': index_response[
-                            "PartitionIndexDescriptorList"
-                        ]
-                    }
+                    {'PartitionIndexes"': index_response["PartitionIndexDescriptorList"]}
                 ),
                 region=region,
             )

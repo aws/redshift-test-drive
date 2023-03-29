@@ -53,9 +53,7 @@ def mock_db_connect(interface, host, port, username, password, database, odbc_dr
     return conn
 
 
-def mock_db_connect_error(
-    interface, host, port, username, password, database, odbc_driver
-):
+def mock_db_connect_error(interface, host, port, username, password, database, odbc_driver):
     cursor.execute.side_effect = KeyError
     conn.cursor.return_value = cursor
 
@@ -72,9 +70,7 @@ class TestReplay(unittest.TestCase):
         unload_object = UnloadSysTable(config, replay_id)
         unload_object.unload_system_table()
 
-        mock_debug.assert_called_once_with(
-            "Executed unload query: select * from stl_test"
-        )
+        mock_debug.assert_called_once_with("Executed unload query: select * from stl_test")
 
     @patch.object(ReplayPrep, "get_connection_credentials", mock_get_connection_cred)
     @patch("core.replay.unload_sys_table.db_connect", mock_db_connect)

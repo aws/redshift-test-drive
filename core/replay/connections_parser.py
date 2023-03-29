@@ -7,7 +7,7 @@ from boto3 import client
 
 from common.util import matches_filters
 
-logger = logging.getLogger("SimpleReplayLogger")
+logger = logging.getLogger("WorkloadReplicatorLogger")
 
 
 def parse_connections(
@@ -30,9 +30,7 @@ def parse_connections(
         )
         connections_json = json.loads(s3_object["Body"].read())
     else:
-        with open(
-            workload_directory.rstrip("/") + "/connections.json", "r"
-        ) as connections_file:
+        with open(workload_directory.rstrip("/") + "/connections.json", "r") as connections_file:
             connections_json = json.loads(connections_file.read())
             connections_file.close()
 

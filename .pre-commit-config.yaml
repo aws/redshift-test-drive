@@ -1,0 +1,36 @@
+exclude: 'tools/NodeConfigCompare/gui/.*'
+repos:
+- repo: https://github.com/pre-commit/pre-commit-hooks
+  rev: v2.3.0
+  hooks:
+  -   id: check-yaml
+      types: [yaml]
+  -   id: end-of-file-fixer
+      types: [python]
+  -   id: trailing-whitespace
+      types: [python]
+- repo: https://github.com/psf/black
+  rev: 22.10.0
+  hooks:
+  -   id: black
+      types: [python]
+      args:
+        - "--line-length=99"
+- repo: https://github.com/pycqa/flake8
+  rev: 4.0.1
+  hooks:
+  - id: flake8
+    alias: flake8-check
+    stages: [manual]
+    types: [python]
+    args:
+      - "--max-line-length=99"
+- repo: local
+  hooks:
+  - id: unittest
+    name: unittest
+    entry: make test
+    language: system
+    types: [python]
+    additional_dependencies: []
+    pass_filenames: false

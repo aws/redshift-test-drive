@@ -2,7 +2,7 @@ import gzip
 import logging
 import common.aws_service as aws_service_helper
 from tqdm import tqdm
-from util import log_validation
+from core.util.log_validation import get_logs_in_range
 from core.extract.extract_parser import parse_log
 
 logger = logging.getLogger("WorkloadReplicatorLogger")
@@ -10,9 +10,7 @@ logger = logging.getLogger("WorkloadReplicatorLogger")
 
 class S3Extractor:
     disable_progress_bar = None
-    bar_format = (
-        "{desc}: {percentage:3.0f}%|{bar}| {n_fmt}/{total_fmt} [{elapsed}{postfix}]"
-    )
+    bar_format = "{desc}: {percentage:3.0f}%|{bar}| {n_fmt}/{total_fmt} [{elapsed}{postfix}]"
 
     def __init__(self, config):
         self.disable_progress_bar = config.get("disable_progress_bar")
@@ -31,9 +29,7 @@ class S3Extractor:
         last_connections = {}
         databases = set()
 
-        bucket_objects = aws_service_helper.s3_get_bucket_contents(
-            log_bucket, log_prefix
-        )
+        bucket_objects = aws_service_helper.s3_get_bucket_contents(log_bucket, log_prefix)
 
         s3_connection_logs = []
         s3_user_activity_logs = []
@@ -100,9 +96,7 @@ class S3Extractor:
 
         index_of_last_valid_log = len(audit_objects) - 1
 
-        log_filenames = log_validation.get_logs_in_range(
-            audit_objects, start_time, end_time
-        )
+        log_filenames = get_logs_in_range(audit_objects, start_time, end_time)
 
         logger.info(f"Processing {len(log_filenames)} files")
 

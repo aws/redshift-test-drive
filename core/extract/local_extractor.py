@@ -9,9 +9,7 @@ logger = logging.getLogger("WorkloadReplicatorLogger")
 
 class LocalExtractor:
     disable_progress_bar = None
-    bar_format = (
-        "{desc}: {percentage:3.0f}%|{bar}| {n_fmt}/{total_fmt} [{elapsed}{postfix}]"
-    )
+    bar_format = "{desc}: {percentage:3.0f}%|{bar}| {n_fmt}/{total_fmt} [{elapsed}{postfix}]"
 
     def __init__(self, config):
         self.config = config

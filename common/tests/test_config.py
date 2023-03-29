@@ -82,32 +82,22 @@ class TestConfig(unittest.TestCase):
         self.assertEqual(cm.exception.code, -1)
 
     def test_validate_config_file_for_extract_no_iam_role(self):
-        self.config_ext[
-            "source_cluster_system_table_unload_location"
-        ] = "s3://test-location"
+        self.config_ext["source_cluster_system_table_unload_location"] = "s3://test-location"
         with self.assertRaises(SystemExit) as cm:
             config_helper.validate_config_file_for_extract(self.config_ext)
         self.assertEqual(cm.exception.code, -1)
 
     def test_validate_config_file_for_extract_no_unload_queries(self):
-        self.config_ext[
-            "source_cluster_system_table_unload_location"
-        ] = "s3://test-location"
-        self.config_ext[
-            "source_cluster_system_table_unload_iam_role"
-        ] = "arn::iam:role/dev"
+        self.config_ext["source_cluster_system_table_unload_location"] = "s3://test-location"
+        self.config_ext["source_cluster_system_table_unload_iam_role"] = "arn::iam:role/dev"
         self.config_ext["unload_system_table_queries"] = ""
         with self.assertRaises(SystemExit) as cm:
             config_helper.validate_config_file_for_extract(self.config_ext)
         self.assertEqual(cm.exception.code, -1)
 
     def test_validate_config_file_for_extract_unload_query_file_format(self):
-        self.config_ext[
-            "source_cluster_system_table_unload_location"
-        ] = "s3://test-location"
-        self.config_ext[
-            "source_cluster_system_table_unload_iam_role"
-        ] = "arn::iam:role/dev"
+        self.config_ext["source_cluster_system_table_unload_location"] = "s3://test-location"
+        self.config_ext["source_cluster_system_table_unload_iam_role"] = "arn::iam:role/dev"
         self.config_ext["unload_system_table_queries"] = "unload_system_tables.py"
         with self.assertRaises(SystemExit) as cm:
             config_helper.validate_config_file_for_extract(self.config_ext)

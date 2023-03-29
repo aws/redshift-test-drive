@@ -141,9 +141,7 @@ class Replayer:
             while not queue.empty():
                 remaining_events += 1
                 job = queue.get_nowait()
-                logger.error(
-                    f"Could not process connection log - {job.get('connection', '')}"
-                )
+                logger.error(f"Could not process connection log - {job.get('connection', '')}")
         except Empty:
             pass
 
@@ -173,17 +171,13 @@ class Replayer:
     ):
         while active_processes:
             cnt += 1
-            active_processes = (
-                len(multiprocessing.active_children()) - initial_processes
-            )
+            active_processes = len(multiprocessing.active_children()) - initial_processes
             if cnt % 60 == 0:
                 logger.debug(f"Waiting for {active_processes} processes to finish")
                 try:
                     queue_length = queue.qsize()
                     logger.debug(f"Queue length: {queue.qsize()}")
-                    logger.debug(
-                        f"Remaining connections: {queue_length - len(self.workers)}"
-                    )
+                    logger.debug(f"Remaining connections: {queue_length - len(self.workers)}")
                 except NotImplementedError:
                     # support for qsize is platform-dependent
                     logger.debug("Queue length not supported.")

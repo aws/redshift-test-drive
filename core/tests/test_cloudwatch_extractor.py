@@ -29,7 +29,7 @@ class CloudwatchExtractorTestCases(unittest.TestCase):
     @patch("common.aws_service.cw_describe_log_streams", mock_cw_describe_log_streams)
     @patch("common.aws_service.cw_get_paginated_logs", mock_cw_get_paginated_logs)
     @patch("common.aws_service.s3_upload", mock_s3_upload)
-    @patch("extract.extract_parser", mock_parse_log)
+    @patch("core.extract.extract_parser", mock_parse_log)
     def test_get_extract_from_cw_source_cluster_endpoint_specified(self):
         cw_extractor = CloudwatchExtractor(
             {

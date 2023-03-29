@@ -6,7 +6,7 @@ import logging
 import boto3
 from botocore.exceptions import ClientError
 
-logger = logging.getLogger("SimpleReplayLogger")
+logger = logging.getLogger("WorkloadReplicatorLogger")
 
 
 def redshift_describe_logging_status(source_cluster_endpoint):
@@ -58,15 +58,11 @@ def redshift_execute_query(
     query_id = response_execute_statement["Id"]
 
     # get query status
-    response_describe_statement = redshift_data_api_client.describe_statement(
-        Id=query_id
-    )
+    response_describe_statement = redshift_data_api_client.describe_statement(Id=query_id)
     query_done = False
 
     while not query_done:
-        response_describe_statement = redshift_data_api_client.describe_statement(
-            Id=query_id
-        )
+        response_describe_statement = redshift_data_api_client.describe_statement(Id=query_id)
         query_status = response_describe_statement["Status"]
 
         if query_status == "FAILED":
@@ -77,8 +73,8 @@ def redshift_execute_query(
             query_done = True
             # log result if there is a result (typically from Select statement)
             if response_describe_statement["HasResultSet"]:
-                response_get_statement_result = (
-                    redshift_data_api_client.get_statement_result(Id=query_id)
+                response_get_statement_result = redshift_data_api_client.get_statement_result(
+                    Id=query_id
                 )
     return response_get_statement_result
 
@@ -91,11 +87,11 @@ def cw_describe_log_groups(log_group_name=None, region=None):
         response_pg_1 = cloudwatch_client.describe_log_groups()
         logs = response_pg_1
 
-        token = response_pg_1.get('nextToken','')
-        while token != '':
+        token = response_pg_1.get("nextToken", "")
+        while token != "":
             response_itr = cloudwatch_client.describe_log_groups(nextToken=token)
-            logs['logGroups'].extend(response_itr['logGroups'])
-            token = response_itr['nextToken'] if 'nextToken' in response_itr.keys() else ''
+            logs["logGroups"].extend(response_itr["logGroups"])
+            token = response_itr["nextToken"] if "nextToken" in response_itr.keys() else ""
     return logs
 
 
@@ -104,18 +100,14 @@ def cw_describe_log_streams(log_group_name, region):
     return cloudwatch_client.describe_log_streams(logGroupName=log_group_name)
 
 
-def cw_get_paginated_logs(
-    log_group_name, log_stream_name, start_time, end_time, region
-):
+def cw_get_paginated_logs(log_group_name, log_stream_name, start_time, end_time, region):
     log_list = []
     cloudwatch_client = boto3.client("logs", region)
     paginator = cloudwatch_client.get_paginator("filter_log_events")
     pagination_config = {"MaxItems": 10000}
     convert_to_millis_since_epoch = (
         lambda time: int(
-            (
-                time.replace(tzinfo=None) - datetime.datetime.utcfromtimestamp(0)
-            ).total_seconds()
+            (time.replace(tzinfo=None) - datetime.datetime.utcfromtimestamp(0)).total_seconds()
         )
         * 1000
     )
@@ -156,9 +148,11 @@ def s3_put_object(file_content, bucket, key):
     s3 = boto3.client("s3")
     s3.put_object(Body=file_content, Bucket=bucket, Key=key)
 
-def s3_resource_put_object(bucket,prefix,body):
+
+def s3_resource_put_object(bucket, prefix, body):
     s3_resource = boto3.resource("s3")
-    s3_resource.Object(bucket,prefix).put(Body=body)
+    s3_resource.Object(bucket, prefix).put(Body=body)
+
 
 def s3_get_bucket_contents(bucket, prefix):
     conn = boto3.client("s3")
@@ -188,6 +182,7 @@ def s3_generate_presigned_url(client_method, bucket_name, object_name):
         ExpiresIn=604800,
     )
     return response
+
 
 def s3_copy_object(src_bucket, src_prefix, dest_bucket, dest_prefix):
     boto3.client("s3").copy_object(
@@ -224,9 +219,7 @@ def glue_get_partition_indexes(database, table, region):
 
 
 def glue_create_table(new_database, table_input, region):
-    boto3.client("glue", region).create_table(
-        DatabaseName=new_database, TableInput=table_input
-    )
+    boto3.client("glue", region).create_table(DatabaseName=new_database, TableInput=table_input)
 
 
 def glue_get_database(name, region):

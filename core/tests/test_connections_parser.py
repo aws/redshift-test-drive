@@ -1,7 +1,6 @@
 from unittest.mock import patch, mock_open
 import unittest
-from replay.connections_parser import parse_connections
-
+from core.replay.connections_parser import parse_connections
 
 time_interval_between_transactions = "all on"
 time_interval_between_queries = "all on"
@@ -80,8 +79,8 @@ open_mock_4 = mock_open(
 
 
 class TestConnectionsParser(unittest.TestCase):
-    @patch("replay.connections_parser.client")
-    @patch("replay.connections_parser.json")
+    @patch("core.replay.connections_parser.client")
+    @patch("core.replay.connections_parser.json")
     def test_parse_connections(self, mock_json, mock_client):
         workload_directory = (
             "s3://test/extracts/Edited_Extraction_2023-01-23T09:46:24.784062+00:00"
@@ -109,7 +108,7 @@ class TestConnectionsParser(unittest.TestCase):
         self.assertEqual(connections[0].pid, "1073815778")
         self.assertEqual(total_connections, 1)
 
-    @patch("replay.connections_parser.open", open_mock_1)
+    @patch("core.replay.connections_parser.open", open_mock_1)
     def test_parse_connections_s3_location(self):
         workload_directory = "testdata/testlocation"
 
@@ -122,7 +121,7 @@ class TestConnectionsParser(unittest.TestCase):
         self.assertEqual(connections[0].pid, "1073815778")
         self.assertEqual(total_connections, 1)
 
-    @patch("replay.connections_parser.open", open_mock_2)
+    @patch("core.replay.connections_parser.open", open_mock_2)
     def test_parse_connections_initiation_time(self):
         workload_directory = "testdata/testlocation"
 
@@ -135,7 +134,7 @@ class TestConnectionsParser(unittest.TestCase):
         self.assertEqual(connections[0].session_initiation_time, None)
         self.assertEqual(total_connections, 1)
 
-    @patch("replay.connections_parser.open", open_mock_3)
+    @patch("core.replay.connections_parser.open", open_mock_3)
     def test_parse_connections_disconnection_time(self):
         workload_directory = "testdata/testlocation"
 
@@ -148,7 +147,7 @@ class TestConnectionsParser(unittest.TestCase):
         self.assertEqual(connections[0].disconnection_time, None)
         self.assertEqual(total_connections, 1)
 
-    @patch("replay.connections_parser.open", open_mock_4)
+    @patch("core.replay.connections_parser.open", open_mock_4)
     def test_parse_connections_except_case(self):
         workload_directory = "testdata/testlocation"
 

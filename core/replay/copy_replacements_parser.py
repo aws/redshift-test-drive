@@ -5,7 +5,7 @@ import sys
 from boto3 import client
 
 
-logger = logging.getLogger("SimpleReplayLogger")
+logger = logging.getLogger("WorkloadReplicatorLogger")
 
 
 def parse_copy_replacements(workload_directory):
@@ -36,7 +36,5 @@ def parse_copy_replacements(workload_directory):
                     sys.exit()
                 copy_replacements[row[0]] = [row[1], row[2]]
 
-    logger.info(
-        f"Loaded {len(copy_replacements)} COPY replacements from {replacements_path}"
-    )
+    logger.info(f"Loaded {len(copy_replacements)} COPY replacements from {replacements_path}")
     return copy_replacements

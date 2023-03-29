@@ -96,9 +96,7 @@ def is_duplicate(first_query_text, second_query_text):
     return (
         (
             first_query_text_no_semi == second_query_tex_no_semi
-            and any(
-                second_query_comment_removed.startswith(word) for word in dedupe_these
-            )
+            and any(second_query_comment_removed.startswith(word) for word in dedupe_these)
         )
         or (
             (second_query_comment_removed.lower().startswith("create"))
@@ -173,22 +171,16 @@ def remove_line_comments(query):
         if linebreak != -1:
             if start_comment == -1 and end_comment != -1:
                 # if line comment is between start and end, then remove until end of comment
-                removed_string = (
-                    removed_string[:line_comment_begin] + removed_string[end_comment:]
-                )
+                removed_string = removed_string[:line_comment_begin] + removed_string[end_comment:]
             else:
                 # else remove up the end of line
-                removed_string = (
-                    removed_string[:line_comment_begin] + removed_string[linebreak:]
-                )
+                removed_string = removed_string[:line_comment_begin] + removed_string[linebreak:]
         else:
             # reached end of query
             if start_comment == -1 and end_comment != -1:
                 # if line comment is between start and end, then remove until end of comment
 
-                removed_string = (
-                    removed_string[:line_comment_begin] + removed_string[end_comment:]
-                )
+                removed_string = removed_string[:line_comment_begin] + removed_string[end_comment:]
             else:
                 # else remove up the end of line
                 removed_string = removed_string[:line_comment_begin]
@@ -212,8 +204,7 @@ def connection_time_replacement(sorted_connections):
             empty_disconnect_times.append(i)
 
         elif max_disconnect_time == "" or (
-            max_disconnect_time
-            and max_disconnect_time < connection["disconnection_time"]
+            max_disconnect_time and max_disconnect_time < connection["disconnection_time"]
         ):
             max_disconnect_time = connection["disconnection_time"]
 
