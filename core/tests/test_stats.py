@@ -1,6 +1,6 @@
 import unittest
-from unittest.mock import MagicMock, patch, call
-from replay.stats import percent, print_stats, display_stats, init_stats, collect_stats
+from unittest.mock import patch, call
+from core.replay.stats import percent, print_stats, display_stats, init_stats, collect_stats
 from multiprocessing.managers import SyncManager
 
 
@@ -96,12 +96,6 @@ class TestStats(unittest.TestCase):
 
     def test_collect_stats(self):
         collect_stats(aggregated_stats, stats)
-        self.assertEqual(
-            aggregated_stats["connection_diff_sec"], stats["connection_diff_sec"]
-        )
-        self.assertEqual(
-            aggregated_stats["transaction_success"], stats["transaction_success"]
-        )
-        self.assertEqual(
-            aggregated_stats["transaction_error_log"], stats["transaction_error_log"]
-        )
+        self.assertEqual(aggregated_stats["connection_diff_sec"], stats["connection_diff_sec"])
+        self.assertEqual(aggregated_stats["transaction_success"], stats["transaction_success"])
+        self.assertEqual(aggregated_stats["transaction_error_log"], stats["transaction_error_log"])

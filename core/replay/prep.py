@@ -72,9 +72,7 @@ class ReplayPrep:
             for c_idx in possible_connections:
                 # truncate session start time, since query/transaction time is truncated to seconds
                 if (
-                    connection_logs[c_idx].session_initiation_time.replace(
-                        microsecond=0
-                    )
+                    connection_logs[c_idx].session_initiation_time.replace(microsecond=0)
                     > t.start_time()
                 ):
                     break
@@ -91,20 +89,12 @@ class ReplayPrep:
                 and connection.session_initiation_time < first_event_time
             ):
                 first_event_time = connection.session_initiation_time
-            if (
-                connection.disconnection_time
-                and connection.disconnection_time > last_event_time
-            ):
+            if connection.disconnection_time and connection.disconnection_time > last_event_time:
                 last_event_time = connection.disconnection_time
-            if (
-                connection.time_interval_between_queries
-                or t.time_interval.lower() == "true"
-            ):
+            if connection.time_interval_between_queries or t.time_interval.lower() == "true":
                 for index, sql in enumerate(t.queries[1:]):
                     prev_sql = t.queries[index]
-                    prev_sql.time_interval = (
-                        sql.start_time - prev_sql.end_time
-                    ).total_seconds()
+                    prev_sql.time_interval = (sql.start_time - prev_sql.end_time).total_seconds()
             query_count += len(t.queries)
         logger.info(f"Found {transaction_count} transactions, {query_count} queries")
         logger.info(
@@ -142,8 +132,11 @@ class ReplayPrep:
         odbc_driver = self.config["odbc_driver"]
 
         cluster_endpoint_split = cluster_endpoint.split(".")
-        cluster_id = f"redshift-serverless-{cluster_endpoint_split[0]}" if is_serverless(self.config) \
+        cluster_id = (
+            f"redshift-serverless-{cluster_endpoint_split[0]}"
+            if is_serverless(self.config)
             else cluster_endpoint_split[0]
+        )
         cluster_region = self.config.get("target_cluster_region", cluster_endpoint_split[2])
 
         # Keeping NLB just for Serverless for now
@@ -189,7 +182,7 @@ class ReplayPrep:
                 database_name=database,
                 cluster_id=cluster_id,
                 duration=credentials_timeout_sec,
-                auto_create=False
+                auto_create=False,
             )
 
         if response is None:
@@ -199,13 +192,15 @@ class ReplayPrep:
         db_user = response["DbUser"]
         db_password = response["DbPassword"]
 
-        cluster_odbc_url = "Driver={}; Server={}; Database={}; IAM=1; DbUser={}; DbPassword={}; Port={}".format(
-            odbc_driver,
-            cluster_host,
-            database,
-            db_user.split(":")[1] if ":" in db_user else db_user,
-            db_password,
-            cluster_port,
+        cluster_odbc_url = (
+            "Driver={}; Server={}; Database={}; IAM=1; DbUser={}; DbPassword={}; Port={}".format(
+                odbc_driver,
+                cluster_host,
+                database,
+                db_user.split(":")[1] if ":" in db_user else db_user,
+                db_password,
+                cluster_port,
+            )
         )
 
         cluster_psql = {
@@ -227,9 +222,7 @@ class ReplayPrep:
             "database": database,
             "odbc_driver": self.config["odbc_driver"],
         }
-        logger.debug(
-            "Successfully retrieved database credentials for {}".format(username)
-        )
+        logger.debug("Successfully retrieved database credentials for {}".format(username))
         self.credentials_cache[username] = {
             "last_update": datetime.datetime.now(tz=datetime.timezone.utc),
             "target_cluster_urls": credentials,
@@ -252,15 +245,11 @@ class ReplayPrep:
             normalized_filters["include"].setdefault(f, ["*"])
             normalized_filters["exclude"].setdefault(f, [])
 
-        include_overlap = set(normalized_filters["include"].keys()) - set(
-            obj.supported_filters()
-        )
+        include_overlap = set(normalized_filters["include"].keys()) - set(obj.supported_filters())
         if len(include_overlap) > 0:
             raise InvalidFilterException(f"Unknown filters: {include_overlap}")
 
-        exclude_overlap = set(normalized_filters["exclude"].keys()) - set(
-            obj.supported_filters()
-        )
+        exclude_overlap = set(normalized_filters["exclude"].keys()) - set(obj.supported_filters())
         if len(exclude_overlap) > 0:
             raise InvalidFilterException(f"Unknown filters: {exclude_overlap}")
 

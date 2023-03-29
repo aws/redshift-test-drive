@@ -42,9 +42,9 @@ from core.replay.report_util import (
 from common import util
 from common import aws_service as aws_service_helper
 import core.replay.report_util as report_util
+
 g_stylesheet = styles()
 g_columns = g_stylesheet.get("columns")
-
 
 
 def pdf_gen(report, summary=None):
@@ -164,6 +164,7 @@ def pdf_gen(report, summary=None):
 
         return pdf.filename
 
+
 def replay_pdf_generator(
     replay,
     cluster_endpoint,
@@ -220,9 +221,7 @@ def replay_pdf_generator(
     try:
         aws_service_helper.s3_upload(info, bucket.get("bucket_name"), f"{replay_path}/{info}")
     except ClientError as e:
-        logger.error(
-            f"{e} Could not upload info. Confirm IAM permissions include S3::PutObject."
-        )
+        logger.error(f"{e} Could not upload info. Confirm IAM permissions include S3::PutObject.")
         exit(-1)
 
     report = report_util.Report(cluster, replay, bucket, replay_path, tag, complete)
@@ -251,6 +250,7 @@ def replay_pdf_generator(
         )
         exit(-1)
 
+
 @contextmanager
 def initiate_connection(username, cluster):
     """Initiate connection with Redshift cluster
@@ -266,7 +266,9 @@ def initiate_connection(username, cluster):
     if cluster.get("is_serverless"):
         if cluster.get("secret_name"):
             logger.info(f"Fetching secrets from: {cluster.get['secret_name']}")
-            secret_name = common.aws_service.get_secret(cluster.get("secret_name"), cluster.get("region"))
+            secret_name = common.aws_service.get_secret(
+                cluster.get("secret_name"), cluster.get("region")
+            )
             if not len(set(secret_keys) - set(secret_name.keys())):
                 response = {
                     "DbUser": secret_name["admin_username"],
@@ -280,13 +282,15 @@ def initiate_connection(username, cluster):
             logger.debug(
                 f"Serverless cluster id {serverless_cluster_id} passed to get_cluster_credentials"
             )
-            response = aws_service_helper.redshift_get_cluster_credentials(cluster.get("region"), username,
-                                                                cluster.get("database"),serverless_cluster_id)
+            response = aws_service_helper.redshift_get_cluster_credentials(
+                cluster.get("region"), username, cluster.get("database"), serverless_cluster_id
+            )
 
     else:
         try:
-            response = aws_service_helper.redshift_get_cluster_credentials(cluster.get("region"), username,
-                                                                cluster.get("database"), cluster.get("id"))
+            response = aws_service_helper.redshift_get_cluster_credentials(
+                cluster.get("region"), username, cluster.get("database"), cluster.get("id")
+            )
         except Exception as e:
             logger.error(
                 f"Unable to connect to Redshift. Confirm IAM permissions include Redshift::GetClusterCredentials."
@@ -329,6 +333,7 @@ def initiate_connection(username, cluster):
         if conn is not None:
             conn.close()
 
+
 # def unload(unload_location, iam_role, cluster, user, path):
 def unload(unload_location, iam_role, cluster, user, replay):
     """Iterates through sql/ and executes UNLOAD with queries on provided cluster
@@ -346,9 +351,7 @@ def unload(unload_location, iam_role, cluster, user, replay):
     directory = r"core/sql"
 
     queries = []  # used to return query names
-    with initiate_connection(
-        username=user, cluster=cluster
-    ) as conn:  # initiate connection
+    with initiate_connection(username=user, cluster=cluster) as conn:  # initiate connection
         cursor = conn.cursor()
         logger.info(f"Querying {cluster.get('id')}. This may take some time.")
 
@@ -357,17 +360,13 @@ def unload(unload_location, iam_role, cluster, user, replay):
                 continue
             with open(f"{directory}/{file}", "r") as query_file:  # open sql file
                 # get file name prefix for s3 files
-                query_name = os.path.splitext(file)[
-                    0
-                ]  # get file/query name for reference
+                query_name = os.path.splitext(file)[0]  # get file/query name for reference
                 logger.debug(f"Query: {query_name}")
                 queries.append(query_name)
                 query = query_file.read()  # read file contents as string
 
                 # replace start and end times in sql with variables
-                query = re.sub(
-                    r"{{START_TIME}}", f"'{cluster.get('start_time')}'", query
-                )
+                query = re.sub(r"{{START_TIME}}", f"'{cluster.get('start_time')}'", query)
                 query = re.sub(r"{{END_TIME}}", f"'{cluster.get('end_time')}'", query)
 
                 # format unload query with actual query from sql/
@@ -399,12 +398,11 @@ def get_raw_data(report, bucket, replay_path, query):
 
     logger = logging.getLogger("WorkloadReplicatorLogger")
     try:
-        response = aws_service_helper.s3_client_get_object(bucket=bucket.get("bucket_name"),
-                                                    key=f"{replay_path}/raw_data/{query}000")
-    except Exception as e:
-        logger.error(
-            f"Unable to get raw data from S3. Results for {query} not found. {e}"
+        response = aws_service_helper.s3_client_get_object(
+            bucket=bucket.get("bucket_name"), key=f"{replay_path}/raw_data/{query}000"
         )
+    except Exception as e:
+        logger.error(f"Unable to get raw data from S3. Results for {query} not found. {e}")
         exit(-1)
     df = pd.read_csv(response.get("Body")).fillna(0)
     logger.debug(f"Parsing results from '{query}' query.")
@@ -466,8 +464,11 @@ def read_data(table_name, df, report_columns, report):
         csv_buffer = StringIO()
         report_table.to_csv(csv_buffer)
         logger.debug(report.bucket)
-        aws_service_helper.s3_resource_put_object(report.bucket.get("bucket_name"),
-                                                  f"{report.path}/aggregated_data/{file}", csv_buffer.getvalue())
+        aws_service_helper.s3_resource_put_object(
+            report.bucket.get("bucket_name"),
+            f"{report.path}/aggregated_data/{file}",
+            csv_buffer.getvalue(),
+        )
     except Exception as e:
         logger.error(
             f"Could not upload aggregated data. Please confirm bucket. Error occurred while processing "
@@ -488,9 +489,8 @@ def create_presigned_url(bucket_name, object_name):
     logger = logging.getLogger("WorkloadReplicatorLogger")
 
     try:
-        response = aws_service_helper.s3_generate_presigned_url(client_method="get_object",
-                                                                bucket_name=bucket_name,
-                                                                object_name=object_name
+        response = aws_service_helper.s3_generate_presigned_url(
+            client_method="get_object", bucket_name=bucket_name, object_name=object_name
         )
     except ClientError as e:
         logger.error(
@@ -517,9 +517,7 @@ def analysis_summary(bucket_url, replay):
         f"\nBelow is the presigned URLs for the analysis performed for replay: {replay}. "
         f"Click or copy/paste the link into your browser to download."
     )
-    r_url = create_presigned_url(
-        bucket.get("bucket_name"), f"{replay_path}{replay}_report.pdf"
-    )
+    r_url = create_presigned_url(bucket.get("bucket_name"), f"{replay_path}{replay}_report.pdf")
     output_str += f"\n\nReplay Analysis Report | Click to Download:\n{r_url}\n"
     logger.info(output_str)
 

@@ -93,9 +93,7 @@ def run_concurrency_test(number_of_parallel_sessions):
         with ThreadPoolExecutor(max_workers=number_of_parallel_sessions) as executor:
             futures = []
             for _ in range(number_of_parallel_sessions):
-                futures.append(
-                    executor.submit(get_sql, engine, number_of_parallel_sessions)
-                )
+                futures.append(executor.submit(get_sql, engine, number_of_parallel_sessions))
             for future in as_completed(futures):
                 rs = future.result()
 

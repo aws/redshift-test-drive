@@ -85,19 +85,15 @@ class ConnectionLog:
             and self.database_name == other.database_name
             and self.username == other.username
             and self.pid == other.pid
-            and self.time_interval_between_transactions
-            == other.time_interval_between_transactions
-            and self.time_interval_between_queries
-            == other.time_interval_between_queries
+            and self.time_interval_between_transactions == other.time_interval_between_transactions
+            and self.time_interval_between_queries == other.time_interval_between_queries
         )
 
     def __hash__(self):
         return hash((self.database_name, self.username, self.pid))
 
     def get_pk(self):
-        return hash(
-            (self.session_initiation_time, self.database_name, self.username, self.pid)
-        )
+        return hash((self.session_initiation_time, self.database_name, self.username, self.pid))
 
 
 class Logger:

@@ -1,6 +1,6 @@
 import unittest
-from replay.connections_parser import ConnectionLog
-from replay.prep import ReplayPrep, InvalidFilterException
+from core.replay.connections_parser import ConnectionLog
+from core.replay.prep import ReplayPrep
 from common.util import matches_filters
 import datetime
 import yaml

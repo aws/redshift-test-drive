@@ -31,10 +31,7 @@ except rs_client.exceptions.ClientError as e:
         )
         exit(-1)
     elif e.response["Error"]["Code"] == "ResourceNotFoundException":
-        print(
-            f"Serverless endpoint could not be found "
-            f"RedshiftServerless:GetCredentials. {e}"
-        )
+        print(f"Serverless endpoint could not be found " f"RedshiftServerless:GetCredentials. {e}")
         exit(-1)
     else:
         print(f"Got exception retrieving credentials ({e.response['Error']['Code']})")
