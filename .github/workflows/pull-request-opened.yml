@@ -2,7 +2,7 @@ name: pull-request-opened
 run-name: ${{ github.actor }} has opened a pull request
 on: 
   pull_request:
-    types: [opened]
+    types: [opened,reopened]
 jobs:
   notify-pull-request:
     runs-on: ubuntu-latest
