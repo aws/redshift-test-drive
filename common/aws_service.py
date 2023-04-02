@@ -166,7 +166,7 @@ def s3_resource_put_object(bucket, prefix, body):
 
 
 async def s3_get_bucket_contents(bucket, prefix, s3_client):
-    '''Pagination implemented in async manner'''
+    """Pagination implemented in async manner"""
     paginator = s3_client.get_paginator("list_objects_v2")
     async for page in paginator.paginate(
         Bucket=bucket,
@@ -175,24 +175,6 @@ async def s3_get_bucket_contents(bucket, prefix, s3_client):
     ):
         for bucket_object in page.get("Contents", []):
             yield bucket_object
-
-
-def list_all_objects(bucket, prefix):
-    threads = [None] * 50
-    pbar = tqdm(range(50))
-    for i in pbar:
-        threads[i] = threading.Thread(
-            target=s3_get_bucket_contents,
-            args=(
-                bucket,
-                prefix,
-            ),
-        )
-        threads[i].start()
-        logger.info(f"Listing data for {bucket}/{prefix}")
-
-    for i in range(50):
-        threads[i].join()
 
 
 def s3_copy_object(src_bucket, src_prefix, dest_bucket, dest_prefix):
