@@ -24,7 +24,7 @@ replay:
 replay_analysis:
 	export PYTHONPATH=$(PYTHONPATH):$(CORE_FOLDER):$(REPLAY_ANALYSIS_DIR)/util && $(PYTHON) $(REPLAY_ANALYSIS_DIR)/replay_analysis.py 
 
-external-object-replicator:
+external_object_replicator:
 	export PYTHONPATH=$(PYTHONPATH):$(EXTERNAL_OBJECT_REPLICATOR_DIR):$(EXTERNAL_OBJECT_REPLICATOR_DIR)/util && $(PYTHON) $(EXTERNAL_OBJECT_REPLICATOR_DIR)/external_object_replicator.py $(CONFIG_FOLDER)/external_object_replicator.yaml
 
 
