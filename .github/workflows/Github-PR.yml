@@ -1,8 +1,8 @@
-name: pull-request-opened
+name: GitHub-PR
 run-name: ${{ github.actor }} has opened a pull request
 on: 
   pull_request:
-    types: [opened,reopened]
+    types: [opened,reopened,closed,converted_to_draft]
 jobs:
   notify-pull-request:
     runs-on: ubuntu-latest
