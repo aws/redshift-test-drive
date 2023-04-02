@@ -2,9 +2,8 @@ import csv
 import threading
 import common.aws_service as aws_helper
 import logging
-import aioboto3
 import time
-
+import aioboto3
 
 from tqdm import tqdm
 from common.util import bucket_dict
@@ -48,6 +47,16 @@ def get_s3_folder_size(copy_file_list):
             total_size = total_size + record["bytes"]
     return size_of_data(total_size)
 
+
+async def s3_get_bucket_contents(bucket, prefix, s3_client):
+    paginator = s3_client.get_paginator("list_objects_v2")
+    async for page in paginator.paginate(
+        Bucket=bucket,
+        Prefix=prefix,
+        PaginationConfig={"MaxItems": 10000, "PageSize": 10000},
+    ):
+        for bucket_object in page.get("Contents", []):
+            yield bucket_object
 
 async def check_file_existence(response, obj_type):
     source_location = []
@@ -144,9 +153,7 @@ def clone_objects_to_s3(target_dest, obj_type, source_location, objects_not_foun
                     f"s3://{obj['source_bucket']}/{obj['source_key']},Object not found,N/A,N/A,N/A\n"
                 )
             fp.write(f"Number of objects not found: {len(objects_not_found)}")
-    aws_helper.s3_upload(
-        file_output, bucket=f"{dest_bucket}", key=f"{dest_prefix}{file_output}"
-    )
+    aws_helper.s3_upload(file_output, bucket=f"{dest_bucket}", key=f"{dest_prefix}{file_output}")
     logger.info(
         f"Details of {full_object_type} cloning uploaded to {dest_bucket}/{dest_prefix}{file_output}"
     )

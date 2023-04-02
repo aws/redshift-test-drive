@@ -166,6 +166,7 @@ def s3_resource_put_object(bucket, prefix, body):
 
 
 async def s3_get_bucket_contents(bucket, prefix, s3_client):
+    '''Pagination implemented in async manner'''
     paginator = s3_client.get_paginator("list_objects_v2")
     async for page in paginator.paginate(
         Bucket=bucket,
