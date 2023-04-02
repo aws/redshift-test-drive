@@ -2,6 +2,9 @@ import csv
 import threading
 import common.aws_service as aws_helper
 import logging
+import aioboto3
+import time
+
 
 from tqdm import tqdm
 from common.util import bucket_dict
@@ -46,22 +49,36 @@ def get_s3_folder_size(copy_file_list):
     return size_of_data(total_size)
 
 
-def check_file_existence(response, obj_type):
+async def check_file_existence(response, obj_type):
     source_location = []
     objects_not_found = []
-    for record in response["Records"]:
-        if obj_type == "copyfiles":
-            source_url = bucket_dict(record[0]["stringValue"])
-            source_bucket = source_url["bucket_name"]
-            source_key = (source_url["prefix"])[:-1]
-        else:
-            source_bucket = record[0]["stringValue"]
-            source_key = record[1]["stringValue"][:-1]
-        objects = aws_helper.s3_get_bucket_contents(source_bucket, source_key)
-        if not objects:  # if no object is found, add it to objects_not_found list
-            objects_not_found.append({"source_bucket": source_bucket, "source_key": source_key})
+    session = aioboto3.Session()
+    start_time = time.time()
+    async with session.client("s3") as s3_async_client:
+        result = []
+        for record in response["Records"]:
+            if obj_type == "copyfiles":
+                source_url = bucket_dict(record[0]["stringValue"])
+                source_bucket = source_url["bucket_name"]
+                source_key = (source_url["prefix"])[:-1]
+            else:
+                source_bucket = record[0]["stringValue"]
+                source_key = record[1]["stringValue"][:-1]
+
+            async for obj in aws_helper.s3_get_bucket_contents(
+                bucket=source_bucket,
+                prefix=source_key,
+                s3_client=s3_async_client,
+            ):
+                result.append(obj)
+        logger.info(f"Listing data for {obj_type}")
+
+        if not result:  # if no object is found, add it to objects_not_found list
+            objects_not_found.append(
+                {"source_bucket": source_bucket, "source_key": source_key}
+            )
         else:  # if object is found, append it to source_location to be cloned
-            for object in objects:
+            for object in result:
                 source_location.append(
                     {
                         "source_bucket": source_bucket,
@@ -72,6 +89,9 @@ def check_file_existence(response, obj_type):
                         "last_modified": object["LastModified"],
                     }
                 )
+    logger.info(
+        f"The total time required to list the objects : {time.time()-start_time}"
+    )
     return source_location, objects_not_found
 
 
@@ -124,7 +144,9 @@ def clone_objects_to_s3(target_dest, obj_type, source_location, objects_not_foun
                     f"s3://{obj['source_bucket']}/{obj['source_key']},Object not found,N/A,N/A,N/A\n"
                 )
             fp.write(f"Number of objects not found: {len(objects_not_found)}")
-    aws_helper.s3_upload(file_output, bucket=f"{dest_bucket}", key=f"{dest_prefix}{file_output}")
+    aws_helper.s3_upload(
+        file_output, bucket=f"{dest_bucket}", key=f"{dest_prefix}{file_output}"
+    )
     logger.info(
         f"Details of {full_object_type} cloning uploaded to {dest_bucket}/{dest_prefix}{file_output}"
     )
