@@ -1,6 +1,5 @@
 import datetime
 import unittest
-import aioboto3
 from pathlib import Path
 from unittest.mock import patch, Mock, mock_open
 
