@@ -1,5 +1,6 @@
 import datetime
 import unittest
+import aioboto3
 from pathlib import Path
 from unittest.mock import patch, Mock, mock_open
 
@@ -183,8 +184,14 @@ class ExtractorTestCases(unittest.TestCase):
     @patch("common.aws_service.s3_upload")
     @patch("common.aws_service.s3_put_object")
     @patch("common.util.cluster_dict")
-    @patch.object(Extractor,"get_copy_replacements")
-    def test_save_logs_s3(self,mock_copy_replacements,mock_cluster_dict,mock_s3_put_object, mock_s3_upload):
+    @patch.object(Extractor, "get_copy_replacements")
+    def test_save_logs_s3(
+        self,
+        mock_copy_replacements,
+        mock_cluster_dict,
+        mock_s3_put_object,
+        mock_s3_upload,
+    ):
         e = Extractor({"external_schemas": ["abc_external", "def_schema"]})
         e.save_logs(
             {"useractivitylog": [self.get_query()]},
@@ -200,11 +207,20 @@ class ExtractorTestCases(unittest.TestCase):
     @patch("gzip.open", mock_open())
     @patch("builtins.open", mock_open())
     @patch("common.util.cluster_dict")
-    @patch.object(Extractor,"get_copy_replacements")
-    def test_save_logs_non_s3(self,mock_copy_replacements,mock_cluster_dict):
+    @patch.object(Extractor, "get_copy_replacements")
+    def test_save_logs_non_s3(self, mock_copy_replacements, mock_cluster_dict):
         with patch.object(Path, "mkdir") as mock_mkdir:
             mock_mkdir.return_value = None
-            e = Extractor({"external_schemas": ["abc_external", "def_schema"],"source_cluster_endpoint": "source-redshift-test-drive.cqm7bdujbnqz.us-east-1.redshift.amazonaws.com:5439/tpcds_tuned_test","start_time": "2022-11-16T00:00:00","end_time": "2022-11-18T00:00:00","master_username":"awsuser","region":"us-east-1"})
+            e = Extractor(
+                {
+                    "external_schemas": ["abc_external", "def_schema"],
+                    "source_cluster_endpoint": "source-redshift-test-drive.cqm7bdujbnqz.us-east-1.redshift.amazonaws.com:5439/tpcds_tuned_test",
+                    "start_time": "2022-11-16T00:00:00",
+                    "end_time": "2022-11-18T00:00:00",
+                    "master_username": "awsuser",
+                    "region": "us-east-1",
+                }
+            )
             e.save_logs(
                 {"useractivitylog": [self.get_query()]},
                 {},
