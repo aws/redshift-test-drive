@@ -24,6 +24,7 @@ def init_logging(
     preamble="",
     script_type="extract",
     logger_name="WorkloadReplicatorLogger",
+    log_id=""
 ):
     """Initialize logging to stdio"""
     logger = logging.getLogger(logger_name)
@@ -56,6 +57,9 @@ def init_logging(
     logger.info(f"Logging to {filename}")
     logger.addHandler(fh)
     logger.info("== Initializing logfile ==")
+
+    if logger_name=="WorkloadReplicatorWorkerLogger":
+        logger.info(f"Reply_ID: {log_id}")
 
 
 def get_log_formatter():
