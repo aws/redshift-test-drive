@@ -1,0 +1,16 @@
+name: Github-PR-thread-comment
+run-name: ${{ github.triggering_actor }} has left a comment in the thread
+on: 
+  pull_request_review:
+    types: []
+jobs:
+  notify-pull-request-review-comment:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send GitHub Action trigger data to Slack workflow
+        id: slack
+        uses: slackapi/slack-github-action@v1.23.0
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL_PR_REVIEW_COMMENT }}
+
+  
