@@ -1,5 +1,5 @@
 name: GitHub-PR
-run-name: ${{ github.actor }} has opened a pull request
+run-name: ${{ github.triggering_actor }} has opened a pull request
 on: 
   pull_request:
     types: [opened,reopened,closed,converted_to_draft]
