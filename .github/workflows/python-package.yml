@@ -30,6 +30,7 @@ jobs:
         pip3 install aioboto3
         pip3 install botocore
         pip3 install botocore --upgrade
+        pip3 install awscli --upgrade
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
     - name: Unit tests for redshift-test-drive
       run: |
