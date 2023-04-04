@@ -1,0 +1,13 @@
+name: GitHub-Push
+run-name: ${{ github.triggering_actor }} has pushed a commit
+on: 
+  push:
+jobs:
+  notify-pull-request:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send GitHub Action trigger data to Slack workflow
+        id: slack
+        uses: slackapi/slack-github-action@v1.23.0
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL_PUSH }}
