@@ -1,8 +1,8 @@
-name: Github-PR-thread-comment
-run-name: ${{ github.triggering_actor }} has left a comment in the thread
+name: Github-PR-Review-Comment
+run-name: ${{ github.triggering_actor }} has left a comment in the PR's Diff
 on: 
   pull_request_review_comment:
-    types: [created]
+    types: [created,edited,deleted]
 jobs:
   notify-pull-request-review-comment:
     runs-on: ubuntu-latest
