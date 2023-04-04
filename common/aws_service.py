@@ -2,10 +2,11 @@ import base64
 import datetime
 import json
 import logging
-import threading
 import boto3
 from botocore.exceptions import ClientError
 from tqdm import tqdm
+import asyncio
+import functools
 
 logger = logging.getLogger("WorkloadReplicatorLogger")
 
@@ -164,18 +165,23 @@ def s3_resource_put_object(bucket, prefix, body):
     s3_resource = boto3.resource("s3")
     s3_resource.Object(bucket, prefix).put(Body=body)
 
-
-async def s3_get_bucket_contents(bucket, prefix, s3_client):
+async def s3_get_bucket_contents(bucket, prefix):
     """Pagination implemented in async manner"""
-    paginator = s3_client.get_paginator("list_objects_v2")
-    async for page in paginator.paginate(
-        Bucket=bucket,
-        Prefix=prefix,
-        PaginationConfig={"MaxItems": 10000, "PageSize": 10000},
-    ):
-        for bucket_object in page.get("Contents", []):
-            yield bucket_object
+    s3_client=boto3.client('s3')
+    loop = asyncio.get_event_loop()
+    f_list_bounded = functools.partial(s3_client.list_objects_v2, Bucket=bucket,Prefix=prefix)
+    bucket_objects =[]
+    continuation_token = {}
+    while True:
+        response = await loop.run_in_executor(executor=None,func=f_list_bounded, **continuation_token)
+        bucket_objects.extend(response.get('Contents',[]))
+        if response['IsTruncated']:
+            continuation_token['ContinuationToken']=response['NextContinuationToken']
+        else:
+            break
+    return bucket_objects
 
+    
 
 def s3_generate_presigned_url(client_method, bucket_name, object_name):
     s3_client = boto3.client("s3")

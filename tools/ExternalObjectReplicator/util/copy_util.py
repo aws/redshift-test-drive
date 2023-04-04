@@ -3,7 +3,7 @@ import threading
 import common.aws_service as aws_helper
 import logging
 import time
-import aioboto3
+import asyncio
 
 from tqdm import tqdm
 from common.util import bucket_dict
@@ -48,46 +48,36 @@ def get_s3_folder_size(copy_file_list):
     return size_of_data(total_size)
 
 
-async def s3_get_bucket_contents(bucket, prefix, s3_client):
-    paginator = s3_client.get_paginator("list_objects_v2")
-    async for page in paginator.paginate(
-        Bucket=bucket,
-        Prefix=prefix,
-        PaginationConfig={"MaxItems": 10000, "PageSize": 10000},
-    ):
-        for bucket_object in page.get("Contents", []):
-            yield bucket_object
 
 async def check_file_existence(response, obj_type):
     source_location = []
     objects_not_found = []
-    session = aioboto3.Session()
+    tasks = []
     start_time = time.time()
-    async with session.client("s3") as s3_async_client:
-        result = []
-        for record in response["Records"]:
-            if obj_type == "copyfiles":
-                source_url = bucket_dict(record[0]["stringValue"])
-                source_bucket = source_url["bucket_name"]
-                source_key = (source_url["prefix"])[:-1]
-            else:
-                source_bucket = record[0]["stringValue"]
-                source_key = record[1]["stringValue"][:-1]
+    result = []
+    for record in response["Records"]:
+        if obj_type == "copyfiles":
+            source_url = bucket_dict(record[0]["stringValue"])
+            source_bucket = source_url["bucket_name"]
+            source_key = (source_url["prefix"])[:-1]
+        else:
+            source_bucket = record[0]["stringValue"]
+            source_key = record[1]["stringValue"][:-1]
 
-            async for obj in aws_helper.s3_get_bucket_contents(
-                bucket=source_bucket,
-                prefix=source_key,
-                s3_client=s3_async_client,
-            ):
-                result.append(obj)
-        logger.info(f"Listing data for {obj_type}")
+        tasks.append(asyncio.create_task(aws_helper.s3_get_bucket_contents(
+            source_bucket,
+            source_key
+        )))
+    for task in asyncio.as_completed(tasks):
+        result.extend(await task)
+    logger.info(f"Listing data for {obj_type}")
 
-        if not result:  # if no object is found, add it to objects_not_found list
-            objects_not_found.append(
-                {"source_bucket": source_bucket, "source_key": source_key}
-            )
-        else:  # if object is found, append it to source_location to be cloned
-            for object in result:
+    if not result:  # if no object is found, add it to objects_not_found list
+        objects_not_found.append(
+            {"source_bucket": source_bucket, "source_key": source_key}
+        )
+    else:  # if object is found, append it to source_location to be cloned
+        for object in result:
                 source_location.append(
                     {
                         "source_bucket": source_bucket,
