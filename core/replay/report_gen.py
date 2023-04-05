@@ -323,11 +323,8 @@ def initiate_connection(username, cluster):
             database=cluster_string["database"],
         )  # yield to reuse connection
         yield conn
-    except redshift_connector.error.Error as e:
-        logger.error(f"Unable to connect to Redshift. Please confirm credentials. {e} ")
-        exit(-1)
     except Exception as e:
-        logger.error(f"Unable to connect to Redshift. {e}")
+        logger.error(f"Unable to connect to Redshift. {e}", exc_info=True)
         exit(-1)
     finally:
         if conn is not None:

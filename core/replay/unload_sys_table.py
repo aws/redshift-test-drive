@@ -20,16 +20,18 @@ class UnloadSysTable:
         credentials = prep.get_connection_credentials(
             self.config["master_username"], max_attempts=3
         )
-        conn = db_connect(
-            self.default_interface,
-            host=credentials["host"],
-            port=int(credentials["port"]),
-            username=credentials["username"],
-            password=credentials["password"],
-            database=credentials["database"],
-            odbc_driver=credentials["odbc_driver"],
-        )
-
+        try:
+            conn = db_connect(
+                self.default_interface,
+                host=credentials["host"],
+                port=int(credentials["port"]),
+                username=credentials["username"],
+                password=credentials["password"],
+                database=credentials["database"],
+                odbc_driver=credentials["odbc_driver"],
+            )
+        except Exception as e:
+            logger.debug(f"Unable to connect: {e}", exc_info=True)
         unload_queries = {}
         table_name = ""
         query_text = ""
