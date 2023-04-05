@@ -34,5 +34,8 @@ setup: requirements.txt
 test:
 	export PYTHONPATH=$(PYTHONPATH):$(CORE_FOLDER):$(CORE_FOLDER) && export PYTHONPATH=$(PYTHONPATH):$(CORE_FOLDER):$(COMMON_FOLDER) && export PYTHONPATH=$(PYTHONPATH):$(CORE_FOLDER):$(EXTERNAL_OBJECT_REPLICATOR_DIR)/ && export PYTHONPATH=$(PYTHONPATH):$(CORE_FOLDER):$(REPLAY_ANALYSIS_DIR)/ && ${PYTHON} -m unittest discover
 
+test_with_coverage:
+	export PYTHONPATH=$(PYTHONPATH):$(CORE_FOLDER):$(CORE_FOLDER) && export PYTHONPATH=$(PYTHONPATH):$(CORE_FOLDER):$(COMMON_FOLDER) && export PYTHONPATH=$(PYTHONPATH):$(CORE_FOLDER):$(EXTERNAL_OBJECT_REPLICATOR_DIR)/ && export PYTHONPATH=$(PYTHONPATH):$(CORE_FOLDER):$(REPLAY_ANALYSIS_DIR)/ && coverage run -m unittest discover && coverage html
+
 clean:
 	rm -rf __pycache__

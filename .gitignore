@@ -170,3 +170,7 @@ yarn-error.log*
 api/*.csv
 
 statements_to_be_avoided.txt
+
+core/*/logs/*
+tools/*/logs/*
+tools/*/tests/logs/*

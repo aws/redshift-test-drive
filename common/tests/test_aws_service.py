@@ -70,7 +70,7 @@ class AWSServiceTestCases(TestCase):
         s.deactivate()
 
     @patch("boto3.client", mock_s3_client)
-    def test_s3_get_bucket_contents(self):
+    async def test_s3_get_bucket_contents(self):
         s = Stubber(s3_client)
         response_with_continuation_token = {
             "Contents": [{}],
@@ -80,7 +80,7 @@ class AWSServiceTestCases(TestCase):
         s.add_response("list_objects_v2", response_with_continuation_token)
         s.add_response("list_objects_v2", response_without_continuation_token)
         s.activate()
-        objects = aws_service_helper.s3_get_bucket_contents("bucket", "prefix")
+        objects = await aws_service_helper.s3_get_bucket_contents("bucket", "prefix")
         assert objects == [{}, {}]
         s.deactivate()
 
