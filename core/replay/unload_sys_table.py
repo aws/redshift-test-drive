@@ -65,4 +65,4 @@ class UnloadSysTable:
                     cursor.execute(unload_query)
                 except Exception as e:
                     logger.error(f"Failed to unload query. {e}")
-                logger.debug(f"Executed unload query: {unload_query}")
+                logger.debug(f"Executed unload query: {table_name}")
