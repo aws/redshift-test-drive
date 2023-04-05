@@ -96,8 +96,8 @@ def execute_svl_query(cluster_object, end_time, file_config, redshift_user, star
 
 
 async def async_check_file_existence(query_response, obj_type):
-    result1, result2 = await check_file_existence(query_response, obj_type)
-    return result1, result2
+    files_found, files_not_found = await check_file_existence(query_response, obj_type)
+    return files_found, files_not_found
 
 
 def execute_stl_load_query(
