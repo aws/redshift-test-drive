@@ -207,6 +207,7 @@ class Extractor:
             connections_file.close()
 
         # Save the replacements
+        logger.info("Generating the copy_replcaments........")
         copy_replacements = self.get_copy_replacements()
         logger.info(f"Exporting copy replacements to {output_directory}")
         replacements_string = (
