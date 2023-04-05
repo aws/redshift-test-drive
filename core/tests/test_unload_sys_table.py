@@ -70,7 +70,7 @@ class TestReplay(unittest.TestCase):
         unload_object = UnloadSysTable(config, replay_id)
         unload_object.unload_system_table()
 
-        mock_debug.assert_called_once_with("Executed unload query: select * from stl_test")
+        mock_debug.assert_called_once_with("Executed unload query: stl_test")
 
     @patch.object(ReplayPrep, "get_connection_credentials", mock_get_connection_cred)
     @patch("core.replay.unload_sys_table.db_connect", mock_db_connect)
@@ -83,7 +83,7 @@ class TestReplay(unittest.TestCase):
         unload_object.unload_system_table()
 
         mock_debug.assert_called_once_with(
-            "Executed unload query: unload (select * from stl_unload) TO 's3://location/replay/2023-02-13T04:59:40.864968+00:00_test-redshift-test-testing_76f32/system_tables/stl_unload/' CREDENTIALS 'aws_iam_role=arn:iam:role/test'"
+            "Executed unload query: stl_unload"
         )
 
     @patch.object(ReplayPrep, "get_connection_credentials", mock_get_connection_cred)
