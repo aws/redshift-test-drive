@@ -243,7 +243,6 @@ class ConnectionThread(threading.Thread):
             )
             if time_until_start_ms > 10:
                 time.sleep(time_until_start_ms / 1000.0)
-            import pdb;pdb.set_trace()
             if self.config.get("split_multi", True):
                 formatted_query = query.text.lower()
                 if not formatted_query.startswith(("begin", "start")):
