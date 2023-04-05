@@ -173,7 +173,7 @@ async def s3_get_bucket_contents(bucket, prefix):
     bucket_objects =[]
     continuation_token = {}
     while True:
-        response = await loop.run_in_executor(executor=None,func=f_list_bounded, **continuation_token)
+        response = await loop.run_in_executor(executor=None, func=f_list_bounded, **continuation_token)
         bucket_objects.extend(response.get('Contents',[]))
         if response['IsTruncated']:
             continuation_token['ContinuationToken']=response['NextContinuationToken']
