@@ -243,8 +243,7 @@ class ConnectionThread(threading.Thread):
             )
             if time_until_start_ms > 10:
                 time.sleep(time_until_start_ms / 1000.0)
-
-            if self.config.get("split_multi", "true").lower() == "true":
+            if self.config.get("split_multi", True):
                 formatted_query = query.text.lower()
                 if not formatted_query.startswith(("begin", "start")):
                     query_begin = "begin;" + formatted_query
