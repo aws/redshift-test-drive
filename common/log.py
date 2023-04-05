@@ -20,7 +20,7 @@ def init_logging(
     filename,
     dir="core/logs/extract",
     level=logging.DEBUG,
-    backup_count=2,
+    backup_count=5,
     preamble="",
     script_type="extract",
     logger_name="WorkloadReplicatorLogger",
