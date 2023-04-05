@@ -9,6 +9,9 @@ source_cluster_endpoint: ""
 # Required only if source_cluster_endpoint is given.
 master_username: "awsuser"
 
+#Required for generating copy_replacements and  if log location for cloudwatch logs is specified
+region: ""
+
 
 # Required. Start and end time of the workload to be extracted, e.g. 2020-06-14T21:41:16+00:00
 start_time: ""

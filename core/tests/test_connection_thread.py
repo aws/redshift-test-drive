@@ -28,11 +28,13 @@ config_dict = {
     "replay_output": "s3://devsaba-sr-drill/replay",
     "analysis_output": "s3://devsaba-sr-drill/analysis",
     "limit_concurrent_connections": "1",
-    "split_multi": "False",
+    "split_multi": False,
 }
 
 query_1 = Query(
-    start_time=datetime.datetime(2023, 2, 1, 10, 0, 45, 0, tzinfo=datetime.timezone.utc),
+    start_time=datetime.datetime(
+        2023, 2, 1, 10, 0, 45, 0, tzinfo=datetime.timezone.utc
+    ),
     end_time=datetime.datetime(2023, 2, 1, 10, 0, 45, 0, tzinfo=datetime.timezone.utc),
     text="SET query_group='0000_create_user.ddl - IR-960eb458-9033-11ed-84bb-029845ae12cf.create-user.create-user.s0001.f0000.1.0'",
 )
@@ -58,7 +60,9 @@ def mock_execute_transaction(self, transaction, connection):
 
 def mock_date_time():
     mock_time = Mock(
-        return_value=datetime.datetime(2023, 2, 1, 10, 0, 0, 0, tzinfo=datetime.timezone.utc)
+        return_value=datetime.datetime(
+            2023, 2, 1, 10, 0, 0, 0, tzinfo=datetime.timezone.utc
+        )
     )
     return mock_time
 
@@ -86,8 +90,12 @@ def get_connection_thread(connection_log):
         connection_log=connection_log,
         default_interface="psql",
         odbc_driver=None,
-        replay_start=datetime.datetime(2023, 2, 1, 9, 45, 0, 0, tzinfo=datetime.timezone.utc),
-        first_event_time=datetime.datetime(2023, 2, 1, 10, 0, 0, 0, tzinfo=datetime.timezone.utc),
+        replay_start=datetime.datetime(
+            2023, 2, 1, 9, 45, 0, 0, tzinfo=datetime.timezone.utc
+        ),
+        first_event_time=datetime.datetime(
+            2023, 2, 1, 10, 0, 0, 0, tzinfo=datetime.timezone.utc
+        ),
         error_logger="",
         thread_stats={
             "connection_diff_sec": 0,
@@ -114,7 +122,9 @@ def get_connection_log(transactions=[], time_interval_between_transactions=True)
         session_initiation_time=datetime.datetime(
             2023, 2, 1, 10, 0, 0, 0, tzinfo=datetime.timezone.utc
         ),
-        disconnection_time=datetime.datetime(2023, 2, 1, 10, 0, 0, 0, tzinfo=datetime.timezone.utc)
+        disconnection_time=datetime.datetime(
+            2023, 2, 1, 10, 0, 0, 0, tzinfo=datetime.timezone.utc
+        )
         + datetime.timedelta(seconds=1),
         application_name="",
         database_name="dev",
@@ -132,7 +142,9 @@ class TestConnectionThread(unittest.TestCase):
     @patch("core.replay.connection_thread.current_offset_ms", lambda _: 0.5)
     @patch.object(ConnectionThread, "execute_transactions")
     @patch.object(ConnectionThread, "initiate_connection")
-    def test_run_with_connection(self, mock_initiate_connection, mock_execute_transactions):
+    def test_run_with_connection(
+        self, mock_initiate_connection, mock_execute_transactions
+    ):
         mock_conn = MagicMock()
         mock_initiate_connection.return_value.__enter__.return_value = mock_conn
         get_connection_thread(get_connection_log()).run()
@@ -141,7 +153,9 @@ class TestConnectionThread(unittest.TestCase):
     @patch("core.replay.connection_thread.current_offset_ms", lambda _: 0.5)
     @patch.object(ConnectionThread, "execute_transactions")
     @patch.object(ConnectionThread, "initiate_connection")
-    def test_run_without_connection(self, mock_initiate_connection, mock_execute_transactions):
+    def test_run_without_connection(
+        self, mock_initiate_connection, mock_execute_transactions
+    ):
         mock_initiate_connection.return_value.__enter__.return_value = None
         get_connection_thread(get_connection_log()).run()
         assert mock_execute_transactions.not_called
@@ -172,7 +186,9 @@ class TestConnectionThread(unittest.TestCase):
 
     @patch("core.replay.connection_thread.db_connect")
     @patch("core.replay.connection_thread.ReplayPrep")
-    def test_initiate_connection_error_in_db_connect(self, mock_replay_prep, mock_db_connect):
+    def test_initiate_connection_error_in_db_connect(
+        self, mock_replay_prep, mock_db_connect
+    ):
         mock_replay_prep.get_connection_credentials.return_value = {}
         mock_db_connect.side_effect = [Exception("Failed to connect")]
         conn_thread = get_connection_thread(get_connection_log())
@@ -243,7 +259,9 @@ class TestConnectionThread(unittest.TestCase):
     @patch("builtins.open", new_callable=mock_open)
     @patch("core.replay.connection_thread.Path")
     def test_save_query_stats_fp_zero(self, mock_path, open_mock):
-        conn_thread = get_connection_thread(get_connection_log(get_transactions([query_1])))
+        conn_thread = get_connection_thread(
+            get_connection_log(get_transactions([query_1]))
+        )
         conn_thread.perf_lock = threading.Lock()
         mock_path.mkdir.return_value = "value"
 
@@ -258,7 +276,9 @@ class TestConnectionThread(unittest.TestCase):
             call("core/logs/replay/2023-02-01T09:45:00+00:00/1_times.csv", "a+"),
             call().__enter__(),
             call().tell(),
-            call().write("1,1-2,2023-02-01 10:00:00+00:00,2023-02-01 10:00:04+00:00,4.000000,0\n"),
+            call().write(
+                "1,1-2,2023-02-01 10:00:00+00:00,2023-02-01 10:00:04+00:00,4.000000,0\n"
+            ),
             call().__exit__(None, None, None),
         ]
 
@@ -267,7 +287,9 @@ class TestConnectionThread(unittest.TestCase):
     @patch("core.replay.connection_thread.open", new_callable=mock_open)
     @patch("core.replay.connection_thread.Path")
     def test_save_query_stats_fp_not_zero(self, mock_path, op_mock):
-        conn_thread = get_connection_thread(get_connection_log(get_transactions([query_1])))
+        conn_thread = get_connection_thread(
+            get_connection_log(get_transactions([query_1]))
+        )
         conn_thread.perf_lock = threading.Lock()
         mock_path.mkdir.return_value = "value"
         mock_fp = MagicMock()
@@ -285,10 +307,14 @@ class TestConnectionThread(unittest.TestCase):
             call("core/logs/replay/2023-02-01T09:45:00+00:00/1_times.csv", "a+"),
             call().__enter__(),
             call().__enter__().tell(),
-            call().__enter__().write("# process,query,start_time,end_time,elapsed_sec,rows\n"),
             call()
             .__enter__()
-            .write("1,1-2,2023-02-01 10:00:00+00:00,2023-02-01 10:00:04+00:00,4.000000,0\n"),
+            .write("# process,query,start_time,end_time,elapsed_sec,rows\n"),
+            call()
+            .__enter__()
+            .write(
+                "1,1-2,2023-02-01 10:00:00+00:00,2023-02-01 10:00:04+00:00,4.000000,0\n"
+            ),
             call().__exit__(None, None, None),
         ]
         op_mock.assert_has_calls(calls, any_order=True)
@@ -338,7 +364,9 @@ class TestConnectionThread(unittest.TestCase):
     @patch("core.replay.connection_thread.parse_error", lambda a, b, c, d: "Test")
     @patch.object(ConnectionThread, "save_query_stats")
     @patch.object(ConnectionThread, "should_execute_sql", lambda a, b: True)
-    def test_execute_transaction_execution_error(self, mock_save_query_stats, patched_time_sleep):
+    def test_execute_transaction_execution_error(
+        self, mock_save_query_stats, patched_time_sleep
+    ):
         mock_connection = Mock()
         mock_cursor = Mock()
         mock_cursor.execute.side_effect = [Exception("Failed to execute query")]
@@ -357,18 +385,29 @@ class TestConnectionThread(unittest.TestCase):
         self.assertFalse(conn_thread.thread_stats.get("query_success"))
 
     def test_should_execute_sql_copy_from_s3_in_sql(self):
-        connection_thread = get_connection_thread(get_connection_log(get_transactions([query_1])))
+        connection_thread = get_connection_thread(
+            get_connection_log(get_transactions([query_1]))
+        )
         connection_thread.config = {"execute_copy_statements": "true"}
         self.assertTrue(connection_thread.should_execute_sql("copy from 's3://folder'"))
         connection_thread.config = {"execute_copy_statements": "false"}
-        self.assertFalse(connection_thread.should_execute_sql("copy from 's3://folder'"))
+        self.assertFalse(
+            connection_thread.should_execute_sql("copy from 's3://folder'")
+        )
 
     def test_should_execute_sql_unload_to_s3_in_sql(self):
-        connection_thread = get_connection_thread(get_connection_log(get_transactions([query_1])))
-        connection_thread.config = {"execute_unload_statements": "true", "replay_output": "abc"}
+        connection_thread = get_connection_thread(
+            get_connection_log(get_transactions([query_1]))
+        )
+        connection_thread.config = {
+            "execute_unload_statements": "true",
+            "replay_output": "abc",
+        }
         self.assertTrue(connection_thread.should_execute_sql("unload to 's3://folder'"))
         connection_thread.config = {"execute_unload_statements": "false"}
-        self.assertFalse(connection_thread.should_execute_sql("unload to 's3://folder'"))
+        self.assertFalse(
+            connection_thread.should_execute_sql("unload to 's3://folder'")
+        )
 
 
 class TestCategorizeError(unittest.TestCase):
@@ -393,7 +432,9 @@ class TestRemoveComments(unittest.TestCase):
     def test_remove_comments(self):
         val = remove_comments(string)
 
-        self.assertEqual(val, "begin;create  user rsperf password '***' createuser;commit;")
+        self.assertEqual(
+            val, "begin;create  user rsperf password '***' createuser;commit;"
+        )
 
 
 class TestParseError(unittest.TestCase):
