@@ -31,7 +31,7 @@ class UnloadSysTable:
                 odbc_driver=credentials["odbc_driver"],
             )
         except Exception as e:
-            logger.debug(f"Unable to connect: {e}", exc_info=True if logger.getEffectiveLevel() == 10 else False)
+            logger.debug(f"Unable to connect: {e}", exc_info=True)
         unload_queries = {}
         table_name = ""
         query_text = ""

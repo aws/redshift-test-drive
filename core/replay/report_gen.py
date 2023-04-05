@@ -324,7 +324,7 @@ def initiate_connection(username, cluster):
         )  # yield to reuse connection
         yield conn
     except Exception as e:
-        logger.error(f"Unable to connect to Redshift. {e}", exc_info=True if logger.getEffectiveLevel() == 10 else False)
+        logger.error(f"Unable to connect to Redshift. {e}", exc_info=True)
         exit(-1)
     finally:
         if conn is not None:

@@ -132,14 +132,14 @@ class ConnectionThread(threading.Thread):
                 hashed_cluster_url["password"] = "***"
                 self.logger.error(
                     f"({self.job_id + 1}) Failed to initiate connection for {self.connection_log.database_name}-"
-                    f"{self.connection_log.username}-{self.connection_log.pid} ({hashed_cluster_url}): {err}", exc_info=True if self.logger.getEffectiveLevel() == 10 else False
+                    f"{self.connection_log.username}-{self.connection_log.pid} ({hashed_cluster_url}): {err}", exc_info=True
                 )
                 self.thread_stats["connection_error_log"][
                     f"{self.connection_log.database_name}-{self.connection_log.username}-{self.connection_log.pid}"
                 ] = f"{self.connection_log}\n\n{err}"
             yield conn
         except Exception as e:
-            self.logger.error(f"Exception in connect: {e}", exc_info=True if self.logger.getEffectiveLevel() == 10 else False)
+            self.logger.error(f"Exception in connect: {e}", exc_info=True
         finally:
             self.logger.debug(f"Context closing for pid: {self.connection_log.pid}")
             if conn is not None:
@@ -171,7 +171,7 @@ class ConnectionThread(threading.Thread):
                 else:
                     self.logger.warning("Failed to connect")
         except Exception as e:
-            self.logger.error(f"Exception thrown for pid {self.connection_log.pid}: {e}", exc_info=True if self.logger.getEffectiveLevel() == 10 else False)
+            self.logger.error(f"Exception thrown for pid {self.connection_log.pid}: {e}", exc_info=True)
 
     def execute_transactions(self, connection):
         if self.connection_log.time_interval_between_transactions is True:
@@ -310,7 +310,7 @@ class ConnectionThread(threading.Thread):
                     errors.append([sql_text, str(err)])
                     self.logger.debug(
                         f"Failed DB={transaction.database_name}, USER={transaction.username}, PID={transaction.pid}, "
-                        f"XID:{transaction.xid}, Query: {idx + 1}/{len(transaction.queries)}{substatement_txt}: {err}", exc_info=True if self.logger.getEffectiveLevel() == 10 else False
+                        f"XID:{transaction.xid}, Query: {idx + 1}/{len(transaction.queries)}{substatement_txt}: {err}", exc_info=True
                     )
                     self.error_logger.append(
                         parse_error(
