@@ -20,10 +20,11 @@ def init_logging(
     filename,
     dir="core/logs/extract",
     level=logging.DEBUG,
-    backup_count=2,
+    backup_count=5,
     preamble="",
     script_type="extract",
     logger_name="WorkloadReplicatorLogger",
+    log_id="",
 ):
     """Initialize logging to stdio"""
     logger = logging.getLogger(logger_name)
@@ -56,6 +57,7 @@ def init_logging(
     logger.info(f"Logging to {filename}")
     logger.addHandler(fh)
     logger.info("== Initializing logfile ==")
+    logger.info(f"Replay ID: {log_id}") if log_id else None
 
 
 def get_log_formatter():
