@@ -43,6 +43,12 @@ class TestConfig(unittest.TestCase):
         with self.assertRaises(SystemExit) as cm:
             config_helper.validate_config_file_for_extract(self.config_ext)
         self.assertEqual(cm.exception.code, -1)
+    
+    def test_validate_config_file_for_extract_region(self):
+        self.config_ext["region"] = ""
+        with self.assertRaises(SystemExit) as cm:
+            config_helper.validate_config_file_for_extract(self.config_ext)
+        self.assertEqual(cm.exception.code, -1)
 
     def test_validate_config_file_for_extract_log_location(self):
         self.config_ext["source_cluster_endpoint"] = ""
