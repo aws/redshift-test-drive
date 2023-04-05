@@ -35,7 +35,7 @@ class CopyUtilTestCases(unittest.TestCase):
         self.assertEqual(mock_s3_copy_object.call_count, 1)
 
     @patch("common.aws_service.s3_get_bucket_contents")
-    def test_check_file_existence_object_not_found(self, mock_objects_not_found):
+    async def test_check_file_existence_object_not_found(self, mock_objects_not_found):
         response = {
             "ColumnMetadata": [{}],
             "Records": [[{"stringValue": "s3://source-test-bucket/test/test_data/file.parquet"}]],
@@ -51,7 +51,7 @@ class CopyUtilTestCases(unittest.TestCase):
                 "Size": 5491,
             }
         ]
-        source_location, objects_not_found = copy_util.check_file_existence(
+        source_location, objects_not_found = await copy_util.check_file_existence(
             response=response, obj_type=obj_type
         )
         self.assertTrue(mock_objects_not_found.called)
@@ -60,7 +60,7 @@ class CopyUtilTestCases(unittest.TestCase):
         self.assertFalse(objects_not_found)
 
     @patch("common.aws_service.s3_get_bucket_contents")
-    def test_check_file_existence_empty_request(self, mock_objects_not_found_empty_req):
+    async def test_check_file_existence_empty_request(self, mock_objects_not_found_empty_req):
         response = {
             "ColumnMetadata": [{}],
             "Records": [
@@ -74,7 +74,7 @@ class CopyUtilTestCases(unittest.TestCase):
         }
         obj_type = "notcopyfiles"
         mock_objects_not_found_empty_req.return_value = {}
-        source_location, objects_not_found = copy_util.check_file_existence(
+        source_location, objects_not_found = await copy_util.check_file_existence(
             response=response, obj_type=obj_type
         )
         self.assertTrue(mock_objects_not_found_empty_req.called)

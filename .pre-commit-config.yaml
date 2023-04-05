@@ -29,7 +29,8 @@ repos:
   hooks:
   - id: unittest
     name: unittest
-    entry: make test
+    verbose: true
+    entry: make test_with_coverage
     language: system
     types: [python]
     additional_dependencies: []

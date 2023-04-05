@@ -37,6 +37,7 @@ external_table_response = {"Records": ""}
 
 
 class MainTest(unittest.TestCase):
+    @patch("tools.ExternalObjectReplicator.util.copy_util.clone_objects_to_s3")
     @patch("common.config.get_config_file_from_args", return_value=config_file)
     @patch("common.util.cluster_dict", return_value=cluster_obj)
     @patch(
@@ -55,9 +56,9 @@ class MainTest(unittest.TestCase):
         mock_execute_svl_query,
         mock_cluster_dict,
         mock_get_config_file_from_args,
+        mock_clone_objects_to_s3,
     ):
-        with self.assertRaises(SystemExit) as context:
-            eor.main()
+        eor.main()
         mock_execute_stl_load_query.assert_called_once_with(
             cluster_obj,
             dateutil.parser.parse(config_file["end_time"]).astimezone(dateutil.tz.tzutc()),
@@ -72,6 +73,7 @@ class MainTest(unittest.TestCase):
             "someuser",
             dateutil.parser.parse(config_file["start_time"]).astimezone(dateutil.tz.tzutc()),
         )
+        mock_clone_objects_to_s3.assert_not_called()
 
     @patch("common.config.get_config_file_from_args", return_value=config_file)
     @patch("tools.ExternalObjectReplicator.util.copy_util.clone_objects_to_s3", return_value=None)
@@ -111,6 +113,7 @@ class MainTest(unittest.TestCase):
             "someuser",
             dateutil.parser.parse(config_file["start_time"]).astimezone(dateutil.tz.tzutc()),
         )
+        mock_clone_objects_to_s3.assert_called()
 
 
 if __name__ == "__main__":
