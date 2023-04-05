@@ -139,7 +139,7 @@ class ConnectionThread(threading.Thread):
                 ] = f"{self.connection_log}\n\n{err}"
             yield conn
         except Exception as e:
-            self.logger.error(f"Exception in connect: {e}", exc_info=True
+            self.logger.error(f"Exception in connect: {e}", exc_info=True)
         finally:
             self.logger.debug(f"Context closing for pid: {self.connection_log.pid}")
             if conn is not None:
