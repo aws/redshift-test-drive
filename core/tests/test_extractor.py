@@ -141,7 +141,9 @@ class ExtractorTestCases(unittest.TestCase):
         assert log_location == "s3://Test/T"
 
     def test_get_parameters_for_log_extraction_no_log_location_specified(self):
-        e = Extractor({"start_time": "2022-11-16T00:00:00", "end_time": "2022-11-18T00:00:00"})
+        e = Extractor(
+            {"start_time": "2022-11-16T00:00:00", "end_time": "2022-11-18T00:00:00"}
+        )
         with self.assertRaises(SystemExit):
             (
                 extraction_name,
@@ -157,7 +159,6 @@ class ExtractorTestCases(unittest.TestCase):
         (
             sql_json,
             missing_conxns,
-            replacements,
             statements_to_be_avoided,
         ) = e.get_sql_connections_replacements([], log_items.items())
         assert len(sql_json["transactions"]) > 0
@@ -181,7 +182,15 @@ class ExtractorTestCases(unittest.TestCase):
     @patch("gzip.open", mock_open())
     @patch("common.aws_service.s3_upload")
     @patch("common.aws_service.s3_put_object")
-    def test_save_logs_s3(self, mock_s3_upload, mock_s3_put_object):
+    @patch("common.util.cluster_dict")
+    @patch.object(Extractor, "get_copy_replacements")
+    def test_save_logs_s3(
+        self,
+        mock_copy_replacements,
+        mock_cluster_dict,
+        mock_s3_put_object,
+        mock_s3_upload,
+    ):
         e = Extractor({"external_schemas": ["abc_external", "def_schema"]})
         e.save_logs(
             {"useractivitylog": [self.get_query()]},
@@ -196,10 +205,21 @@ class ExtractorTestCases(unittest.TestCase):
 
     @patch("gzip.open", mock_open())
     @patch("builtins.open", mock_open())
-    def test_save_logs_non_s3(self):
+    @patch("common.util.cluster_dict")
+    @patch.object(Extractor, "get_copy_replacements")
+    def test_save_logs_non_s3(self, mock_copy_replacements, mock_cluster_dict):
         with patch.object(Path, "mkdir") as mock_mkdir:
             mock_mkdir.return_value = None
-            e = Extractor({"external_schemas": ["abc_external", "def_schema"]})
+            e = Extractor(
+                {
+                    "external_schemas": ["abc_external", "def_schema"],
+                    "source_cluster_endpoint": "source-redshift-test-drive.cqm7bdujbnqz.us-east-1.redshift.amazonaws.com:5439/tpcds_tuned_test",
+                    "start_time": "2022-11-16T00:00:00",
+                    "end_time": "2022-11-18T00:00:00",
+                    "master_username": "awsuser",
+                    "region": "us-east-1",
+                }
+            )
             e.save_logs(
                 {"useractivitylog": [self.get_query()]},
                 {},

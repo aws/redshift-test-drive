@@ -2,9 +2,11 @@ import base64
 import datetime
 import json
 import logging
-
 import boto3
 from botocore.exceptions import ClientError
+from tqdm import tqdm
+import asyncio
+import functools
 
 logger = logging.getLogger("WorkloadReplicatorLogger")
 
@@ -58,11 +60,15 @@ def redshift_execute_query(
     query_id = response_execute_statement["Id"]
 
     # get query status
-    response_describe_statement = redshift_data_api_client.describe_statement(Id=query_id)
+    response_describe_statement = redshift_data_api_client.describe_statement(
+        Id=query_id
+    )
     query_done = False
 
     while not query_done:
-        response_describe_statement = redshift_data_api_client.describe_statement(Id=query_id)
+        response_describe_statement = redshift_data_api_client.describe_statement(
+            Id=query_id
+        )
         query_status = response_describe_statement["Status"]
 
         if query_status == "FAILED":
@@ -73,8 +79,8 @@ def redshift_execute_query(
             query_done = True
             # log result if there is a result (typically from Select statement)
             if response_describe_statement["HasResultSet"]:
-                response_get_statement_result = redshift_data_api_client.get_statement_result(
-                    Id=query_id
+                response_get_statement_result = (
+                    redshift_data_api_client.get_statement_result(Id=query_id)
                 )
     return response_get_statement_result
 
@@ -91,7 +97,9 @@ def cw_describe_log_groups(log_group_name=None, region=None):
         while token != "":
             response_itr = cloudwatch_client.describe_log_groups(nextToken=token)
             logs["logGroups"].extend(response_itr["logGroups"])
-            token = response_itr["nextToken"] if "nextToken" in response_itr.keys() else ""
+            token = (
+                response_itr["nextToken"] if "nextToken" in response_itr.keys() else ""
+            )
     return logs
 
 
@@ -100,14 +108,18 @@ def cw_describe_log_streams(log_group_name, region):
     return cloudwatch_client.describe_log_streams(logGroupName=log_group_name)
 
 
-def cw_get_paginated_logs(log_group_name, log_stream_name, start_time, end_time, region):
+def cw_get_paginated_logs(
+    log_group_name, log_stream_name, start_time, end_time, region
+):
     log_list = []
     cloudwatch_client = boto3.client("logs", region)
     paginator = cloudwatch_client.get_paginator("filter_log_events")
     pagination_config = {"MaxItems": 10000}
     convert_to_millis_since_epoch = (
         lambda time: int(
-            (time.replace(tzinfo=None) - datetime.datetime.utcfromtimestamp(0)).total_seconds()
+            (
+                time.replace(tzinfo=None) - datetime.datetime.utcfromtimestamp(0)
+            ).total_seconds()
         )
         * 1000
     )
@@ -153,26 +165,23 @@ def s3_resource_put_object(bucket, prefix, body):
     s3_resource = boto3.resource("s3")
     s3_resource.Object(bucket, prefix).put(Body=body)
 
-
-def s3_get_bucket_contents(bucket, prefix):
-    conn = boto3.client("s3")
-
-    # get first set of
-    response = conn.list_objects_v2(Bucket=bucket, Prefix=prefix)
-    bucket_objects = response.get("Contents", [])
-
-    if "NextContinuationToken" in response:
-        prev_key = response["NextContinuationToken"]
-        while True:
-            response = conn.list_objects_v2(
-                Bucket=bucket, Prefix=prefix, ContinuationToken=prev_key
-            )
-            bucket_objects.extend(response["Contents"])
-            if "NextContinuationToken" not in response:
-                break
-            prev_key = response["NextContinuationToken"]
+async def s3_get_bucket_contents(bucket, prefix):
+    """Pagination implemented in async manner"""
+    s3_client=boto3.client('s3')
+    loop = asyncio.get_event_loop()
+    f_list_bounded = functools.partial(s3_client.list_objects_v2, Bucket=bucket,Prefix=prefix)
+    bucket_objects =[]
+    continuation_token = {}
+    while True:
+        response = await loop.run_in_executor(executor=None, func=f_list_bounded, **continuation_token)
+        bucket_objects.extend(response.get('Contents',[]))
+        if response['IsTruncated']:
+            continuation_token['ContinuationToken']=response['NextContinuationToken']
+        else:
+            break
     return bucket_objects
 
+    
 
 def s3_generate_presigned_url(client_method, bucket_name, object_name):
     s3_client = boto3.client("s3")
@@ -219,7 +228,9 @@ def glue_get_partition_indexes(database, table, region):
 
 
 def glue_create_table(new_database, table_input, region):
-    boto3.client("glue", region).create_table(DatabaseName=new_database, TableInput=table_input)
+    boto3.client("glue", region).create_table(
+        DatabaseName=new_database, TableInput=table_input
+    )
 
 
 def glue_get_database(name, region):

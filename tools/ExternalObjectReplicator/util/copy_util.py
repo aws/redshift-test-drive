@@ -2,6 +2,8 @@ import csv
 import threading
 import common.aws_service as aws_helper
 import logging
+import time
+import asyncio
 
 from tqdm import tqdm
 from common.util import bucket_dict
@@ -46,9 +48,13 @@ def get_s3_folder_size(copy_file_list):
     return size_of_data(total_size)
 
 
-def check_file_existence(response, obj_type):
+
+async def check_file_existence(response, obj_type):
     source_location = []
     objects_not_found = []
+    tasks = []
+    start_time = time.time()
+    result = []
     for record in response["Records"]:
         if obj_type == "copyfiles":
             source_url = bucket_dict(record[0]["stringValue"])
@@ -57,11 +63,21 @@ def check_file_existence(response, obj_type):
         else:
             source_bucket = record[0]["stringValue"]
             source_key = record[1]["stringValue"][:-1]
-        objects = aws_helper.s3_get_bucket_contents(source_bucket, source_key)
-        if not objects:  # if no object is found, add it to objects_not_found list
-            objects_not_found.append({"source_bucket": source_bucket, "source_key": source_key})
-        else:  # if object is found, append it to source_location to be cloned
-            for object in objects:
+
+        tasks.append(asyncio.create_task(aws_helper.s3_get_bucket_contents(
+            source_bucket,
+            source_key
+        )))
+    for task in asyncio.as_completed(tasks):
+        result.extend(await task)
+    logger.info(f"Listing data for {obj_type}")
+
+    if not result:  # if no object is found, add it to objects_not_found list
+        objects_not_found.append(
+            {"source_bucket": source_bucket, "source_key": source_key}
+        )
+    else:  # if object is found, append it to source_location to be cloned
+        for object in result:
                 source_location.append(
                     {
                         "source_bucket": source_bucket,
@@ -72,6 +88,9 @@ def check_file_existence(response, obj_type):
                         "last_modified": object["LastModified"],
                     }
                 )
+    logger.info(
+        f"The total time required to list the objects : {time.time()-start_time}"
+    )
     return source_location, objects_not_found
 
 
