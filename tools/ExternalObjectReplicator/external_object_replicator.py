@@ -192,6 +192,7 @@ def main():
     for idx, element in enumerate(options):
         choice = input("Enter your choice: ")
         if int(choice) == 1:
+            logger.info("Cloning the copy objects")
             if STL_LOAD_response["TotalNumRows"] > 0:
                 logger.info(
                     f"== Begin to clone COPY files to {file_config['target_s3_location']} =="
@@ -202,23 +203,24 @@ def main():
                     source_location=copy_source_location,
                     objects_not_found=copy_objects_not_found,
                 )
-            if SVL_S3LIST_result["TotalNumRows"] > 0:
-                logger.info("== Begin to clone Glue databases and tables ==")
-                new_gluedb_list = clone_glue_catalog(
-                    external_table_response["Records"],
-                    file_config["target_s3_location"],
-                    file_config["region"],
-                )
-                logger.info(
-                    f"== Begin to clone Spectrum files to {file_config['target_s3_location']} =="
-                )
-                copy_util.clone_objects_to_s3(
-                    file_config["target_s3_location"],
-                    objects_not_found=spectrum_obj_not_found,
-                    source_location=spectrum_source_location,
-                    obj_type="spectrumfiles",
-                )
-            if (
+                if SVL_S3LIST_result["TotalNumRows"] > 0:
+                    logger.info(
+                        f"== Begin to clone Spectrum files to {file_config['target_s3_location']} =="
+                    )
+                    logger.info("== Begin to clone Glue databases and tables ==")
+                    new_gluedb_list = clone_glue_catalog(
+                        external_table_response["Records"],
+                        file_config["target_s3_location"],
+                        file_config["region"],
+                    )
+                    copy_util.clone_objects_to_s3(
+                        file_config["target_s3_location"],
+                        objects_not_found=spectrum_obj_not_found,
+                        source_location=spectrum_source_location,
+                        obj_type="spectrumfiles",
+                    )
+                exit(-1)
+            elif (
                 SVL_S3LIST_result["TotalNumRows"] == 0
                 and STL_LOAD_response["TotalNumRows"] == 0
             ):
