@@ -3,9 +3,9 @@ import datetime
 import json
 import logging
 import re
-import sys
 import threading
 import time
+import sys
 from contextlib import contextmanager
 from pathlib import Path
 
@@ -90,8 +90,6 @@ class ConnectionThread(threading.Thread):
                 )
             )
 
-        interface = self.default_interface
-
         if "psql" in self.connection_log.application_name.lower():
             interface = "psql"
         elif (
@@ -132,7 +130,8 @@ class ConnectionThread(threading.Thread):
                 hashed_cluster_url["password"] = "***"
                 self.logger.error(
                     f"({self.job_id + 1}) Failed to initiate connection for {self.connection_log.database_name}-"
-                    f"{self.connection_log.username}-{self.connection_log.pid} ({hashed_cluster_url}): {err}", exc_info=True
+                    f"{self.connection_log.username}-{self.connection_log.pid} ({hashed_cluster_url}): {err}",
+                    exc_info=True,
                 )
                 self.thread_stats["connection_error_log"][
                     f"{self.connection_log.database_name}-{self.connection_log.username}-{self.connection_log.pid}"
@@ -171,7 +170,10 @@ class ConnectionThread(threading.Thread):
                 else:
                     self.logger.warning("Failed to connect")
         except Exception as e:
-            self.logger.error(f"Exception thrown for pid {self.connection_log.pid}: {e}", exc_info=True)
+            self.logger.error(
+                f"Exception thrown for pid {self.connection_log.pid}: {e}", exc_info=True
+            )
+            sys.exit(-1)
 
     def execute_transactions(self, connection):
         if self.connection_log.time_interval_between_transactions is True:
@@ -202,35 +204,27 @@ class ConnectionThread(threading.Thread):
             for transaction in self.connection_log.transactions:
                 self.execute_transaction(transaction, connection)
 
-    def save_query_stats(self, starttime, endtime, xid, query_idx):
+    def save_query_stats(self, start_time, end_time, xid, query_idx):
         with self.perf_lock:
             sr_dir = (
-                self.config.get("logging_dir", "core/logs/replay/")
+                self.config.get("logging_dir", "core/logs/replay")
                 + "/"
                 + self.replay_start.isoformat()
             )
             Path(sr_dir).mkdir(parents=True, exist_ok=True)
             filename = f"{sr_dir}/{self.process_idx}_times.csv"
             elapsed_sec = 0
-            if endtime is not None:
-                elapsed_sec = "{:.6f}".format((endtime - starttime).total_seconds())
+            if end_time is not None:
+                elapsed_sec = "{:.6f}".format((end_time - start_time).total_seconds())
             with open(filename, "a+") as fp:
                 if fp.tell() == 0:
                     fp.write("# process,query,start_time,end_time,elapsed_sec,rows\n")
                 query_id = f"{xid}-{query_idx}"
                 fp.write(
                     "{},{},{},{},{},{}\n".format(
-                        self.process_idx, query_id, starttime, endtime, elapsed_sec, 0
+                        self.process_idx, query_id, start_time, end_time, elapsed_sec, 0
                     )
                 )
-
-    def get_tagged_sql(self, query_text, idx, transaction, connection):
-        json_tags = {
-            "xid": transaction.xid,
-            "query_idx": idx,
-            "replay_start": self.replay_start.isoformat(),
-        }
-        return "/* {} */ {}".format(json.dumps(json_tags), query_text)
 
     def execute_transaction(self, transaction, connection):
         errors = []
@@ -247,10 +241,8 @@ class ConnectionThread(threading.Thread):
             self.logger.debug(
                 f"Executing [{truncated_query}] in {time_until_start_ms / 1000.0:.1f} sec"
             )
-
             if time_until_start_ms > 10:
                 time.sleep(time_until_start_ms / 1000.0)
-
             if self.config.get("split_multi", True):
                 formatted_query = query.text.lower()
                 if not formatted_query.startswith(("begin", "start")):
@@ -258,7 +250,10 @@ class ConnectionThread(threading.Thread):
                 if not formatted_query.endswith(("commit", "end")):
                     query.text = query_begin + "commit;"
                 split_statements = sqlparse.split(query.text)
-                split_statements = [_ for _ in split_statements if _ != ";"]
+                split_statements = [
+                    statement for statement in split_statements if statement != ";"
+                ]
+                self.thread_stats["multi_statements"] += 1
             else:
                 split_statements = [query.text]
 
@@ -268,9 +263,12 @@ class ConnectionThread(threading.Thread):
 
             success = True
             for s_idx, sql_text in enumerate(split_statements):
-                sql_text = self.get_tagged_sql(
-                    sql_text, transaction_query_idx, transaction, connection
-                )
+                json_tags = {
+                    "xid": transaction.xid,
+                    "query_idx": idx,
+                    "replay_start": self.replay_start.isoformat(),
+                }
+                sql_text = "/* {} */ {}".format(json.dumps(json_tags), sql_text)
                 transaction_query_idx += 1
 
                 substatement_txt = ""
@@ -281,20 +279,7 @@ class ConnectionThread(threading.Thread):
                 exec_end = None
                 try:
                     status = ""
-                    if (
-                        self.config["execute_copy_statements"] == "true"
-                        and "from 's3:" in sql_text.lower()
-                    ):
-                        cursor.execute(sql_text)
-                    elif (
-                        self.config["execute_unload_statements"] == "true"
-                        and "to 's3:" in sql_text.lower()
-                        and self.config["replay_output"] is not None
-                    ):
-                        cursor.execute(sql_text)
-                    elif ("from 's3:" not in sql_text.lower()) and (
-                        "to 's3:" not in sql_text.lower()
-                    ):  ## removed condition to exclude bind variables
+                    if self.should_execute_sql(sql_text):
                         cursor.execute(sql_text)
                     else:
                         status = "Not a valid query"
@@ -310,7 +295,8 @@ class ConnectionThread(threading.Thread):
                     errors.append([sql_text, str(err)])
                     self.logger.debug(
                         f"Failed DB={transaction.database_name}, USER={transaction.username}, PID={transaction.pid}, "
-                        f"XID:{transaction.xid}, Query: {idx + 1}/{len(transaction.queries)}{substatement_txt}: {err}", exc_info=True
+                        f"XID:{transaction.xid}, Query: {idx + 1}/{len(transaction.queries)}{substatement_txt}: {err}",
+                        exc_info=True,
                     )
                     self.error_logger.append(
                         parse_error(
@@ -339,6 +325,21 @@ class ConnectionThread(threading.Thread):
         else:
             self.thread_stats["transaction_error"] += 1
             self.thread_stats["transaction_error_log"][transaction.get_base_filename()] = errors
+
+    def should_execute_sql(self, sql_text):
+        return (
+            (
+                self.config.get("execute_copy_statements", "").lower() == "true"
+                and "from 's3:" in sql_text.lower()
+            )
+            or (
+                self.config.get("execute_unload_statements", "") == "true"
+                and "to 's3:" in sql_text.lower()
+                and self.config["replay_output"] is not None
+            )
+            or ("from 's3:" not in sql_text.lower())
+            and ("to 's3:" not in sql_text.lower())
+        )
 
 
 def categorize_error(err_code):
@@ -425,16 +426,12 @@ def parse_error(error, user, db, query_text):
 
     if "D" in raw_error_string:
         detail_string = raw_error_string["D"]
-        try:
-            detail = (
-                detail_string[detail_string.find("context:") : detail_string.find("query")]
-                .split(":", maxsplit=1)[-1]
-                .strip()
-            )
-            err_entry["detail"] = detail
-        except Exception as e:
-            print(e)
-            err_entry["detail"] = ""
+        detail = (
+            detail_string[detail_string.find("context:") : detail_string.find("query")]
+            .split(":", maxsplit=1)[-1]
+            .strip()
+        )
+        err_entry["detail"] = detail
 
     err_entry["code"] = raw_error_string["C"]
     err_entry["message"] = raw_error_string["M"]
