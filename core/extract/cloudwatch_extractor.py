@@ -88,16 +88,30 @@ class CloudwatchExtractor:
                         with gzip.open(f"{tempdir}/{log_type}.gz", "wt") as gzip_file:
                             gzip_file.write("\n".join(log_list))
 
-                        with gzip.open(f"{tempdir}/{log_type}.gz", "r") as gzip_file:
-                            parse_log(
-                                gzip_file,
-                                f"{log_type}.gz",
-                                connections,
-                                last_connections,
-                                logs,
-                                databases,
-                                start_time,
-                                end_time,
-                            )
+        logger.info("Parsing connection logs...")
+        with gzip.open(f"{tempdir}/connectionlog.gz", "r") as gzip_file:
+            parse_log(
+                gzip_file,
+                "connectionlog.gz",
+                connections,
+                last_connections,
+                logs,
+                databases,
+                start_time,
+                end_time,
+            )
+
+        logger.info("Parsing user activity logs...")
+        with gzip.open(f"{tempdir}/useractivitylog.gz", "r") as gzip_file:
+            parse_log(
+                gzip_file,
+                "useractivitylog.gz",
+                connections,
+                last_connections,
+                logs,
+                databases,
+                start_time,
+                end_time,
+            )
 
         return connections, logs, databases, last_connections

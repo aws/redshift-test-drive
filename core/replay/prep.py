@@ -3,11 +3,8 @@ import datetime
 import logging
 import os
 import re
-import time
 
 import boto3
-from boto3 import client
-from botocore.exceptions import NoCredentialsError
 
 from core.replay.transactions_parser import TransactionsParser
 from core.replay.connections_parser import parse_connections

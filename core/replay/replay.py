@@ -2,7 +2,6 @@ import csv
 import datetime
 import hashlib
 import logging
-import re
 import sys
 import yaml
 import common.config as config_helper
@@ -74,7 +73,7 @@ def main():
         preamble=yaml.dump(g_config),
         backup_count=g_config.get("backup_count", 2),
         script_type="replay",
-        log_id=replay_id
+        log_id=replay_id,
     )
     log_helper.log_version()
 
