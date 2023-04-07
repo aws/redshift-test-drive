@@ -152,13 +152,15 @@ class ExtractorTestCases(unittest.TestCase):
                 log_location,
             ) = e.get_parameters_for_log_extraction()
 
+    
     def test_get_sql_connections_replacements(self):
         query1 = self.get_query()
         log_items = {"abc.log": [query1]}
-        e = Extractor({"external_schemas": ["abc_external", "def_schema"]})
+        e = Extractor({"external_schemas": ["abc_external", "def_schema"],"log_location": "test/test_data"})
         (
             sql_json,
             missing_conxns,
+            replacements,
             statements_to_be_avoided,
         ) = e.get_sql_connections_replacements([], log_items.items())
         assert len(sql_json["transactions"]) > 0
@@ -191,7 +193,7 @@ class ExtractorTestCases(unittest.TestCase):
         mock_s3_put_object,
         mock_s3_upload,
     ):
-        e = Extractor({"external_schemas": ["abc_external", "def_schema"]})
+        e = Extractor({"external_schemas": ["abc_external", "def_schema"],"log_location": "test/test_data"})
         e.save_logs(
             {"useractivitylog": [self.get_query()]},
             {},
@@ -218,6 +220,7 @@ class ExtractorTestCases(unittest.TestCase):
                     "end_time": "2022-11-18T00:00:00",
                     "master_username": "awsuser",
                     "region": "us-east-1",
+                    "log_location": ""
                 }
             )
             e.save_logs(
