@@ -165,23 +165,50 @@ def s3_resource_put_object(bucket, prefix, body):
     s3_resource = boto3.resource("s3")
     s3_resource.Object(bucket, prefix).put(Body=body)
 
+
 async def s3_get_bucket_contents(bucket, prefix):
-    """Pagination implemented in async manner"""
-    s3_client=boto3.client('s3')
+    s3_client = boto3.client('s3')
     loop = asyncio.get_event_loop()
-    f_list_bounded = functools.partial(s3_client.list_objects_v2, Bucket=bucket,Prefix=prefix)
-    bucket_objects =[]
-    continuation_token = {}
+    bucket_objects = []
+    continuation_token = ""
     while True:
-        response = await loop.run_in_executor(executor=None, func=f_list_bounded, **continuation_token)
+        if continuation_token != "":
+            f_list_bounded = functools.partial(s3_client.list_objects_v2,
+                                               Bucket=bucket,
+                                               Prefix=prefix,
+                                               ContinuationToken=continuation_token)
+        else:
+            f_list_bounded = functools.partial(s3_client.list_objects_v2,
+                                               Bucket=bucket,
+                                               Prefix=prefix)
+        response = await loop.run_in_executor(executor=None, func=f_list_bounded)
         bucket_objects.extend(response.get('Contents',[]))
         if response['IsTruncated']:
-            continuation_token['ContinuationToken']=response['NextContinuationToken']
+            continuation_token=response["NextContinuationToken"]
         else:
             break
     return bucket_objects
 
-    
+
+def sync_s3_get_bucket_contents(bucket, prefix):
+    conn = boto3.client("s3")
+
+    # get first set of
+    response = conn.list_objects_v2(Bucket=bucket, Prefix=prefix)
+    bucket_objects = response.get("Contents", [])
+
+    if "NextContinuationToken" in response:
+        prev_key = response["NextContinuationToken"]
+        while True:
+            response = conn.list_objects_v2(
+                Bucket=bucket, Prefix=prefix, ContinuationToken=prev_key
+            )
+            bucket_objects.extend(response["Contents"])
+            if "NextContinuationToken" not in response:
+                break
+            prev_key = response["NextContinuationToken"]
+    return bucket_objects
+
 
 def s3_generate_presigned_url(client_method, bucket_name, object_name):
     s3_client = boto3.client("s3")

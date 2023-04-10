@@ -5,7 +5,7 @@ from unittest.mock import patch, Mock
 from core.extract.s3_extractor import S3Extractor
 
 
-def mock_s3_get_bucket_contents(bucket, prefix):
+def mock_sync_s3_get_bucket_contents(bucket, prefix):
     return [
         {"Key": "s3://bucket/cluster_connectionlog_2021-08-15T15:00.gz"},
         {"Key": "s3://bucket/cluster_useractivitylog_2021-08-15T19:00.gz"},
@@ -37,7 +37,7 @@ def mock_parse_log(
 
 class S3ExtractorTestCases(unittest.TestCase):
     @patch("core.extract.s3_extractor.get_logs_in_range", mock_get_logs_in_range)
-    @patch("common.aws_service.s3_get_bucket_contents", mock_s3_get_bucket_contents)
+    @patch("common.aws_service.sync_s3_get_bucket_contents", mock_sync_s3_get_bucket_contents)
     @patch("common.aws_service.s3_get_object", mock_s3_get_object)
     @patch("core.extract.extract_parser", mock_parse_log)
     def test_get_extract_from_s3(self):
