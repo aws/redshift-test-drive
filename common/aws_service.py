@@ -4,11 +4,21 @@ import json
 import logging
 import boto3
 from botocore.exceptions import ClientError
-from tqdm import tqdm
 import asyncio
 import functools
 
 logger = logging.getLogger("WorkloadReplicatorLogger")
+
+
+def redshift_get_serverless_workgroup(workgroup_name, region):
+    rs_client = boto3.client("redshift-serverless", region_name=region)
+    return rs_client.get_workgroup(workgroupName=workgroup_name)
+
+
+def redshift_describe_clusters(cluster_id, region):
+    rs_client = boto3.client("redshift", region_name=region)
+    response = rs_client.describe_clusters(ClusterIdentifier=cluster_id)
+    return response
 
 
 def redshift_describe_logging_status(source_cluster_endpoint):
@@ -35,10 +45,13 @@ def redshift_get_cluster_credentials(
             DurationSeconds=duration,
             AutoCreate=auto_create,
         )
-    except rs_client.exceptions.ClusterNotFoundFault:
-        logger.error(
-            f"Cluster {cluster_id} not found. Please confirm cluster endpoint, account, and region."
-        )
+    except Exception as e:
+        if e == rs_client.exceptions.ClusterNotFoundFault:
+            logger.error(
+                f"Cluster {cluster_id} not found. Please confirm cluster endpoint, account, and region."
+            )
+        else:
+            logger.error(f"Error while getting cluster credentials: {e}", exc_info=True)
         exit(-1)
     return response
 
@@ -59,16 +72,10 @@ def redshift_execute_query(
     )
     query_id = response_execute_statement["Id"]
 
-    # get query status
-    response_describe_statement = redshift_data_api_client.describe_statement(
-        Id=query_id
-    )
     query_done = False
 
     while not query_done:
-        response_describe_statement = redshift_data_api_client.describe_statement(
-            Id=query_id
-        )
+        response_describe_statement = redshift_data_api_client.describe_statement(Id=query_id)
         query_status = response_describe_statement["Status"]
 
         if query_status == "FAILED":
@@ -79,8 +86,8 @@ def redshift_execute_query(
             query_done = True
             # log result if there is a result (typically from Select statement)
             if response_describe_statement["HasResultSet"]:
-                response_get_statement_result = (
-                    redshift_data_api_client.get_statement_result(Id=query_id)
+                response_get_statement_result = redshift_data_api_client.get_statement_result(
+                    Id=query_id
                 )
     return response_get_statement_result
 
@@ -97,9 +104,7 @@ def cw_describe_log_groups(log_group_name=None, region=None):
         while token != "":
             response_itr = cloudwatch_client.describe_log_groups(nextToken=token)
             logs["logGroups"].extend(response_itr["logGroups"])
-            token = (
-                response_itr["nextToken"] if "nextToken" in response_itr.keys() else ""
-            )
+            token = response_itr["nextToken"] if "nextToken" in response_itr.keys() else ""
     return logs
 
 
@@ -108,18 +113,14 @@ def cw_describe_log_streams(log_group_name, region):
     return cloudwatch_client.describe_log_streams(logGroupName=log_group_name)
 
 
-def cw_get_paginated_logs(
-    log_group_name, log_stream_name, start_time, end_time, region
-):
+def cw_get_paginated_logs(log_group_name, log_stream_name, start_time, end_time, region):
     log_list = []
     cloudwatch_client = boto3.client("logs", region)
     paginator = cloudwatch_client.get_paginator("filter_log_events")
     pagination_config = {"MaxItems": 10000}
     convert_to_millis_since_epoch = (
         lambda time: int(
-            (
-                time.replace(tzinfo=None) - datetime.datetime.utcfromtimestamp(0)
-            ).total_seconds()
+            (time.replace(tzinfo=None) - datetime.datetime.utcfromtimestamp(0)).total_seconds()
         )
         * 1000
     )
@@ -165,23 +166,33 @@ def s3_resource_put_object(bucket, prefix, body):
     s3_resource = boto3.resource("s3")
     s3_resource.Object(bucket, prefix).put(Body=body)
 
+
 async def s3_get_bucket_contents(bucket, prefix):
     """Pagination implemented in async manner"""
-    s3_client=boto3.client('s3')
+    s3_client = boto3.client("s3")
     loop = asyncio.get_event_loop()
-    f_list_bounded = functools.partial(s3_client.list_objects_v2, Bucket=bucket,Prefix=prefix)
-    bucket_objects =[]
-    continuation_token = {}
+    bucket_objects = []
+    continuation_token = ""
     while True:
-        response = await loop.run_in_executor(executor=None, func=f_list_bounded, **continuation_token)
-        bucket_objects.extend(response.get('Contents',[]))
-        if response['IsTruncated']:
-            continuation_token['ContinuationToken']=response['NextContinuationToken']
+        if continuation_token != "":
+            f_list_bounded = functools.partial(
+                s3_client.list_objects_v2,
+                Bucket=bucket,
+                Prefix=prefix,
+                ContinuationToken=continuation_token,
+            )
+        else:
+            f_list_bounded = functools.partial(
+                s3_client.list_objects_v2, Bucket=bucket, Prefix=prefix
+            )
+        response = await loop.run_in_executor(executor=None, func=f_list_bounded)
+        bucket_objects.extend(response.get("Contents", []))
+        if response["IsTruncated"]:
+            continuation_token = response["NextContinuationToken"]
         else:
             break
     return bucket_objects
 
-    
 
 def s3_generate_presigned_url(client_method, bucket_name, object_name):
     s3_client = boto3.client("s3")
@@ -228,9 +239,7 @@ def glue_get_partition_indexes(database, table, region):
 
 
 def glue_create_table(new_database, table_input, region):
-    boto3.client("glue", region).create_table(
-        DatabaseName=new_database, TableInput=table_input
-    )
+    boto3.client("glue", region).create_table(DatabaseName=new_database, TableInput=table_input)
 
 
 def glue_get_database(name, region):
@@ -248,44 +257,17 @@ def glue_create_database(name, description, region):
 
 def get_secret(secret_name, region_name):
     # Create a Secrets Manager client
-    session = boto3.session.Session()
-    client = session.client(service_name="secretsmanager", region_name=region_name)
-
-    get_secret_value_response = None
-
+    client = boto3.client(service_name="secretsmanager", region_name=region_name)
     try:
         get_secret_value_response = client.get_secret_value(SecretId=secret_name)
-        # secret_string = json.loads(get_secret_value_response['SecretString'])
+        # Decrypts secret using the associated KMS key.
+        # Depending on whether the secret is a string or binary, one of these fields will be populated.
+        if "SecretString" in get_secret_value_response:
+            return json.loads(get_secret_value_response["SecretString"])
+        else:
+            return json.loads(base64.b64decode(get_secret_value_response["SecretBinary"]))
     except ClientError as e:
-        if e.response["Error"]["Code"] == "DecryptionFailureException":
-            # Secrets Manager can't decrypt the protected secret text using the provided KMS key.
-            # Deal with the exception here, and/or rethrow at your discretion.
-            raise e
-        elif e.response["Error"]["Code"] == "InternalServiceErrorException":
-            # An error occurred on the server side.
-            # Deal with the exception here, and/or rethrow at your discretion.
-            raise e
-        elif e.response["Error"]["Code"] == "InvalidParameterException":
-            # You provided an invalid value for a parameter.
-            # Deal with the exception here, and/or rethrow at your discretion.
-            raise e
-        elif e.response["Error"]["Code"] == "InvalidRequestException":
-            # You provided a parameter value that is not valid for the current state of the resource.
-            # Deal with the exception here, and/or rethrow at your discretion.
-            raise e
-        elif e.response["Error"]["Code"] == "ResourceNotFoundException":
-            # We can't find the resource that you asked for.
-            # Deal with the exception here, and/or rethrow at your discretion.
-            raise e
-        elif e.response["Error"]["Code"] == "AccessDeniedException":
-            # Use is not authorized to perform secretsmanager:GetSecretValue on requested resource
-            raise e
-
-    # Decrypts secret using the associated KMS key.
-    # Depending on whether the secret is a string or binary, one of these fields will be populated.
-    if "SecretString" in get_secret_value_response:
-        secret = json.loads(get_secret_value_response["SecretString"])
-    else:
-        secret = json.loads(base64.b64decode(get_secret_value_response["SecretBinary"]))
-
-    return secret
+        logger.error(
+            f"Exception occurred while getting secret from Secrets manager {e}", exc_info=True
+        )
+        raise e

@@ -81,7 +81,7 @@ def validate_config_file_for_extract(config):
     if config["start_time"]:
         try:
             parser.isoparse(config["start_time"])
-        except ValueError:
+        except:
             logger.error(
                 'Config file "start_time" value not formatted as ISO 8601. Please format "start_time" as ISO 8601 or '
                 "remove its value. "
@@ -151,9 +151,7 @@ def validate_config_for_replay(config):
     cluster_endpoint_pattern = (
         r"(.+)\.(.+)\.(.+).redshift(-serverless)?\.amazonaws\.com:[0-9]{4}\/(.)+"
     )
-    if not bool(
-        re.fullmatch(cluster_endpoint_pattern, config["target_cluster_endpoint"])
-    ):
+    if not bool(re.fullmatch(cluster_endpoint_pattern, config["target_cluster_endpoint"])):
         logger.error(
             'Config file value for "target_cluster_endpoint" is not a valid endpoint. Endpoints must be in the format '
             "of <cluster-hostname>:<port>/<database-name>."
@@ -177,9 +175,7 @@ def validate_config_for_replay(config):
                 "to REAME.md"
             )
             exit(-1)
-    if not (
-        config["default_interface"] == "psql" or config["default_interface"] == "odbc"
-    ):
+    if not (config["default_interface"] == "psql" or config["default_interface"] == "odbc"):
         logger.error(
             'Config file value for "default_interface" must be either "psql" or "odbc". Please change the value for '
             '"default_interface" to either "psql" or "odbc".'
@@ -206,8 +202,7 @@ def validate_config_for_replay(config):
         )
         exit(-1)
     if not (
-        config["execute_copy_statements"] == "true"
-        or config["execute_copy_statements"] == "false"
+        config["execute_copy_statements"] == "true" or config["execute_copy_statements"] == "false"
     ):
         logger.error(
             'Config file value for "execute_copy_statements" must be either "true" or "false". Please change the value '

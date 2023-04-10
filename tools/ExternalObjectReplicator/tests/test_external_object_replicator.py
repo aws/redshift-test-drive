@@ -1,12 +1,9 @@
-import os
-import sys
 import unittest
-from unittest.mock import patch
+from unittest import TestCase, IsolatedAsyncioTestCase
+from unittest.mock import patch, mock_open
 import dateutil
 import yaml
-import tools.ExternalObjectReplicator.util.copy_util
 import tools.ExternalObjectReplicator.external_object_replicator as eor
-import tools.ExternalObjectReplicator.util.glue_util
 
 return_val = ({"TotalNumRows": 1}, None, None, None)
 
@@ -20,6 +17,8 @@ config_yaml = """
          "log_level": Debug
        """
 config_file = yaml.safe_load(config_yaml)
+end_time = dateutil.parser.parse(config_file["end_time"]).astimezone(dateutil.tz.tzutc())
+start_time = dateutil.parser.parse(config_file["start_time"]).astimezone(dateutil.tz.tzutc())
 
 cluster_obj = {
     "endpoint": "someendpoint",
@@ -61,17 +60,17 @@ class MainTest(unittest.TestCase):
         eor.main()
         mock_execute_stl_load_query.assert_called_once_with(
             cluster_obj,
-            dateutil.parser.parse(config_file["end_time"]).astimezone(dateutil.tz.tzutc()),
+            end_time,
             config_file,
             "someuser",
-            dateutil.parser.parse(config_file["start_time"]).astimezone(dateutil.tz.tzutc()),
+            start_time,
         )
         mock_execute_svl_query.assert_called_once_with(
             cluster_obj,
-            dateutil.parser.parse(config_file["end_time"]).astimezone(dateutil.tz.tzutc()),
+            end_time,
             config_file,
             "someuser",
-            dateutil.parser.parse(config_file["start_time"]).astimezone(dateutil.tz.tzutc()),
+            start_time,
         )
         mock_clone_objects_to_s3.assert_not_called()
 
@@ -101,19 +100,73 @@ class MainTest(unittest.TestCase):
         eor.main()
         mock_execute_stl_load_query.assert_called_once_with(
             cluster_obj,
-            dateutil.parser.parse(config_file["end_time"]).astimezone(dateutil.tz.tzutc()),
+            end_time,
             config_file,
             "someuser",
-            dateutil.parser.parse(config_file["start_time"]).astimezone(dateutil.tz.tzutc()),
+            start_time,
         )
         mock_execute_svl_query.assert_called_once_with(
             cluster_obj,
-            dateutil.parser.parse(config_file["end_time"]).astimezone(dateutil.tz.tzutc()),
+            end_time,
             config_file,
             "someuser",
-            dateutil.parser.parse(config_file["start_time"]).astimezone(dateutil.tz.tzutc()),
+            start_time,
         )
         mock_clone_objects_to_s3.assert_called()
+
+
+class TestExecuteStlLoadQuery(IsolatedAsyncioTestCase):
+    @patch(
+        "tools.ExternalObjectReplicator.external_object_replicator.get_s3_folder_size",
+        lambda copy_file_list: 10,
+    )
+    @patch("builtins.open", mock_open())
+    @patch("tools.ExternalObjectReplicator.external_object_replicator.check_file_existence")
+    @patch("tools.ExternalObjectReplicator.external_object_replicator.redshift_execute_query")
+    def test_execute_stl_load_query_success(
+        self, mock_redshift_execute_query, mock_check_file_existence
+    ):
+        expected_objects_found = ["A", "B", "C"]
+        stubbed_query_response = {"TotalNumRows": 20, "Records": expected_objects_found}
+        mock_redshift_execute_query.return_value = stubbed_query_response
+        expected_objects_not_found = ["D"]
+        mock_check_file_existence.return_value = expected_objects_found, expected_objects_not_found
+        stl_load_response, objects_not_found, objects_found = eor.execute_stl_load_query(
+            cluster_obj, end_time, config_file, "awsuser", start_time
+        )
+        self.assertEqual(stubbed_query_response, stl_load_response)
+        self.assertEqual(objects_found, expected_objects_found)
+        self.assertEqual(objects_not_found, expected_objects_not_found)
+
+    @patch(
+        "tools.ExternalObjectReplicator.external_object_replicator.get_s3_folder_size",
+        lambda copy_file_list: 10,
+    )
+    @patch("builtins.open", mock_open())
+    @patch("tools.ExternalObjectReplicator.external_object_replicator.check_file_existence")
+    @patch("tools.ExternalObjectReplicator.external_object_replicator.redshift_execute_query")
+    def test_execute_svl_load_query(self, mock_redshift_execute_query, mock_check_file_existence):
+        stubbed_ext_table_query_response = {"TotalNumRows": 1}
+        stubbed_svl_s3list_query_response = {"TotalNumRows": 2, "Records": []}
+        mock_redshift_execute_query.side_effect = [
+            stubbed_ext_table_query_response,
+            stubbed_svl_s3list_query_response,
+        ]
+        expected_objects_found = ["A", "B", "C"]
+        expected_objects_not_found = ["D"]
+
+        mock_check_file_existence.return_value = expected_objects_found, expected_objects_not_found
+
+        (
+            svl_s3list_result,
+            objects_found,
+            external_table_response,
+            objects_not_found,
+        ) = eor.execute_svl_query(cluster_obj, end_time, config_file, "awsuser", start_time)
+        self.assertEqual(svl_s3list_result, stubbed_svl_s3list_query_response)
+        self.assertEqual(objects_found, expected_objects_found)
+        self.assertEqual(external_table_response, stubbed_ext_table_query_response)
+        self.assertEqual(objects_not_found, expected_objects_not_found)
 
 
 if __name__ == "__main__":

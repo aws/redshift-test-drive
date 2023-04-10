@@ -3,9 +3,11 @@ import unittest
 from unittest.mock import patch
 
 import yaml
+from dateutil.tz import tzutc
 
 from core.replay.connections_parser import ConnectionLog
 from core.replay.prep import ReplayPrep, InvalidFilterException
+from core.replay.transactions_parser import TransactionsParser, Transaction, Query
 
 
 class TestParseFilename(unittest.TestCase):
@@ -264,6 +266,62 @@ class TestGetConnectionCredentials(unittest.TestCase):
                 "database": "dev",
             },
         )
+
+
+class TestCorrelateTransactionsWithConnections(unittest.TestCase):
+    @patch.object(TransactionsParser, "__init__", return_value=None)
+    @patch.object(TransactionsParser, "parse_transactions")
+    @patch("core.replay.prep.parse_connections")
+    def test_success(self, patched_parse_connections, patched_parse_transactions, mock_obj):
+        connection_log = ConnectionLog(
+            datetime.datetime.now(tz=datetime.timezone.utc),
+            datetime.datetime.now(tz=datetime.timezone.utc),
+            "app",
+            "dev",
+            "awsuser",
+            123,
+            True,
+            True,
+            "key",
+        )
+        patched_parse_connections.return_value = [connection_log], 1
+        query = Query(
+            start_time=datetime.datetime.now(tz=datetime.timezone.utc),
+            end_time=datetime.datetime.now(tz=datetime.timezone.utc),
+            text="SET query_group='0000_create_user.ddl - IR-960eb458-9033-11ed-84bb-029845ae12cf.create-user.create-user.s0001.f0000.1.0';",
+        )
+        patched_parse_transactions.return_value = [
+            Transaction(
+                time_interval=True,
+                database_name="dev",
+                username="awsuser",
+                pid=123,
+                xid=345,
+                queries=[query],
+                transaction_key="dev_awsuser_1073815778",
+            )
+        ]
+        p = ReplayPrep(
+            {
+                "workload_location": "s3://test-bucket/test-workload-location",
+                "time_interval_between_transactions": "true",
+                "time_interval_between_queries": "true",
+                "filters": [],
+            }
+        )
+        (
+            conxn_logs,
+            query_count,
+            transaction_count,
+            first_event_time,
+            last_event_time,
+            total_connections,
+        ) = p.correlate_transactions_with_connections("test-replay")
+        self.assertEqual(len(conxn_logs), 1)
+        self.assertEqual(conxn_logs[0], connection_log)
+        self.assertEqual(query_count, 1)
+        self.assertEqual(transaction_count, 1)
+        self.assertEqual(total_connections, 1)
 
 
 if __name__ == "__main__":

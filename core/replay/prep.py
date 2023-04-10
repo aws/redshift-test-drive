@@ -27,7 +27,6 @@ class ReplayPrep:
     def __init__(self, config):
         self.config = config
         self.credentials_cache = {}
-        self.boto3_session = boto3.Session()
 
     def correlate_transactions_with_connections(self, replay_id):
         (connection_logs, total_connections) = parse_connections(
