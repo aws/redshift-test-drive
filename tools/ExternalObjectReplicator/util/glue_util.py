@@ -96,28 +96,27 @@ def glue_table_copy(original_glue_db, new_glue_db, original_glue_table, dest_loc
         )
         orig_s3_loc = table_get_response["Table"]["StorageDescriptor"]["Location"].split("/")
         new_s3_loc = f"{dest_bucket}/spectrumfiles/{'/'.join(orig_s3_loc[2:])}"
-        table_input = (
-            {
-                "Name": table_get_response["Table"]["Name"],
-                "Description": "For use with Redshfit candidate release testing",
-                "StorageDescriptor": {
-                    "Columns": table_get_response["Table"]["StorageDescriptor"]["Columns"],
-                    "Location": new_s3_loc,
-                },
-                "PartitionKeys": table_get_response["Table"]["PartitionKeys"],
+        table_input = {
+            "Name": table_get_response["Table"]["Name"],
+            "Description": "For use with Redshfit candidate release testing",
+            "StorageDescriptor": {
+                "Columns": table_get_response["Table"]["StorageDescriptor"]["Columns"],
+                "Location": new_s3_loc,
             },
-        )
+            "PartitionKeys": table_get_response["Table"]["PartitionKeys"],
+        }
+
         if index_response["PartitionIndexDescriptorList"]:
             aws_helper.glue_create_table(
                 new_database=new_glue_db,
                 table_input=table_input.update(
-                    {'PartitionIndexes"': index_response["PartitionIndexDescriptorList"]}
+                    {"PartitionIndexes": index_response["PartitionIndexDescriptorList"]}
                 ),
                 region=region,
             )
         else:
             aws_helper.glue_create_table(
-                new_database=new_glue_db, table_input=table_input[0], region=region
+                new_database=new_glue_db, table_input=table_input, region=region
             )
         return new_s3_loc
     except Exception as e:
