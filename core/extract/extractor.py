@@ -124,6 +124,7 @@ class Extractor:
         (
             sql_json,
             missing_audit_log_connections,
+            replacements,
             statements_to_be_avoided,
         ) = self.get_sql_connections_replacements(last_connections, log_items)
         with gzip.open(archive_filename, "wb") as f:
@@ -184,8 +185,11 @@ class Extractor:
             connections_file.close()
 
         # Save the replacements
+        if self.config["log_location"]:
+            copy_replacements = replacements
+        else:
+            copy_replacements = self.get_copy_replacements()
         logger.info("Generating the copy_replcaments........")
-        copy_replacements = self.get_copy_replacements()
         logger.info(f"Exporting copy replacements to {output_directory}")
         replacements_string = "Original location,Replacement location,Replacement IAM role\n"
         for bucket in copy_replacements:
@@ -249,6 +253,18 @@ class Extractor:
 
                 query.text = remove_line_comments(query.text).strip()
 
+                if self.config["log_location"]:
+                    if "copy " in query.text.lower() and "from 's3:" in query.text.lower():
+                        bucket = re.search(
+                            r"from 's3:\/\/[^']*", query.text, re.IGNORECASE
+                        ).group()[6:]
+                        replacements.add(bucket)
+                        query.text = re.sub(
+                            r"IAM_ROLE 'arn:aws:iam::\d+:role/\S+'",
+                            f" IAM_ROLE ''",
+                            query.text,
+                            flags=re.IGNORECASE,
+                        )
                 if "unload" in query.text.lower() and "to 's3:" in query.text.lower():
                     query.text = re.sub(
                         r"IAM_ROLE 'arn:aws:iam::\d+:role/\S+'",
@@ -275,6 +291,7 @@ class Extractor:
         return (
             sql_json,
             missing_audit_log_connections,
+            replacements,
             statements_to_be_avoided,
         )
 

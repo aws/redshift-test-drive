@@ -168,7 +168,6 @@ def s3_resource_put_object(bucket, prefix, body):
 
 
 async def s3_get_bucket_contents(bucket, prefix):
-    """Pagination implemented in async manner"""
     s3_client = boto3.client("s3")
     loop = asyncio.get_event_loop()
     bucket_objects = []
@@ -191,6 +190,26 @@ async def s3_get_bucket_contents(bucket, prefix):
             continuation_token = response["NextContinuationToken"]
         else:
             break
+    return bucket_objects
+
+
+def sync_s3_get_bucket_contents(bucket, prefix):
+    conn = boto3.client("s3")
+
+    # get first set of
+    response = conn.list_objects_v2(Bucket=bucket, Prefix=prefix)
+    bucket_objects = response.get("Contents", [])
+
+    if "NextContinuationToken" in response:
+        prev_key = response["NextContinuationToken"]
+        while True:
+            response = conn.list_objects_v2(
+                Bucket=bucket, Prefix=prefix, ContinuationToken=prev_key
+            )
+            bucket_objects.extend(response["Contents"])
+            if "NextContinuationToken" not in response:
+                break
+            prev_key = response["NextContinuationToken"]
     return bucket_objects
 
 
