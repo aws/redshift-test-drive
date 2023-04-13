@@ -214,7 +214,6 @@ def main():
     object_key = 'replay_logs.zip'
     zip_file_name = f'replay_{replay_id}.zip'
     logger.info(f"Uploading replay logs to {bucket['bucket_name']}/{bucket['prefix']}")
-    import pdb;pdb.set_trace()
     dir = f"core/logs/replay/replay_log-{replay_id}"
     path = '/replay_logs'
     with zipfile.ZipFile(zip_file_name, "w", zipfile.ZIP_DEFLATED) as zip_object:

@@ -239,12 +239,14 @@ class Extractor:
 
         # save the extract logs to S3
         logger.info(f"Uploading extract.log to {output_directory}")
-        with open("core/logs/extract/extract.log", "rb") as fp:
-            aws_service_helper.s3_put_object(
-                fp,
-                bucket_name,
-                output_prefix + "/extract.log",
-            )
+        if is_s3:
+            with open("core/logs/extract/extract.log", "rb") as fp:
+                aws_service_helper.s3_put_object(
+                    fp,
+                    bucket_name,
+                    output_prefix + "/extract.log",
+                )
+        
 
     def get_sql_connections_replacements(self, last_connections, log_items):
         # transactions has form { "xid": xxx, "pid": xxx, etc..., queries: [] }
