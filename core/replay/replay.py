@@ -212,7 +212,7 @@ def main():
 
     bucket = bucket_dict(g_config["workload_location"])
     object_key = 'replay_logs.zip'
-    zip_file_name = f'replay_{replay_id}.zip'
+    zip_file_name = f'replay_logs.zip'
     logger.info(f"Uploading replay logs to {bucket['bucket_name']}/{bucket['prefix']}")
     dir = f"core/logs/replay/replay_log-{replay_id}"
     with zipfile.ZipFile(zip_file_name, "w", zipfile.ZIP_DEFLATED) as zip_object:
