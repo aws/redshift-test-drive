@@ -186,6 +186,7 @@ class ExtractorTestCases(unittest.TestCase):
             Extractor.validate_log_result([], [])
 
     @patch("gzip.open", mock_open())
+    @patch("builtins.open", mock_open())
     @patch("common.aws_service.s3_upload")
     @patch("common.aws_service.s3_put_object")
     @patch("common.util.cluster_dict")
