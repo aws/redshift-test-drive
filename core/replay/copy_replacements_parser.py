@@ -2,8 +2,7 @@ import csv
 import logging
 import sys
 
-from boto3 import client
-
+import common.aws_service as aws_service_helper
 
 logger = logging.getLogger("WorkloadReplicatorLogger")
 
@@ -16,8 +15,7 @@ def parse_copy_replacements(workload_directory):
         workload_s3_location = replacements_path[5:].partition("/")
         bucket_name = workload_s3_location[0]
         prefix = workload_s3_location[2]
-        s3_object = client("s3").get_object(Bucket=bucket_name, Key=prefix)
-
+        s3_object = aws_service_helper.s3_client_get_object(bucket_name, prefix)
         csv_string = s3_object["Body"].read().decode("utf-8")
         copy_replacements_reader = csv.reader(csv_string.splitlines())
         next(copy_replacements_reader)  # Skip header

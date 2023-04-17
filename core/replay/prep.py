@@ -3,11 +3,8 @@ import datetime
 import logging
 import os
 import re
-import time
 
 import boto3
-from boto3 import client
-from botocore.exceptions import NoCredentialsError
 
 from core.replay.transactions_parser import TransactionsParser
 from core.replay.connections_parser import parse_connections
@@ -30,7 +27,6 @@ class ReplayPrep:
     def __init__(self, config):
         self.config = config
         self.credentials_cache = {}
-        self.boto3_session = boto3.Session()
 
     def correlate_transactions_with_connections(self, replay_id):
         (connection_logs, total_connections) = parse_connections(

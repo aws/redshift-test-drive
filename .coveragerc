@@ -1,7 +1,12 @@
 # .coveragerc to control coverage.py
 [run]
 branch = True
-omit = *tests*
+omit =
+    core/tests/*
+    common/tests/*
+    tools/ExternalObjectReplicator/tests/*
+    tools/ReplayAnalysis/tests/*
+
 command_line = -m unittest discover
 
 [html]

@@ -1,10 +1,10 @@
 import re
 
-import boto3
 import logging.handlers
 import redshift_connector
 from urllib.parse import urlparse
 import datetime
+import common.aws_service as aws_service_helper
 
 logger = logging.getLogger("WorkloadReplicatorLogger")
 
@@ -80,24 +80,11 @@ def cluster_dict(endpoint, is_serverless=False, start_time=None, end_time=None):
     if end_time is not None:
         cluster["end_time"] = end_time
 
-    if not is_serverless:
-        rs_client = boto3.client("redshift", region_name=cluster.get("region"))
+    if is_serverless:
         try:
-            response = rs_client.describe_clusters(ClusterIdentifier=cluster.get("id"))
-
-            cluster["num_nodes"] = response["Clusters"][0]["NumberOfNodes"]
-            cluster["instance"] = response["Clusters"][0]["NodeType"]
-        except Exception as e:
-            logger.warning(
-                f"Unable to get cluster information. Please ensure IAM permissions include "
-                f"Redshift:DescribeClusters. {e}"
+            response = aws_service_helper.redshift_get_serverless_workgroup(
+                workgroup_name, cluster.get("region")
             )
-            cluster["num_nodes"] = "N/A"
-            cluster["instance"] = "N/A"
-    else:
-        rs_client = boto3.client("redshift-serverless", region_name=cluster.get("region"))
-        try:
-            response = rs_client.get_workgroup(workgroupName=workgroup_name)
 
             cluster["num_nodes"] = "N/A"
             cluster["instance"] = "Serverless"
@@ -108,6 +95,7 @@ def cluster_dict(endpoint, is_serverless=False, start_time=None, end_time=None):
                     f"Serverless endpoint could not be found "
                     f"RedshiftServerless:GetWorkGroup. {e}"
                 )
+                raise e
             else:
                 logger.warning(
                     f"Exception during fetching work group details for Serverless endpoint "
@@ -116,6 +104,21 @@ def cluster_dict(endpoint, is_serverless=False, start_time=None, end_time=None):
                 cluster["num_nodes"] = "N/A"
                 cluster["instance"] = "Serverless"
                 cluster["base_rpu"] = "N/A"
+    else:
+        try:
+            response = aws_service_helper.redshift_describe_clusters(
+                cluster.get("id"), cluster.get("region")
+            )
+
+            cluster["num_nodes"] = response["Clusters"][0]["NumberOfNodes"]
+            cluster["instance"] = response["Clusters"][0]["NodeType"]
+        except Exception as e:
+            logger.warning(
+                f"Unable to get cluster information. Please ensure IAM permissions include "
+                f"Redshift:DescribeClusters. {e}"
+            )
+            cluster["num_nodes"] = "N/A"
+            cluster["instance"] = "N/A"
 
     return cluster
 

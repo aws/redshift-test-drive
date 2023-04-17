@@ -1,5 +1,12 @@
 import unittest
-from core.util.log_validation import is_duplicate, get_logs_in_range
+
+from core.util.audit_logs_parsing import Log
+from core.util.log_validation import (
+    is_duplicate,
+    get_logs_in_range,
+    is_valid_log,
+    remove_line_comments,
+)
 import os
 import datetime
 import json
@@ -25,9 +32,109 @@ def mock_get_local_logs(log_directory_path, start_time, end_time):
 
 
 class TestIsValidLog(unittest.TestCase):
-    def setUp(self):
-        pass
+    def test_with_username_rdsdb(self):
+        log = Log()
+        log.username = "rdsdb"
+        self.assertFalse(
+            is_valid_log(
+                log,
+                datetime.datetime.fromisoformat("2023-01-10T13:59:27+00:00"),
+                datetime.datetime.fromisoformat("2023-01-03T16:59:27+00:00"),
+            )
+        )
 
+    def test_with_start_time_after_record_time(self):
+        log = Log()
+        log.username = "test"
+        log.record_time = datetime.datetime.fromisoformat("2023-01-10T12:59:27+00:00")
+        self.assertFalse(
+            is_valid_log(
+                log,
+                datetime.datetime.fromisoformat("2023-01-10T13:59:27+00:00"),
+                datetime.datetime.fromisoformat("2023-01-03T16:59:27+00:00"),
+            )
+        )
+
+    def test_with_end_time_before_record_time(self):
+        log = Log()
+        log.username = "test"
+        log.record_time = datetime.datetime.fromisoformat("2023-01-15T17:59:27+00:00")
+        self.assertFalse(
+            is_valid_log(
+                log,
+                datetime.datetime.fromisoformat("2023-01-10T13:59:27+00:00"),
+                datetime.datetime.fromisoformat("2023-01-13T16:59:27+00:00"),
+            )
+        )
+
+    def test_with_text_containing_problem_keywords(self):
+        log = Log()
+        log.username = "test"
+        log.record_time = datetime.datetime.fromisoformat("2023-01-10T14:59:27+00:00")
+        log.text = "UNLISTEN *"
+        self.assertFalse(
+            is_valid_log(
+                log,
+                datetime.datetime.fromisoformat("2023-01-10T13:59:27+00:00"),
+                datetime.datetime.fromisoformat("2023-01-13T16:59:27+00:00"),
+            )
+        )
+
+    def test_with_text_containing_potential_problem_keywords(self):
+        log = Log()
+        log.username = "test"
+        log.record_time = datetime.datetime.fromisoformat("2023-01-10T14:59:27+00:00")
+        log.text = "BIND"
+        self.assertFalse(
+            is_valid_log(
+                log,
+                datetime.datetime.fromisoformat("2023-01-10T13:59:27+00:00"),
+                datetime.datetime.fromisoformat("2023-01-13T16:59:27+00:00"),
+            )
+        )
+
+    def test_with_parameter_markers_incorrect_query(self):
+        log = Log()
+        log.username = "test"
+        log.record_time = datetime.datetime.fromisoformat("2023-01-10T14:59:27+00:00")
+        log.text = "PREPARE fooplan (int, text, bool, numeric) AS INSERT INTO foo VALUES($1, $2, $3, $4);EXECUTE fooplan(1, 'Hunter Valley', 't', 200.00);--test"
+        self.assertFalse(
+            is_valid_log(
+                log,
+                datetime.datetime.fromisoformat("2023-01-10T13:59:27+00:00"),
+                datetime.datetime.fromisoformat("2023-01-13T16:59:27+00:00"),
+            )
+        )
+
+    def test_with_parameter_markers_correct_query(self):
+        log = Log()
+        log.username = "test"
+        log.record_time = datetime.datetime.fromisoformat("2023-01-10T14:59:27+00:00")
+        log.text = "SELECT * FROM id;"
+        self.assertTrue(
+            is_valid_log(
+                log,
+                datetime.datetime.fromisoformat("2023-01-10T13:59:27+00:00"),
+                datetime.datetime.fromisoformat("2023-01-13T16:59:27+00:00"),
+            )
+        )
+
+
+class TestLineComments(unittest.TestCase):
+    def test_single_line_comments(self):
+        query = remove_line_comments("SELECT * FROM Customers-- WHERE City='Berlin';")
+        self.assertEqual(query, "SELECT * FROM Customers")
+
+    def test_multi_line_comments(self):
+        query = remove_line_comments(
+            "SELECT * FROM Customers --WHERE city='Berlin'\n SELECT * FROM Users --WHERE city='Berlin'\n SELECT * FROM Cyclists;"
+        )
+        self.assertEqual(
+            query, "SELECT * FROM Customers \n SELECT * FROM Users \n SELECT * FROM Cyclists;"
+        )
+
+
+class TestIsDuplicate(unittest.TestCase):
     def test_is_duplicate(self):
         query1 = "/*test*/ select 1 "
         query2 = "select 1;"

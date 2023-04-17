@@ -186,33 +186,3 @@ def remove_line_comments(query):
                 removed_string = removed_string[:line_comment_begin]
 
     return removed_string
-
-
-def connection_time_replacement(sorted_connections):
-    i = 0
-    min_init_time = sorted_connections[0]["session_initiation_time"]
-    max_disconnect_time = sorted_connections[0]["disconnection_time"]
-    empty_init_times = []
-    empty_disconnect_times = []
-    for connection in sorted_connections:
-        if connection["session_initiation_time"] == "":
-            empty_init_times.append(i)
-        elif min_init_time > connection["session_initiation_time"]:
-            min_init_time = connection["session_initiation_time"]
-
-        if connection["disconnection_time"] == "":
-            empty_disconnect_times.append(i)
-
-        elif max_disconnect_time == "" or (
-            max_disconnect_time and max_disconnect_time < connection["disconnection_time"]
-        ):
-            max_disconnect_time = connection["disconnection_time"]
-
-        i += 1
-    for init_time in empty_init_times:
-        sorted_connections[init_time]["session_initiation_time"] = min_init_time
-
-    for init_time in empty_disconnect_times:
-        sorted_connections[init_time]["disconnection_time"] = max_disconnect_time
-
-    return sorted_connections

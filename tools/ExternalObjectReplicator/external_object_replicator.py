@@ -44,7 +44,6 @@ def execute_svl_query(cluster_object, end_time, file_config, redshift_user, star
     spectrum_obj_not_found = []
     # Query Spectrum files
     logger.info("Scanning system tables to find Spectrum files queried by source cluster")
-    SVL_S3LIST_result = OrderedDict()
     with open("tools/ExternalObjectReplicator/sql/svl_s3_list.sql", "r") as svl_s3_list:
         SVL_S3LIST_query = svl_s3_list.read().format(
             start=start_time, end=end_time, db=cluster_object["database"]
@@ -98,7 +97,6 @@ def execute_stl_load_query(cluster_object, end_time, file_config, redshift_user,
     # Query COPY objects
     copy_objects_not_found = []
     copy_source_location = []
-    STL_LOAD_response = OrderedDict()
     with open("tools/ExternalObjectReplicator/sql/stl_load_query.sql", "r") as stl_load:
         STL_LOAD_query = stl_load.read().format(
             start=start_time, end=end_time, db=cluster_object["database"]
