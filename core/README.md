@@ -85,27 +85,28 @@ aws configure
 
 ### Step 3 - COPY and UNLOAD setup
 
-The following steps are important to mimic any COPY and UNLOAD command 
+You will need the following things setup for the COPY and UNLOAD process to execute correctly:
 
-1. S3 bucket for UNLOAD commands
+#### S3 bucket for UNLOAD commands
 
-Create a temporary S3 bucket where UNLOAD will spill data to S3.
+1. An S3 bucket where the UNLOAD command will store data to.
+    If you don't already have one, create a new S3 bucket. Instructions to create a s3 bucket [here](https://docs.aws.amazon.com/AmazonS3/latest/userguide/creating-bucket.html).
 
-1. IAM role for S3 COPY and UNLOAD commands
+2. IAM role with read access
 
-Create an IAM role with read access to S3 buckets where COPY will read from. Add write access to the temporary S3 bucket created in the previous step. Make sure the IAM role has a trust relationship with Redshift. This role will be attached to the replica cluster before running Workload Replicator.
+    Create an IAM role with read access to S3 buckets where COPY commands read from. After you create this IAM role, add write access to the role for the S3 bucket in the previous step. Make sure the IAM role has a trust relationship with Redshift. This role will be attached to the replica cluster before running Workload Replicator. More information on IAM [here](https://docs.aws.amazon.com/redshift/latest/mgmt/copy-unload-iam-role.html).
 
-More information on https://docs.aws.amazon.com/redshift/latest/mgmt/copy-unload-iam-role.html
+## Extract
 
-## Running Extraction
-
-This script extracts query and connection info from User Activity Log (audit) and Connection Log (audit).
+Extract executes a script that extracts query and connection information from user activity and connection log(retrieved from the audit logs).
 
 * Extraction process supports both Redshift Provisioned cluster and Serverless endpoint
 * If the source cluster end point is provided as input in the YAML file, Workload Replicator will automatically determine the location to extract the audit logs from, either it is S3 or Cloudwatch. Cloudwatch Audit Logs are now supported for both Provisioned Cluster and Serverless  
 * Customer can provide the s3 bucket or local directory in YAML file as log location if they choose not to provide the source cluster endpoint
 * Workload Replicator will extract starttime and endtime for each query from the system table automatically if the source cluster end point is provided as input in the YAML file. Recordtime from audit logs will be used otherwise. 
 * The source cluster should be accessible from wherever Workload Replicator is being run. This may entail modifying the security group inbound rules to include “My IP”, or running Workload Replicator on an EC2 instance in the same VPC.
+
+## Learn how to run Extract with steps below:
 
 ### Configuration file parameters for `extraction.yaml` :
 
@@ -146,9 +147,11 @@ Workload Replicator extract process produces the following outputs in the
 * sql_statements_skipped.txt
     * Contains all the sql statement which are skipped during the replay process.
 
-## Running Replay
+## Replay
 
-Takes an extracted workload and replays it against a target cluster. Target cluster could be a Redshift Provisioned or Serverless cluster.
+Replay is the process of taking a workload extracted by Extract and replaying the same workload against a target cluster. Target cluster could be a Redshift Provisioned or Serverless cluster.
+    
+## Learn how to run Replay with steps below:
 
 ### Preparation
 
