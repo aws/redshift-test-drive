@@ -57,10 +57,16 @@ def init_logging(
     logger.info(f"Logging to {filename}")
     logger.addHandler(fh)
     logger.info("== Initializing logfile ==")
-    if script_type == 'extract':
-        logger.info(f"Extract ID: {log_id}") if log_id else None
-    else:
-        logger.info(f"Replay ID: {log_id}") if log_id else None        
+    if script_type == "extract":
+        if log_id:
+            logger.info(f"Extract ID: {log_id}")
+        else:
+            None
+    elif script_type == "replay":
+        if log_id:
+            logger.info(f"Replay ID: {log_id}")
+        else:
+            None
 
 
 def get_log_formatter():
