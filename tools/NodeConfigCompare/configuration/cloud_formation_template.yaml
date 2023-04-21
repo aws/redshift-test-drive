@@ -96,7 +96,7 @@ Conditions:
   NotificationEmail:
     #!Not [!Equals [!Ref AWSECRContainerImage, "N/A"]]
     !Not [!Equals [!Ref NotificationEmail, "N/A"]]
-
+    
 
 Mappings:
   Redshift: # static values related to the redshift cluster. they are also stored in system_config.json file
@@ -114,8 +114,7 @@ Mappings:
       Length: 32
   ConfigTesting: # static values related to the configuration testing. they are also stored in system_config.json file
     S3:
-      ScriptPrefix: tools/NodeConfigCompare
-      BucketPrefix: 'configurations'
+      ScriptPrefix: 'configurations'
       DataPrefix: 'data'
       ExtractPrefix: 'extract'
       ReplayPrefix: 'replay'
@@ -135,7 +134,7 @@ Mappings:
       PopulateComparisonResultsScript: 'populate_comparison_results.sql'
       ConfigTestingLambdaScript: 'RedshiftConfigTestingLambda.py.zip'
       ConfigTestingStepFunctionScript: 'RedshiftConfigTestingStepFunction.json'
-      ExternalPublicBucket: 'amazon-redshift-node-config-compare'
+      ExternalPublicBucket: 'redshift-test-drive-node-config'
     Pricing:
       Uri: 'https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonRedshift/current/index.csv'
       File: 'pricing/redshift_pricing.csv'
@@ -672,7 +671,7 @@ Resources:
         - python3.8
       Content:
         S3Bucket: !Ref RedshiftConfigTestingBucket
-        S3Key: tools/NodeConfigCompare/boto3-redshift-serverless.zip
+        S3Key: configurations/boto3-redshift-serverless.zip
       Description: boto3 latest
       LayerName: boto3-latest
       LicenseInfo: MIT
@@ -700,7 +699,7 @@ Resources:
           CLUSTER_IDENTIFIER_PREFIX: !Ref ClusterIdentifierPrefix
       Layers: 
         - !Ref LambdaLayer
-
+    
 
   RedshiftConfigTestingStepFunctionIamRole:
     Type: AWS::IAM::Role
@@ -800,7 +799,6 @@ Resources:
           DEFAULT_PORT: !FindInMap [ Redshift, Port, Number]
           PUBLICLY_ACCESSIBLE: !FindInMap [ Redshift, Accessible, Public]
           SCRIPT_PREFIX: !FindInMap [ ConfigTesting, S3, ScriptPrefix]
-          BUCKET_PREFIX: !FindInMap [ ConfigTesting, S3, BucketPrefix]
           DATA_PREFIX: !FindInMap [ ConfigTesting, S3, DataPrefix]
           EXTRACT_PREFIX: !FindInMap [ ConfigTesting, S3, ExtractPrefix]
           REPLAY_PREFIX: !FindInMap [ ConfigTesting, S3, ReplayPrefix]
@@ -1006,8 +1004,8 @@ Resources:
       ServiceToken:
         Fn::GetAtt : [LambdaFunctionS3Copy, Arn]
       source_folder_s3_path: !Sub
-        - s3://${ExternalPublicBucket}/${BucketPrefix}
-        - {ExternalPublicBucket: !FindInMap [ ConfigTesting, S3, ExternalPublicBucket],BucketPrefix: !FindInMap [ ConfigTesting, S3, BucketPrefix]}
+        - s3://${ExternalPublicBucket}/${ScriptPrefix}
+        - {ExternalPublicBucket: !FindInMap [ ConfigTesting, S3, ExternalPublicBucket],ScriptPrefix: !FindInMap [ ConfigTesting, S3, ScriptPrefix]}
       target_folder_s3_path: !Sub
         - s3://${RedshiftConfigTestingBucket}/${ScriptPrefix}
         - {ScriptPrefix: !FindInMap [ ConfigTesting, S3, ScriptPrefix]}
@@ -1107,4 +1105,4 @@ Resources:
             - !Ref RedshiftConfigTestingStepFunction
       Targets:
         - Arn: !Ref StepFunctionSNSTopic
-          Id: Id123 
+          Id: Id123

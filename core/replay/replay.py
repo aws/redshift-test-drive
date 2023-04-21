@@ -3,6 +3,8 @@ import datetime
 import hashlib
 import logging
 import sys
+import os
+import zipfile
 import yaml
 import common.config as config_helper
 import common.log as log_helper
@@ -56,19 +58,21 @@ def main():
     replay_start_timestamp = datetime.datetime.now(tz=datetime.timezone.utc)
     logger.info(f"Replay start time: {replay_start_timestamp}")
 
-    id_hash = hashlib.sha1(replay_start_timestamp.isoformat().encode("UTF-8")).hexdigest()[:5]
+    id_hash = hashlib.sha1(
+        replay_start_timestamp.isoformat().encode("UTF-8")
+    ).hexdigest()[:5]
     if g_config.get("tag", "") != "":
-        replay_id = (
-            f'{replay_start_timestamp.isoformat()}_{cluster.get("id")}_{g_config["tag"]}_{id_hash}'
-        )
+        replay_id = f'{replay_start_timestamp.isoformat()}_{cluster.get("id")}_{g_config["tag"]}_{id_hash}'
     else:
-        replay_id = f'{replay_start_timestamp.isoformat()}_{cluster.get("id")}_{id_hash}'
+        replay_id = (
+            f'{replay_start_timestamp.isoformat()}_{cluster.get("id")}_{id_hash}'
+        )
 
     # Setup Logging
     level = logging.getLevelName(g_config.get("log_level", "INFO").upper())
     log_helper.init_logging(
         "replay_log",
-        dir=f"core/logs/replay_log-{replay_id}",
+        dir=f"core/logs/replay/replay_log-{replay_id}",
         level=level,
         preamble=yaml.dump(g_config),
         backup_count=g_config.get("backup_count", 2),
@@ -123,7 +127,11 @@ def main():
     try:
         replayer = Replayer(g_config)
         aggregated_stats = replayer.start_replay(
-            connection_logs, first_event_time, query_count, replay_start_timestamp, replay_id
+            connection_logs,
+            first_event_time,
+            query_count,
+            replay_start_timestamp,
+            replay_id,
         )
         complete = True
     except KeyboardInterrupt:
@@ -198,6 +206,25 @@ def main():
         unload_table.unload_system_table()
 
         logger.info(f'Exported system tables to {g_config["replay_output"]}')
+
+    # uploading replay logs to s3
+
+    bucket = bucket_dict(g_config["workload_location"])
+    object_key = 'replay_logs.zip'
+    zip_file_name = f'replay_logs.zip'
+    logger.info(f"Uploading replay logs to {bucket['bucket_name']}/{bucket['prefix']}")
+    dir = f"core/logs/replay/replay_log-{replay_id}"
+    with zipfile.ZipFile(zip_file_name, "w", zipfile.ZIP_DEFLATED) as zip_object:
+        for folder_name,sub_folders, file_names in os.walk(dir):
+            for filename in file_names:
+                file_path = os.path.join(folder_name,filename)
+                zip_object.write(file_path)
+    with open(zip_file_name,'rb') as f:
+        aws_service_helper.s3_put_object(
+                f,
+                bucket["bucket_name"],
+                f"{bucket['prefix']}{object_key}"
+            )
 
 
 if __name__ == "__main__":

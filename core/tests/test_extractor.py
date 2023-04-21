@@ -152,11 +152,15 @@ class ExtractorTestCases(unittest.TestCase):
                 log_location,
             ) = e.get_parameters_for_log_extraction()
 
-    
     def test_get_sql_connections_replacements(self):
         query1 = self.get_query()
         log_items = {"abc.log": [query1]}
-        e = Extractor({"external_schemas": ["abc_external", "def_schema"],"log_location": "test/test_data"})
+        e = Extractor(
+            {
+                "external_schemas": ["abc_external", "def_schema"],
+                "log_location": "test/test_data",
+            }
+        )
         (
             sql_json,
             missing_conxns,
@@ -182,6 +186,7 @@ class ExtractorTestCases(unittest.TestCase):
             Extractor.validate_log_result([], [])
 
     @patch("gzip.open", mock_open())
+    @patch("builtins.open", mock_open())
     @patch("common.aws_service.s3_upload")
     @patch("common.aws_service.s3_put_object")
     @patch("common.util.cluster_dict")
@@ -193,7 +198,12 @@ class ExtractorTestCases(unittest.TestCase):
         mock_s3_put_object,
         mock_s3_upload,
     ):
-        e = Extractor({"external_schemas": ["abc_external", "def_schema"],"log_location": "test/test_data"})
+        e = Extractor(
+            {
+                "external_schemas": ["abc_external", "def_schema"],
+                "log_location": "test/test_data",
+            }
+        )
         e.save_logs(
             {"useractivitylog": [self.get_query()]},
             {},
@@ -220,7 +230,7 @@ class ExtractorTestCases(unittest.TestCase):
                     "end_time": "2022-11-18T00:00:00",
                     "master_username": "awsuser",
                     "region": "us-east-1",
-                    "log_location": ""
+                    "log_location": "test/test_data",
                 }
             )
             e.save_logs(

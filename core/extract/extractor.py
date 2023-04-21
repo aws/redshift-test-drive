@@ -212,6 +212,8 @@ class Extractor:
             replacements_file.write(replacements_string)
             replacements_file.close()
 
+        
+
     def get_sql_connections_replacements(self, last_connections, log_items):
         # transactions has form { "xid": xxx, "pid": xxx, etc..., queries: [] }
         sql_json = {"transactions": OrderedDict()}
