@@ -97,7 +97,7 @@ More information on https://docs.aws.amazon.com/redshift/latest/mgmt/copy-unload
 
 ## Running Extraction
 
-The extract script gets the query and connection information from the audit logs. The audit logs comprises of user activitry Logs which contain information about the queries executed on the cluster and the  connection logs which contain connection information of the clusters.
+The extract script gets the query and connection information from the audit logs. The audit logs comprises of user activity logs which contain information about the queries executed on the cluster and the  connection logs which contain connection information of the clusters.
 
 * Extraction process supports both Redshift Provisioned cluster and Serverless endpoint
 * If the source cluster end point is provided as input in the YAML file, Workload Replicator will automatically determine the location to extract the audit logs from, either it is S3 or Cloudwatch. Cloudwatch Audit Logs are now supported for both Provisioned Cluster and Serverless  
