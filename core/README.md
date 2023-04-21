@@ -85,21 +85,19 @@ aws configure
 
 ### Step 3 - COPY and UNLOAD setup
 
-The following steps are important to mimic any COPY and UNLOAD command 
+The following steps are important to mimic any COPY and UNLOAD command:
 
 1. S3 bucket for UNLOAD commands
+   <br> Create a temporary S3 bucket where UNLOAD will spill data to S3.
 
-Create a temporary S3 bucket where UNLOAD will spill data to S3.
-
-1. IAM role for S3 COPY and UNLOAD commands
-
-Create an IAM role with read access to S3 buckets where COPY will read from. Add write access to the temporary S3 bucket created in the previous step. Make sure the IAM role has a trust relationship with Redshift. This role will be attached to the replica cluster before running Workload Replicator.
+2. IAM role for S3 COPY and UNLOAD commands
+  <br>  Create an IAM role with read access to S3 buckets where COPY will read from. Add write access to the temporary S3 bucket created in the previous step. Make sure the IAM role has a trust relationship with Redshift. This role will be attached to the replica cluster before running Workload Replicator.
 
 More information on https://docs.aws.amazon.com/redshift/latest/mgmt/copy-unload-iam-role.html
 
 ## Running Extraction
 
-This script extracts query and connection info from User Activity Log (audit) and Connection Log (audit).
+The extract script gets the query and connection information from the audit logs. The audit logs comprises of user activitry Logs which contain information about the queries executed on the cluster and the  connection logs which contain connection information of the clusters.
 
 * Extraction process supports both Redshift Provisioned cluster and Serverless endpoint
 * If the source cluster end point is provided as input in the YAML file, Workload Replicator will automatically determine the location to extract the audit logs from, either it is S3 or Cloudwatch. Cloudwatch Audit Logs are now supported for both Provisioned Cluster and Serverless  
@@ -135,7 +133,7 @@ make extract
 
 ### Output
 
-Workload Replicator extract process produces the following outputs in the 
+The extract functionality of the Workload Replicator produces the following output in the output location provided:
 
 * sqls.json.gz
     * Contains the extracted SQL scripts.
