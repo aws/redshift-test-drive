@@ -149,7 +149,7 @@ def validate_config_file_for_extract(config):
 
 def validate_config_for_replay(config):
     cluster_endpoint_pattern = (
-        r"(.+)\.(.+)\.(.+).redshift(-serverless)?\.amazonaws\.com:[0-9]{4}\/(.)+"
+        r"(.+)\.(.+)\.(.+).redshift(-serverless)?\.amazonaws\.com:[0-9]{4,5}\/(.)+"
     )
     if not bool(re.fullmatch(cluster_endpoint_pattern, config["target_cluster_endpoint"])):
         logger.error(
