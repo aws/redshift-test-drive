@@ -97,7 +97,6 @@ You will need the following things setup for the COPY and UNLOAD process to exec
     Create an IAM role with read access to S3 buckets where COPY commands read from. After you create this IAM role, add write access to the role for the S3 bucket in the previous step. Make sure the IAM role has a trust relationship with Redshift. This role will be attached to the replica cluster before running Workload Replicator. More information on IAM [here](https://docs.aws.amazon.com/redshift/latest/mgmt/copy-unload-iam-role.html).
 
 ## Extract
-
 Extract executes a script that extracts query and connection information from user activity and connection log(retrieved from the audit logs).
 
 * Extraction process supports both Redshift Provisioned cluster and Serverless endpoint
@@ -136,7 +135,7 @@ make extract
 
 ### Output
 
-Workload Replicator extract process produces the following outputs in the 
+The extract functionality of the Workload Replicator produces the following output in the output location provided:
 
 * sqls.json.gz
     * Contains the extracted SQL scripts.
