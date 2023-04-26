@@ -31,9 +31,6 @@ g_config = {}
 g_replay_timestamp = None
 
 g_is_serverless = False
-g_serverless_cluster_endpoint_pattern = (
-    r"(.+)\.(.+)\.(.+).redshift-serverless(-dev)?\.amazonaws\.com:[0-9]{4}\/(.)+"
-)
 
 logger = logging.getLogger("WorkloadReplicatorLogger")
 
