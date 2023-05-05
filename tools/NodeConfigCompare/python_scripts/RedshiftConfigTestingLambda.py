@@ -496,10 +496,10 @@ def validate_user_config(user_config, client, current_account_id):
             log_location != "N/A"
             and loggingStatusResponse.get("LogDestinationType") == "cloudwatch"
         ):
-            match = re.search(r"\/aws\/redshift\/cluster\/(.*)",log_location)
+            match = re.search(r"\/aws\/redshift\/cluster\/(.*)", log_location)
             describe_log_group_response = cw_describe_log_groups(
                 log_group_name=match.group(0),
-                region=user_config.get("region"),
+                region=user_config.get("REGION"),
             )
     simple_replay_extract_start_time = user_config.get(
         "SIMPLE_REPLAY_EXTRACT_START_TIME"
