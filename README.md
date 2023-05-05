@@ -23,7 +23,10 @@ yum install git
 
  ## Preparations
  01. Clone the git repository using the following command:
+ 
+ ```
  git clone git@github.com:aws/redshift-test-drive.git
+ ```
  02. Execute the following command from the root directory to install all the required packages:
  ```
  make setup
