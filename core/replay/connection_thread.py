@@ -267,6 +267,7 @@ class ConnectionThread(threading.Thread):
                     "xid": transaction.xid,
                     "query_idx": idx,
                     "replay_start": self.replay_start.isoformat(),
+                    "source": "Test-Drive",
                 }
                 sql_text = "/* {} */ {}".format(json.dumps(json_tags), sql_text)
                 transaction_query_idx += 1
