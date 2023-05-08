@@ -31,7 +31,7 @@ yum install git
  ```
  make setup
  ```
- 03. Refer to the Table of Content which will point out the different tols and README links of your interest.
+ 03. Refer to the Table of Content which will point out the different tools and README links of your interest.
 
 
 <br>
