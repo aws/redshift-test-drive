@@ -19,7 +19,9 @@ def handler(event, context):
     cluster_identifier = event["Input"].get("cluster_identifier")
     sql_id = event["Input"].get("sql_id")
     job_id = event["Input"].get("job_id")
-    redshift_cluster_configuration = event["Input"].get("redshift_cluster_configuration")
+    redshift_cluster_configuration = event["Input"].get(
+        "redshift_cluster_configuration"
+    )
     redshift_cluster_index = event["Input"].get("redshift_cluster_index")
     workgroup = event["Input"].get("cluster_identifier")
     namespace = event["Input"].get("namespace_identifier")
@@ -30,7 +32,10 @@ def handler(event, context):
     try:
         client = boto3.client("redshift")
         serverless_client = boto3.client("redshift-serverless")
-        if user_config.get("DATABASE_NAME") == "N/A" or user_config.get("DATABASE_NAME") is None:
+        if (
+            user_config.get("DATABASE_NAME") == "N/A"
+            or user_config.get("DATABASE_NAME") is None
+        ):
             database_name = system_config.get("DATABASE_NAME")
             print("Database name from system_config")
         else:
@@ -38,15 +43,21 @@ def handler(event, context):
             print("Database name from user_config")
         print("Database name {}".format(database_name))
         if action == "initiate":
-            what_if_timestamp = time.strftime("%Y-%m-%d-%H-%M-%S", time.localtime(time.time()))
+            what_if_timestamp = time.strftime(
+                "%Y-%m-%d-%H-%M-%S", time.localtime(time.time())
+            )
             res = {"status": what_if_timestamp}
         elif action == "validate_user_config":
-            res = {"status": validate_user_config(user_config, client, current_account_id)}
+            res = {
+                "status": validate_user_config(user_config, client, current_account_id)
+            }
         elif action == "run_extract":
             res = {
                 "job_id": run_extract(
                     what_if_timestamp=what_if_timestamp,
-                    simple_replay_log_location=user_config.get("SIMPLE_REPLAY_LOG_LOCATION"),
+                    simple_replay_log_location=user_config.get(
+                        "SIMPLE_REPLAY_LOG_LOCATION"
+                    ),
                     simple_replay_extract_start_time=user_config.get(
                         "SIMPLE_REPLAY_EXTRACT_START_TIME"
                     ),
@@ -60,7 +71,9 @@ def handler(event, context):
                     redshift_user_name=system_config.get("MASTER_USER_NAME"),
                     extract_prefix=system_config.get("EXTRACT_PREFIX"),
                     script_prefix=system_config.get("SCRIPT_PREFIX"),
-                    extract_bootstrap_script=system_config.get("EXTRACT_BOOTSTRAP_SCRIPT"),
+                    extract_bootstrap_script=system_config.get(
+                        "EXTRACT_BOOTSTRAP_SCRIPT"
+                    ),
                     job_definition=system_config.get("JOB_DEFINITION"),
                     job_queue=system_config.get("JOB_QUEUE"),
                 )
@@ -71,7 +84,11 @@ def handler(event, context):
             res = {"status": user_config.get("CONFIGURATIONS")}
         elif action == "get_endpoint_type":
             cluster_index = int(event["Input"].get("index"))
-            res = {"status": user_config.get("CONFIGURATIONS")[cluster_index]["TYPE"].upper()}
+            res = {
+                "status": user_config.get("CONFIGURATIONS")[cluster_index][
+                    "TYPE"
+                ].upper()
+            }
         elif action == "get_cluster_identifier":
             res = {
                 "status": get_cluster_identifier(
@@ -105,7 +122,11 @@ def handler(event, context):
             else:
                 parameter_group = user_config.get("PARAMETER_GROUP_CONFIG_S3_PATH")
 
-            res = {"status": update_parameter_group(client, cluster_identifier, parameter_group)}
+            res = {
+                "status": update_parameter_group(
+                    client, cluster_identifier, parameter_group
+                )
+            }
 
         elif action == "create_cluster":
             maintenance_track = (
@@ -129,7 +150,9 @@ def handler(event, context):
                     database_name=database_name,
                     secrets_manager_arn=system_config.get("SECRETS_MANAGER_ARN"),
                     port=int(system_config.get("PORT")),
-                    publicly_accessible=(system_config.get("PUBLICLY_ACCESSIBLE") == "true"),
+                    publicly_accessible=(
+                        system_config.get("PUBLICLY_ACCESSIBLE") == "true"
+                    ),
                     maintenance_track=maintenance_track,
                 )
             }
@@ -172,7 +195,9 @@ def handler(event, context):
                     serverless_client,
                     subnet_group=system_config.get("WORKGROUP_SUBNET"),
                     security_group_id=system_config.get("SECURITY_GROUP_ID"),
-                    publicly_accessible=(system_config.get("PUBLICLY_ACCESSIBLE") == "true"),
+                    publicly_accessible=(
+                        system_config.get("PUBLICLY_ACCESSIBLE") == "true"
+                    ),
                     base_capacity=redshift_cluster_configuration.get("BASE_RPU"),
                     namespace_name=namespace,
                     workgroup_name=workgroup,
@@ -296,7 +321,9 @@ def handler(event, context):
                     simple_replay_overwrite_s3_path=user_config.get(
                         "SIMPLE_REPLAY_OVERWRITE_S3_PATH"
                     ),
-                    simple_replay_log_location=user_config.get("SIMPLE_REPLAY_LOG_LOCATION"),
+                    simple_replay_log_location=user_config.get(
+                        "SIMPLE_REPLAY_LOG_LOCATION"
+                    ),
                     bucket_name=system_config.get("S3_BUCKET_NAME"),
                     redshift_user_name=system_config.get("MASTER_USER_NAME"),
                     redshift_iam_role=system_config.get("REDSHIFT_IAM_ROLE"),
@@ -305,7 +332,9 @@ def handler(event, context):
                     replay_prefix=system_config.get("REPLAY_PREFIX"),
                     script_prefix=system_config.get("SCRIPT_PREFIX"),
                     snapshot_account_id=user_config.get("SNAPSHOT_ACCOUNT_ID"),
-                    replay_bootstrap_script=system_config.get("REPLAY_BOOTSTRAP_SCRIPT"),
+                    replay_bootstrap_script=system_config.get(
+                        "REPLAY_BOOTSTRAP_SCRIPT"
+                    ),
                     job_definition=system_config.get("JOB_DEFINITION"),
                     job_queue=system_config.get("JOB_QUEUE"),
                     endpoint_type=endpoint_type,
@@ -314,7 +343,9 @@ def handler(event, context):
             }
         elif action == "gather_comparison_stats":
             if endpoint_type.upper() == "SERVERLESS":
-                script_s3_path = system_config.get("GATHER_COMPARISON_STATS_SERVERLESS_SCRIPT")
+                script_s3_path = system_config.get(
+                    "GATHER_COMPARISON_STATS_SERVERLESS_SCRIPT"
+                )
                 comparison_stats_s3_path = system_config.get("COMPARISON_STATS_S3_PATH")
             else:
                 script_s3_path = (
@@ -338,7 +369,9 @@ def handler(event, context):
                     external_schema_script=system_config.get("EXTERNAL_SCHEMA_SCRIPT"),
                     query_label_prefix=system_config.get("QUERY_LABEL_PREFIX"),
                     node_type=redshift_cluster_configuration.get("NODE_TYPE"),
-                    number_of_nodes=redshift_cluster_configuration.get("NUMBER_OF_NODES"),
+                    number_of_nodes=redshift_cluster_configuration.get(
+                        "NUMBER_OF_NODES"
+                    ),
                     region=system_config.get("REGION"),
                     cluster_config_s3_path=system_config.get("CLUSTER_CONFIG_S3_PATH"),
                     endpoint_type=endpoint_type,
@@ -348,7 +381,9 @@ def handler(event, context):
         elif action == "populate_comparison_results":
             res = {
                 "sql_id": populate_comparison_results(
-                    script_s3_path=system_config.get("POPULATE_COMPARISON_RESULTS_SCRIPT"),
+                    script_s3_path=system_config.get(
+                        "POPULATE_COMPARISON_RESULTS_SCRIPT"
+                    ),
                     action=action,
                     cluster_identifier=cluster_identifier,
                     redshift_iam_role=system_config.get("REDSHIFT_IAM_ROLE"),
@@ -360,7 +395,9 @@ def handler(event, context):
                     raw_comparison_results_s3_path=system_config.get(
                         "RAW_COMPARISON_RESULTS_S3_PATH"
                     ),
-                    comparison_results_s3_path=system_config.get("COMPARISON_RESULTS_S3_PATH"),
+                    comparison_results_s3_path=system_config.get(
+                        "COMPARISON_RESULTS_S3_PATH"
+                    ),
                 )
             }
 
@@ -373,7 +410,9 @@ def handler(event, context):
         elif action == "set_untag":
             res = {"status": set_untag(serverless_client, inresourceArn)}
         elif action == "get_list_tags_for_resource":
-            res = {"status": get_list_tags_for_resource(serverless_client, inresourceArn)}
+            res = {
+                "status": get_list_tags_for_resource(serverless_client, inresourceArn)
+            }
         elif action == "list_workgroups":
             res = {"status": get_workgroups(serverless_client, workgroup)}
         else:
@@ -384,6 +423,24 @@ def handler(event, context):
         raise
     print(res)
     return res
+
+
+def cw_describe_log_groups(log_group_name=None, region=None):
+    cloudwatch_client = boto3.client("logs", region)
+    if log_group_name:
+        return cloudwatch_client.describe_log_groups(logGroupNamePrefix=log_group_name)
+    else:
+        response_pg_1 = cloudwatch_client.describe_log_groups()
+        logs = response_pg_1
+
+        token = response_pg_1.get("nextToken", "")
+        while token != "":
+            response_itr = cloudwatch_client.describe_log_groups(nextToken=token)
+            logs["logGroups"].extend(response_itr["logGroups"])
+            token = (
+                response_itr["nextToken"] if "nextToken" in response_itr.keys() else ""
+            )
+    return logs
 
 
 def validate_user_config(user_config, client, current_account_id):
@@ -402,10 +459,12 @@ def validate_user_config(user_config, client, current_account_id):
         )
         cluster_id = response["Snapshots"][0]["ClusterIdentifier"]
         cluster_desc_resp = client.describe_clusters(ClusterIdentifier=cluster_id)
-        cluster_param_grp = cluster_desc_resp["Clusters"][0]["ClusterParameterGroups"][0][
-            "ParameterGroupName"
-        ]
-        loggingStatusResponse = client.describe_logging_status(ClusterIdentifier=cluster_id)
+        cluster_param_grp = cluster_desc_resp["Clusters"][0]["ClusterParameterGroups"][
+            0
+        ]["ParameterGroupName"]
+        loggingStatusResponse = client.describe_logging_status(
+            ClusterIdentifier=cluster_id
+        )
 
         if loggingStatusResponse.get("LoggingEnabled"):
             print("Audit logging is enabled")
@@ -425,15 +484,30 @@ def validate_user_config(user_config, client, current_account_id):
                 else:
                     print("enable_user_activity_logging parameter is set to True")
 
-    if log_location != "N/A":
-        match = re.search(r"s3://([^/]+)/(.*)", log_location)
-        list_objects_response = boto3.client("s3").list_objects_v2(
-            Bucket=match.group(1), Prefix=match.group(2)
-        )
-    simple_replay_extract_start_time = user_config.get("SIMPLE_REPLAY_EXTRACT_START_TIME")
+        if (
+            log_location != "N/A"
+            and loggingStatusResponse.get("LogDestinationType") == "s3"
+        ):
+            match = re.search(r"s3://([^/]+)/(.*)", log_location)
+            list_objects_response = boto3.client("s3").list_objects_v2(
+                Bucket=match.group(1), Prefix=match.group(2)
+            )
+        elif (
+            log_location != "N/A"
+            and loggingStatusResponse.get("LogDestinationType") == "cloudwatch"
+        ):
+            match = re.search(r"\/aws\/redshift\/cluster\/(.*)", log_location)
+            describe_log_group_response = cw_describe_log_groups(
+                log_group_name=match.group(0),
+                region=user_config.get("REGION"),
+            )
+    simple_replay_extract_start_time = user_config.get(
+        "SIMPLE_REPLAY_EXTRACT_START_TIME"
+    )
     simple_replay_extract_end_time = user_config.get("SIMPLE_REPLAY_EXTRACT_END_TIME")
     if log_location != "N/A" and (
-        simple_replay_extract_start_time == "N/A" or simple_replay_extract_end_time == "N/A"
+        simple_replay_extract_start_time == "N/A"
+        or simple_replay_extract_end_time == "N/A"
     ):
         raise ValueError(
             "You need to provide SIMPLE_REPLAY_EXTRACT_START_TIME and SIMPLE_REPLAY_EXTRACT_END_TIME value"
@@ -455,7 +529,9 @@ def validate_user_config(user_config, client, current_account_id):
             "ra3.16xlarge",
         ]:
             raise ValueError(
-                "Invalid node type - " + config["NODE_TYPE"] + ", choose a valid node type"
+                "Invalid node type - "
+                + config["NODE_TYPE"]
+                + ", choose a valid node type"
             )
     return "Validation successful"
 
@@ -531,7 +607,9 @@ def gather_comparison_stats(
     if endpoint_type.upper() == "SERVERLESS":
         workgroup = cluster_identifier["workgroup"]
         comparison_stats_s3_path = comparison_stats_s3_path + "comparison_stats"
-        print("gather_comparison_stats >> Serverless >> cluster_identifier >>" + workgroup)
+        print(
+            "gather_comparison_stats >> Serverless >> cluster_identifier >>" + workgroup
+        )
         print("Serverless >> script_s3_path >>" + script_s3_path)
         print("Serverless >> comparison_stats_s3_path >> " + comparison_stats_s3_path)
         run_sql_script_from_s3(
@@ -557,7 +635,9 @@ def gather_comparison_stats(
             # config=f'cluster_identifier,node_type,number_of_nodes,region\n{cluster_identifier},{node_type},{number_of_nodes},{region}'
             # s3_put(cluster_config_s3_path+'/'+cluster_identifier+'.csv', config)
             print("Provisioned >> script_s3_path >>" + script_s3_path)
-            print("Provisioned >> comparison_stats_s3_path >> " + comparison_stats_s3_path)
+            print(
+                "Provisioned >> comparison_stats_s3_path >> " + comparison_stats_s3_path
+            )
             print("Checking if sys_query_history exists in the cluster")
             executeResponse = boto3.client("redshift-data").execute_statement(
                 Database=db,
@@ -616,7 +696,8 @@ def gather_comparison_stats(
                 user=user,
                 run_type=run_type,
                 what_if_timestamp=what_if_timestamp,
-                comparison_stats_s3_path=comparison_stats_s3_path + "comparison_stats_provisioned",
+                comparison_stats_s3_path=comparison_stats_s3_path
+                + "comparison_stats_provisioned",
                 query_label_prefix=query_label_prefix,
             )
 
@@ -643,7 +724,11 @@ def cluster_status(client, clusterid):
             status = (
                 desc.get("ClusterStatus")
                 + desc.get("ClusterAvailabilityStatus")
-                + (desc.get("RestoreStatus").get("Status") if desc.get("RestoreStatus") else "")
+                + (
+                    desc.get("RestoreStatus").get("Status")
+                    if desc.get("RestoreStatus")
+                    else ""
+                )
             )
         else:
             status = "Unavailable"
@@ -669,7 +754,9 @@ def serverless_status(serverless_client, workgroupname, namespacename):
         if isinstance(response, dict):
             status = response.get("status")
 
-            namespace_response = serverless_client.get_namespace(namespaceName=namespacename)
+            namespace_response = serverless_client.get_namespace(
+                namespaceName=namespacename
+            )
             for key, value in namespace_response.items():
                 if key == "namespace":
                     namespace_status = value.get("namespaceArn")
@@ -686,7 +773,9 @@ def serverless_status(serverless_client, workgroupname, namespacename):
     return {"workgroupstatus": status, "namespace_arn": namespace_status}
 
 
-def get_cluster_identifier(client, config, redshift_configurations, cluster_identifier_prefix):
+def get_cluster_identifier(
+    client, config, redshift_configurations, cluster_identifier_prefix
+):
     print("provisioned")
     print(redshift_configurations)
     if (
@@ -726,7 +815,11 @@ def update_wlm_config(client, cluster_identifier, wlm_config_s3_path):
         return "N/A"
     else:
         wlm_config = get_json_config_from_s3(wlm_config_s3_path)
-        print("Changing {} parameter group wlm : {}".format(cluster_identifier, wlm_config))
+        print(
+            "Changing {} parameter group wlm : {}".format(
+                cluster_identifier, wlm_config
+            )
+        )
         client.modify_cluster_parameter_group(
             ParameterGroupName=cluster_identifier,
             Parameters=[
@@ -744,10 +837,12 @@ def update_wlm_config(client, cluster_identifier, wlm_config_s3_path):
 ## Added to check for clusters in pending reboot after wlm change ##
 def check_pending_reboot_status(client, cluster_identifier):
     try:
-        cluster_desc = client.describe_clusters(ClusterIdentifier=cluster_identifier)["Clusters"][
-            0
+        cluster_desc = client.describe_clusters(ClusterIdentifier=cluster_identifier)[
+            "Clusters"
+        ][0]
+        desc_paramgroup_status = cluster_desc["ClusterParameterGroups"][0][
+            "ParameterApplyStatus"
         ]
-        desc_paramgroup_status = cluster_desc["ClusterParameterGroups"][0]["ParameterApplyStatus"]
         status = (
             cluster_desc.get("ClusterStatus")
             + cluster_desc.get("ClusterAvailabilityStatus")
@@ -788,18 +883,24 @@ def create_parameter_group(client, parameter_group_name):
 
 
 def parameter_group_status(client, parameter_group_name):
-    parameter_group = client.describe_cluster_parameters(ParameterGroupName=parameter_group_name)
+    parameter_group = client.describe_cluster_parameters(
+        ParameterGroupName=parameter_group_name
+    )
     return parameter_group
 
 
-def update_parameter_group(client, parameter_group_name, parameter_group_config_s3_path):
+def update_parameter_group(
+    client, parameter_group_name, parameter_group_config_s3_path
+):
     target_parameter_group = client.describe_cluster_parameters(
         ParameterGroupName=parameter_group_name
     )["Parameters"]
     target_parameters = {}
     for i in target_parameter_group:
         target_parameters[i["ParameterName"]] = i["ParameterValue"]
-    source_parameter_group = get_json_config_from_s3(parameter_group_config_s3_path)["Parameters"]
+    source_parameter_group = get_json_config_from_s3(parameter_group_config_s3_path)[
+        "Parameters"
+    ]
     modified_parameter_group = []
     for i in source_parameter_group:
         source_parameter_value = i["ParameterValue"].replace(" ", "")
@@ -843,7 +944,6 @@ def create_cluster(
     secrets_manager_arn,
 ):
     try:
-
         if snapshot_id is None or snapshot_id == "N/A":
             master_user_secret = json.loads(
                 boto3.client("secretsmanager")
@@ -851,12 +951,16 @@ def create_cluster(
                 .get("SecretString")
             )
             master_user_password = master_user_secret.get("password")
-            maintenance_track_val = "Current" if maintenance_track == "N/A" else maintenance_track
+            maintenance_track_val = (
+                "Current" if maintenance_track == "N/A" else maintenance_track
+            )
             print("maintenance_track_val >> " + maintenance_track_val)
             client.create_cluster(
                 DBName=database_name,
                 ClusterIdentifier=cluster_identifier,
-                ClusterType="single-node" if int(number_of_nodes) == 1 else "multi-node",
+                ClusterType="single-node"
+                if int(number_of_nodes) == 1
+                else "multi-node",
                 NodeType=node_type,
                 MasterUsername=master_user_name,
                 MasterUserPassword=master_user_password,
@@ -871,7 +975,9 @@ def create_cluster(
             )
         else:
             if snapshot_account_id is None or snapshot_account_id == "N/A":
-                snapshot_account_id = boto3.client("sts").get_caller_identity()["Account"]
+                snapshot_account_id = boto3.client("sts").get_caller_identity()[
+                    "Account"
+                ]
             if maintenance_track != "N/A":
                 client.restore_from_cluster_snapshot(
                     NumberOfNodes=int(number_of_nodes),
@@ -976,7 +1082,9 @@ def run_sql_script_from_s3(
         # Serverless
 
         query_group_statement = "set query_group to '" + action + "';\n"
-        result_cache_statement = "set enable_result_cache_for_session to " + result_cache + "; \n"
+        result_cache_statement = (
+            "set enable_result_cache_for_session to " + result_cache + "; \n"
+        )
         script = query_group_statement + result_cache_statement + script
         if workgroup_name is None:
             sql_id = run_sql(
@@ -1003,7 +1111,9 @@ def run_sql_script_from_s3(
         return sql_id
 
 
-def run_sql(clusterid, db, user, script, with_event, run_type, endpoint_type, workgroup_name):
+def run_sql(
+    clusterid, db, user, script, with_event, run_type, endpoint_type, workgroup_name
+):
     print("Script >> " + str(script))
     if endpoint_type.upper() == "PROVISIONED":
         res = boto3.client("redshift-data").execute_statement(
@@ -1019,7 +1129,9 @@ def run_sql(clusterid, db, user, script, with_event, run_type, endpoint_type, wo
         status = response["workgroup"]["status"]
         while status != "AVAILABLE":
             print(
-                "gather_comparison_stats >> workgroup {} is not available".format(workgroup_name)
+                "gather_comparison_stats >> workgroup {} is not available".format(
+                    workgroup_name
+                )
             )
             time.sleep(300)
         res = boto3.client("redshift-data").execute_statement(
@@ -1070,7 +1182,9 @@ def run_redshift_performance_test(
     if sql_script_s3_path is None or sql_script_s3_path == "N/A":
         return "N/A"
     else:
-        desc = client.describe_clusters(ClusterIdentifier=cluster_identifier)["Clusters"][0]
+        desc = client.describe_clusters(ClusterIdentifier=cluster_identifier)[
+            "Clusters"
+        ][0]
         cluster_endpoint = (
             desc.get("Endpoint").get("Address")
             + ":"
@@ -1211,7 +1325,9 @@ def run_replay(
         if simple_replay_overwrite_s3_path is None:
             simple_replay_overwrite_s3_path = "N/A"
         if endpoint_type.upper() == "PROVISIONED":
-            desc = client.describe_clusters(ClusterIdentifier=cluster_identifier)["Clusters"][0]
+            desc = client.describe_clusters(ClusterIdentifier=cluster_identifier)[
+                "Clusters"
+            ][0]
             cluster_endpoint = (
                 desc.get("Endpoint").get("Address")
                 + ":"
@@ -1345,7 +1461,9 @@ def restore_serverless_snapshot(
     try:
         if snapshot_id is not None or snapshot_id != "N/A":
             if snapshot_account_id is None or snapshot_account_id == "N/A":
-                snapshot_account_id = boto3.client("sts").get_caller_identity()["Account"]
+                snapshot_account_id = boto3.client("sts").get_caller_identity()[
+                    "Account"
+                ]
             v_snapshotArn = (
                 "arn:aws:redshift:"
                 + region
@@ -1440,7 +1558,9 @@ def get_list_tags_for_resource(serverless_client, inresourceArn):
 
 
 def set_untag(serverless_client, inresourceArn):
-    response = serverless_client.untag_resource(resourceArn=inresourceArn, tagKeys=["status"])
+    response = serverless_client.untag_resource(
+        resourceArn=inresourceArn, tagKeys=["status"]
+    )
 
 
 def get_workgroups(serverless_client, workgroup):
@@ -1450,7 +1570,9 @@ def get_workgroups(serverless_client, workgroup):
 
 def pause_cluster(client, auto_pause, cluster_config):
     max_index = max(
-        index for index, item in enumerate(cluster_config) if "redshift_cluster_index" in item
+        index
+        for index, item in enumerate(cluster_config)
+        if "redshift_cluster_index" in item
     )
     max_range = max_index + 1
     if auto_pause:

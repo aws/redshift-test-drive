@@ -513,6 +513,7 @@ Resources:
           Action: sts:AssumeRole
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
+        - arn:aws:iam::aws:policy/CloudWatchLogsReadOnlyAccess
         - !Ref RedshiftBucketAccessIamPolicy
         - !Ref RedshiftAccessIamPolicy
         - !Ref RedshiftServerlessIAMPolicy
@@ -620,6 +621,7 @@ Resources:
             - !Ref RedshiftAccessIamPolicy
             - !Ref RedshiftServerlessIAMPolicy
             - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+            - arn:aws:iam::aws:policy/CloudWatchLogsReadOnlyAccess
             - Fn::If:
               - EncryptedSourceCluster
               - Ref: KMSAccessPolicy
