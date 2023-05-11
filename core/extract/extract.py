@@ -20,17 +20,26 @@ def main():
     config_helper.validate_config_file_for_extract(config)
 
     # UID for extract logs
-    cluster = cluster_dict(config["source_cluster_endpoint"])
     extract_start_timestamp = datetime.datetime.now(tz=datetime.timezone.utc)
     id_hash = hashlib.sha1(
         extract_start_timestamp.isoformat().encode("UTF-8")
     ).hexdigest()[:5]
-    if config.get("tag", "") != "":
-        extract_id = f'{extract_start_timestamp.isoformat()}_{cluster.get("id")}_{config["tag"]}_{id_hash}'
+    if config.get("source_cluster_endpoint", "") != "":
+        cluster = cluster_dict(config["source_cluster_endpoint"])
+        if config.get("tag", "") != "":
+            extract_id = f'{extract_start_timestamp.isoformat()}_{cluster.get("id")}_{config["tag"]}_{id_hash}'
+        else:
+            extract_id = (
+                f'{extract_start_timestamp.isoformat()}_{cluster.get("id")}_{id_hash}'
+            )
     else:
-        extract_id = (
-            f'{extract_start_timestamp.isoformat()}_{cluster.get("id")}_{id_hash}'
-        )
+        log_location = config.get("log_location")
+        if config.get("tag", "") != "":
+            extract_id = f'{extract_start_timestamp.isoformat()}_{log_location}_{config["tag"]}_{id_hash}'
+        else:
+            extract_id = (
+                f"{extract_start_timestamp.isoformat()}_{log_location}_{id_hash}"
+            )
 
     # Setup Logging
     level = logging.getLevelName(config.get("log_level", "INFO").upper())
