@@ -69,7 +69,8 @@ class ConnectionThread(threading.Thread):
         ).total_seconds()
         connection_diff_sec = elapsed_sec - expected_elapsed_sec
         connection_duration_sec = (
-            self.connection_log.disconnection_time - self.connection_log.session_initiation_time
+            self.connection_log.disconnection_time
+            - self.connection_log.session_initiation_time
         ).total_seconds()
 
         self.logger.debug(
@@ -93,7 +94,8 @@ class ConnectionThread(threading.Thread):
         if "psql" in self.connection_log.application_name.lower():
             interface = "psql"
         elif (
-            "odbc" in self.connection_log.application_name.lower() and self.odbc_driver is not None
+            "odbc" in self.connection_log.application_name.lower()
+            and self.odbc_driver is not None
         ):
             interface = "odbc"
         elif self.default_interface == "odbc" and self.odbc_driver is None:
@@ -159,7 +161,8 @@ class ConnectionThread(threading.Thread):
                     self.execute_transactions(connection)
                     if self.connection_log.time_interval_between_transactions is True:
                         disconnect_offset_sec = (
-                            self.connection_log.disconnection_time - self.first_event_time
+                            self.connection_log.disconnection_time
+                            - self.first_event_time
                         ).total_seconds()
                         if disconnect_offset_sec > current_offset_ms(self.replay_start):
                             self.logger.debug(
@@ -171,7 +174,8 @@ class ConnectionThread(threading.Thread):
                     self.logger.warning("Failed to connect")
         except Exception as e:
             self.logger.error(
-                f"Exception thrown for pid {self.connection_log.pid}: {e}", exc_info=True
+                f"Exception thrown for pid {self.connection_log.pid}: {e}",
+                exc_info=True,
             )
             sys.exit(-1)
 
@@ -185,7 +189,8 @@ class ConnectionThread(threading.Thread):
                 # or use this to preserve the time between transactions
                 if idx == 0:
                     time_until_start_ms = (
-                        transaction.start_time() - self.connection_log.session_initiation_time
+                        transaction.start_time()
+                        - self.connection_log.session_initiation_time
                     ).total_seconds() * 1000.0
                 else:
                     prev_transaction = self.connection_log.transactions[idx - 1]
@@ -232,9 +237,9 @@ class ConnectionThread(threading.Thread):
 
         transaction_query_idx = 0
         for idx, query in enumerate(transaction.queries):
-            time_until_start_ms = query.offset_ms(self.first_event_time) - current_offset_ms(
-                self.replay_start
-            )
+            time_until_start_ms = query.offset_ms(
+                self.first_event_time
+            ) - current_offset_ms(self.replay_start)
             truncated_query = (
                 query.text[:60] + "..." if len(query.text) > 60 else query.text
             ).replace("\n", " ")
@@ -246,9 +251,11 @@ class ConnectionThread(threading.Thread):
             if self.config.get("split_multi", True):
                 formatted_query = query.text.lower()
                 if not formatted_query.startswith(("begin", "start")):
-                    query_begin = "begin;" + formatted_query
+                    formatted_query = "begin;" + formatted_query
                 if not formatted_query.endswith(("commit", "end")):
-                    query.text = query_begin + "commit;"
+                    if not formatted_query.endswith(";"):
+                        formatted_query = formatted_query + ";"
+                    formatted_query = formatted_query + "commit;"
                 split_statements = sqlparse.split(query.text)
                 split_statements = [
                     statement for statement in split_statements if statement != ";"
@@ -274,7 +281,9 @@ class ConnectionThread(threading.Thread):
 
                 substatement_txt = ""
                 if len(split_statements) > 1:
-                    substatement_txt = f", Multistatement: {s_idx + 1}/{len(split_statements)}"
+                    substatement_txt = (
+                        f", Multistatement: {s_idx + 1}/{len(split_statements)}"
+                    )
 
                 exec_start = datetime.datetime.now(tz=datetime.timezone.utc)
                 exec_end = None
@@ -308,7 +317,9 @@ class ConnectionThread(threading.Thread):
                         )
                     )
 
-                self.save_query_stats(exec_start, exec_end, transaction.xid, transaction_query_idx)
+                self.save_query_stats(
+                    exec_start, exec_end, transaction.xid, transaction_query_idx
+                )
             if success:
                 self.thread_stats["query_success"] += 1
             else:
@@ -325,7 +336,9 @@ class ConnectionThread(threading.Thread):
             self.thread_stats["transaction_success"] += 1
         else:
             self.thread_stats["transaction_error"] += 1
-            self.thread_stats["transaction_error_log"][transaction.get_base_filename()] = errors
+            self.thread_stats["transaction_error_log"][
+                transaction.get_base_filename()
+            ] = errors
 
     def should_execute_sql(self, sql_text):
         return (
@@ -415,7 +428,9 @@ def remove_comments(string):
 
 def parse_error(error, user, db, query_text):
     err_entry = {
-        "timestamp": datetime.datetime.now(tz=datetime.timezone.utc).isoformat(timespec="seconds"),
+        "timestamp": datetime.datetime.now(tz=datetime.timezone.utc).isoformat(
+            timespec="seconds"
+        ),
         "user": user,
         "db": db,
         "query_text": remove_comments(query_text),
