@@ -235,6 +235,8 @@ def replay_pdf_generator(
         logger.error(f"{e}: Data read failed. Error in replay analysis.")
         exit(-1)
 
+    logger.info(f'Pdf generation is completed and the data uploaded at {bucket.get("bucket_name")}/{replay_path} and can be used in Replay Analysis.')
+
     # generate replay_id_report.pdf and info.json
     logger.info(f"Generating report.")
     pdf = pdf_gen(report, summary)
@@ -244,6 +246,7 @@ def replay_pdf_generator(
         aws_service_helper.s3_upload(pdf, bucket.get("bucket_name"), f"{replay_path}/out/{pdf}")
         aws_service_helper.s3_upload(info, bucket.get("bucket_name"), f"{replay_path}/out/{info}")
         analysis_summary(bucket.get("url"), replay)
+        
     except ClientError as e:
         logger.error(
             f"{e} Could not upload report. Confirm IAM permissions include S3::PutObject."
