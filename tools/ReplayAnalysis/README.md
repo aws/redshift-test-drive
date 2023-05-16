@@ -5,21 +5,22 @@ The Replay analysis web app is used to analyze and compare replays. The goal of 
 
 ## Preparation
 ### Prerequisites
-* Execute replay by adding the following parameters in replay.yaml
+* Execute replay (either using the [WorkloadReplicator](/core) or [NodeConfigCompare](/tools/NodeConfigCompare)) by adding the following parameters in `$REDSHIFT_TEST_DRIVE_ROOT/config/replay.yaml` (when executing Workload replicator) and overriding these values
+in bootstrap.sh in NodeConfigCompare.
     * analysis_iam_role
     * analysis_output
-* Pre-install Node js
-
+* Pre-install Node js (Minimum Node >= 14 required for React)
 
 
 ## Command
+### NOTE: Complete all the initial setup steps outlined in the Redshift-test-drive Readme before proceeding.
+Execute this from the root directory (within your clone of redshift-test-drive - this is aliased to `$REDSHIFT_TEST_DRIVE_ROOT`)
 ```
-make  replay_analysis
-
+cd $REDSHIFT_TEST_DRIVE_ROOT && make replay_analysis
 ```
 
 ## Output
-* Installs all the requiremnts required to launch the web app.
+* Installs all the requirements required to launch the web app.
 * Opens Web app which helps customer to choose multiple replays for comparison.
 
 ## User Interface of the Web App <br />

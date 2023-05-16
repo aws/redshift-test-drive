@@ -24,58 +24,7 @@ serverless endpoint in a future release.
 1. Create an EC2 instance
     1. Recommended EC2 instance type: **m5.8xlarge**, 32GB of SSD storage, Amazon Linux AMI
     2. The cluster must be accessible from where External object replicator is being run. This may entail modifying the security group inbound rules or running Workload Replicator on the same VPC as the Redshift replica cluster. 
-2. Install Workload Replicator and libraries dependencies on the provided EC2 machine
-
-In the newly created EC2 machine:
-
-2.1 Install Python3
-
-```
-sudo yum install python3
-
-sudo yum install python3-pip
-```
-
-2.2 Install ODBC dependencies
-
-```
-sudo yum install gcc gcc-c++ python3 python3-devel unixODBC unixODBC-devel
-```
-
-2.3 Clone Workload Replicator scripts
-
-   ```
-   git clone https://github.com/awslabs/amazon-redshift-utils.git
-   ```
-
-2.4 Install Python libraries 
-
-If you have executed Workload Replicator and installed packages in requirements.txt, skip this step and go to 2.5
-
-If you are running External Object Replicator on its own, and you have not executed Workload Replicator before, do the following:
-Navigate to Workload Replicator root directory and run the following command:
-
-```
-sudo pip3 install -r requirements.txt
-```
-
-2.5 Install ODBC Driver for Linux
-
-Follow the steps provided by the documentation and install ODBC Driver for Linux
-https://docs.aws.amazon.com/redshift/latest/mgmt/configure-odbc-connection.html
-
-2.6 AWS CLI
-
-Check if AWS CLI is configured in the machine. If it’s not configured, follow the steps in [installation guide](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-install.html)
-
-2.7 Configure AWS CLI
-
-```
-aws configure
-```
-            * Provided IAM user should have Redshift and S3 permissions. If temporary IAM credentials are being used, ensure they do not expire before the external replicator ends.
-            * The IAM user needs to have permission to read S3 buckets where COPY and Spectrum objects are stored.
-            * The IAM user needs to have permission to write into S3 bucket of the provided target_s3_location in external_replicato.yaml.
+2. Install Workload Replicator and libraries dependencies on the provided EC2 machine by following the instructions [here](/core/README.md#step-2---workload-replicator-setup)
 
 
 ## Running External Object Replicator
@@ -84,7 +33,7 @@ aws configure
 * External Object Replicator will replicate any files copied using the COPY command or a MANIFEST file, and Spectrum tables queried within the starttime and endtime provided in the external_replicator.yaml (See below).
 * The source cluster should be accessible from wherever External Object Replicator is being run. This may entail modifying the security group inbound rules to include “My IP”, or running Workload Replicator on an EC2 instance in the same VPC.
 
-### Configuration file parameters for `extraction.yaml` :
+### To run external object replicator, begin by configuring the parameters in `$REDSHIFT_TEST_DRIVE_ROOT/config/external_object_replicator.yaml`:
 
 | Configuration value          | Required?   | Details                                                                                                                                                                                                       | Example                                                                                      |
 |------------------------------|-------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------|
@@ -98,11 +47,10 @@ aws configure
 
 ### Command
 
-Edit 
-Once the above configuration parameters are set in external_replicator.yaml, the external replicator can be run using the following command
+Once the above configuration parameters are set in external_object_replicator.yaml, the tool can be run using the following command
 
 ```
-python3 external_replicator.py external_replicator.yaml
+cd $REDSHIFT_TEST_DRIVE_ROOT && make external_object_replicator
 ```
 
 ### Output
