@@ -150,27 +150,46 @@ class Log:
 
 
 class ConnectionLog:
-    def __init__(self, session_initiation_time, end_time, database_name, username, pid):
+    def __init__(
+        self,
+        session_initiation_time,
+        disconnection_time,
+        application_name,
+        database_name,
+        username,
+        pid,
+        time_interval_between_transactions,
+        time_interval_between_queries,
+        connection_key,
+    ):
         self.session_initiation_time = session_initiation_time
-        self.disconnection_time = end_time
-        self.application_name = ""
+        self.disconnection_time = disconnection_time
+        self.application_name = application_name
         self.database_name = database_name
         self.username = username
         self.pid = pid
-        self.time_interval_between_transactions = True
-        self.time_interval_between_queries = "transaction"
+        self.query_index = 0
+        self.time_interval_between_transactions = time_interval_between_transactions
+        self.time_interval_between_queries = time_interval_between_queries
+        self.connection_key = connection_key
+        self.transactions = []
 
-    def __eq__(self, other):
+    def __str__(self):
         return (
-            isinstance(other, self.__class__)
-            and self.session_initiation_time == other.session_initiation_time
-            and self.disconnection_time == other.disconnection_time
-            and self.application_name == other.application_name
-            and self.database_name == other.database_name
-            and self.username == other.username
-            and self.pid == other.pid
-            and self.time_interval_between_transactions == other.time_interval_between_transactions
-            and self.time_interval_between_queries == other.time_interval_between_queries
+            "Session initiation time: %s, Disconnection time: %s, Application name: %s, Database name: %s, "
+            "Username; %s, PID: %s, Time interval between transactions: %s, Time interval between queries: %s, "
+            "Number of transactions: %s"
+            % (
+                self.session_initiation_time.isoformat(),
+                self.disconnection_time.isoformat(),
+                self.application_name,
+                self.database_name,
+                self.username,
+                self.pid,
+                self.time_interval_between_transactions,
+                self.time_interval_between_queries,
+                len(self.transactions),
+            )
         )
 
     def __hash__(self):
@@ -178,3 +197,10 @@ class ConnectionLog:
 
     def get_pk(self):
         return hash((self.session_initiation_time, self.database_name, self.username, self.pid))
+    
+    def offset_ms(self, ref_time):
+        return (self.session_initiation_time - ref_time).total_seconds() * 1000.0
+
+    @staticmethod
+    def supported_filters():
+        return {"database_name", "username", "pid"}
