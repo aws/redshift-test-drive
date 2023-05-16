@@ -15,7 +15,7 @@ import redshift_connector
 from collections import OrderedDict
 from boto3 import client
 from tqdm import tqdm
-from core.util import audit_logs_parsing as audit_log_parser
+from core.replay.connections_parser import ConnectionLog
 from common import aws_service as aws_service_helper
 from common import util
 from core.util.log_validation import remove_line_comments
@@ -156,7 +156,7 @@ class Extractor:
 
         logger.info(f"Generating {len(missing_audit_log_connections)} missing connections.")
         for missing_audit_log_connection_info in missing_audit_log_connections:
-            connection = audit_log_parser.ConnectionLog(
+            connection = ConnectionLog(
                 start_time,
                 end_time,  # for missing connections set start_time and end_time to our extraction range
                 missing_audit_log_connection_info[0],

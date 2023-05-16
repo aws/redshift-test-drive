@@ -2,7 +2,7 @@ import datetime
 import logging
 import re
 import dateutil.parser
-from core.util.audit_logs_parsing import Log, ConnectionLog
+from core.replay.connections_parser import ConnectionLog,Log
 from core.util.log_validation import is_valid_log, is_duplicate
 
 logger = logging.getLogger("WorkloadReplicatorLogger")

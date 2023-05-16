@@ -30,7 +30,9 @@ def parse_connections(
         )
         connections_json = json.loads(s3_object["Body"].read())
     else:
-        with open(workload_directory.rstrip("/") + "/connections.json", "r") as connections_file:
+        with open(
+            workload_directory.rstrip("/") + "/connections.json", "r"
+        ) as connections_file:
             connections_json = json.loads(connections_file.read())
             connections_file.close()
 
@@ -87,6 +89,64 @@ def parse_connections(
     )
 
     return connections, total_connections
+
+
+class Log:
+    def __init__(self):
+        self.record_time = ""
+        self.start_time = ""
+        self.end_time = ""
+        self.username = ""
+        self.database_name = ""
+        self.pid = ""
+        self.xid = ""
+        self.text = ""
+
+    def get_filename(self):
+        base_name = (
+            self.database_name
+            + "-"
+            + self.username
+            + "-"
+            + self.pid
+            + "-"
+            + self.xid
+            + " ("
+            + self.record_time.isoformat()
+            + ")"
+        )
+        return base_name
+
+    def __str__(self):
+        return (
+            "Record time: %s, Start time: %s, End time: %s, Username: %s, Database: %s, PID: %s, XID: %s, Query: %s"
+            % (
+                self.record_time,
+                self.start_time,
+                self.end_time,
+                self.username,
+                self.database_name,
+                self.pid,
+                self.xid,
+                self.text,
+            )
+        )
+
+    def __eq__(self, other):
+        return (
+            isinstance(other, self.__class__)
+            and self.record_time == other.record_time
+            and self.start_time == other.start_time
+            and self.end_time == other.end_time
+            and self.username == other.username
+            and self.database_name == other.database_name
+            and self.pid == other.pid
+            and self.xid == other.xid
+            and self.text == other.text
+        )
+
+    def __hash__(self):
+        return hash((str(self.pid), str(self.xid), self.text.strip("\n")))
 
 
 class ConnectionLog:

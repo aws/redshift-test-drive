@@ -83,11 +83,12 @@ class CloudwatchExtractor:
                             f"Unsupported log file {log_group_name}, cannot determine type"
                         )
                         continue
-
                     with tempfile.TemporaryDirectory(suffix="TestDrive") as tempdir:
                         with gzip.open(f"{tempdir}/{log_type}.gz", "wt") as gzip_file:
                             gzip_file.write("\n".join(log_list))
 
+        import pdb
+        pdb.set_trace()
         logger.info("Parsing connection logs...")
         with gzip.open(f"{tempdir}/connectionlog.gz", "r") as gzip_file:
             parse_log(
@@ -96,7 +97,6 @@ class CloudwatchExtractor:
                 connections,
                 last_connections,
                 logs,
-                databases,
                 start_time,
                 end_time,
             )
