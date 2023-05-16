@@ -5,7 +5,7 @@ from unittest.mock import patch, Mock, mock_open
 
 from core.extract.extractor import Extractor
 
-from core.util.audit_logs_parsing import Log
+from core.replay.connections_parser import Log
 
 
 def mock_redshift_describe_logging_status(endpoint):

@@ -4,7 +4,7 @@ from unittest.mock import Mock
 
 from core.extract import extract_parser
 
-from core.util.audit_logs_parsing import ConnectionLog
+from core.replay.connections_parser import ConnectionLog
 
 pid = "12324"
 xid = "123142412"

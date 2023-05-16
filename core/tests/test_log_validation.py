@@ -1,6 +1,6 @@
 import unittest
 
-from core.util.audit_logs_parsing import Log
+from core.replay.connections_parser import Log
 from core.util.log_validation import (
     is_duplicate,
     get_logs_in_range,
