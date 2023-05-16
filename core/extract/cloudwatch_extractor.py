@@ -95,6 +95,7 @@ class CloudwatchExtractor:
                 connections,
                 last_connections,
                 logs,
+                databases,
                 start_time,
                 end_time,
             )
