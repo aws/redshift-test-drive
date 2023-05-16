@@ -33,7 +33,7 @@ log_location: ""
 
 
 # Location of the SQL file containing queries to unload system tables
-unload_system_table_queries: "unload_system_tables.sql"
+unload_system_table_queries: "core/replay/unload_system_tables.sql"
 
 # Should be a S3 location. If unspecified, system tables will not be unloaded
 source_cluster_system_table_unload_location: ""
