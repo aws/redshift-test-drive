@@ -42,7 +42,7 @@ def parse_log(
 
 
 def _parse_user_activity_log(file, logs, databases, start_time, end_time):
-    user_activity_log = Log()
+    user_activity_log = StartNodeLog()
     datetime_pattern = re.compile(r"'\d+-\d+-\d+T\d+:\d+:\d+Z UTC")
     fetch_pattern = re.compile(
         r"fetch\s+(next|all|forward all|\d+|forward\s+\d+)\s+(from|in)\s+\S+",
@@ -70,7 +70,7 @@ def _parse_user_activity_log(file, logs, databases, start_time, end_time):
                     logs[filename] = [user_activity_log]
 
                 databases.add(user_activity_log.database_name)
-                user_activity_log = Log()
+                user_activity_log = StartNodeLog()
             line_split = line.split(" LOG: ")
             query_information = line_split[0].split(" ")
 
@@ -102,7 +102,7 @@ def _parse_start_node_log(file, logs, databases, start_time, end_time):
                     logs[filename] = [start_node_log]
 
                 databases.add(start_node_log.database_name)
-                start_node_log = Log()
+                start_node_log = StartNodeLog()
 
             line_split = line.split("LOG:  statement: ")
 

@@ -174,6 +174,7 @@ class ConnectionLog:
         self.connection_key = connection_key
         self.transactions = []
 
+    
     def __str__(self):
         return (
             "Session initiation time: %s, Disconnection time: %s, Application name: %s, Database name: %s, "
