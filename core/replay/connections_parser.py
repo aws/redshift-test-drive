@@ -174,7 +174,6 @@ class ConnectionLog:
         self.connection_key = connection_key
         self.transactions = []
 
-    
     def __str__(self):
         return (
             "Session initiation time: %s, Disconnection time: %s, Application name: %s, Database name: %s, "
@@ -197,8 +196,10 @@ class ConnectionLog:
         return hash((self.database_name, self.username, self.pid))
 
     def get_pk(self):
-        return hash((self.session_initiation_time, self.database_name, self.username, self.pid))
-    
+        return hash(
+            (self.session_initiation_time, self.database_name, self.username, self.pid)
+        )
+
     def offset_ms(self, ref_time):
         return (self.session_initiation_time - ref_time).total_seconds() * 1000.0
 
