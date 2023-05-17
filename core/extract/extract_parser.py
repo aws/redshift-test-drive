@@ -2,7 +2,7 @@ import datetime
 import logging
 import re
 import dateutil.parser
-from core.replay.connections_parser import ConnectionLog,Log
+from core.replay.connections_parser import ConnectionLog,StartNodeLog
 from core.util.log_validation import is_valid_log, is_duplicate
 
 logger = logging.getLogger("WorkloadReplicatorLogger")
@@ -85,7 +85,7 @@ def _parse_user_activity_log(file, logs, databases, start_time, end_time):
 
 
 def _parse_start_node_log(file, logs, databases, start_time, end_time):
-    start_node_log = Log()
+    start_node_log = StartNodeLog()
 
     datetime_pattern = re.compile(r"'\d+-\d+-\d+ \d+:\d+:\d+ UTC")
 
