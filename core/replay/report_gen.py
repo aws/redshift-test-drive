@@ -235,6 +235,8 @@ def replay_pdf_generator(
         logger.error(f"{e}: Data read failed. Error in replay analysis.")
         exit(-1)
 
+    logger.info(f'Pdf generation is completed and the data uploaded at {bucket.get("bucket_name")}/{replay_path} and can be used in Replay Analysis.')
+
     # generate replay_id_report.pdf and info.json
     logger.info(f"Generating report.")
     pdf = pdf_gen(report, summary)
