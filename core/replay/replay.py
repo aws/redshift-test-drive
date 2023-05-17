@@ -209,19 +209,22 @@ def main():
     bucket = bucket_dict(g_config["workload_location"])
     object_key = 'replay_logs.zip'
     zip_file_name = f'replay_logs.zip'
-    logger.info(f"Uploading replay logs to {bucket['bucket_name']}/{bucket['prefix']}")
-    dir = f"core/logs/replay/replay_log-{replay_id}"
-    with zipfile.ZipFile(zip_file_name, "w", zipfile.ZIP_DEFLATED) as zip_object:
-        for folder_name,sub_folders, file_names in os.walk(dir):
-            for filename in file_names:
-                file_path = os.path.join(folder_name,filename)
-                zip_object.write(file_path)
-    with open(zip_file_name,'rb') as f:
-        aws_service_helper.s3_put_object(
-                f,
-                bucket["bucket_name"],
-                f"{bucket['prefix']}{object_key}"
-            )
+    if bucket.get('bucket_name', ''):
+        logger.info(f"Uploading replay logs to {bucket['bucket_name']}/{bucket['prefix']}")
+        dir = f"core/logs/replay/replay_log-{replay_id}"
+        with zipfile.ZipFile(zip_file_name, "w", zipfile.ZIP_DEFLATED) as zip_object:
+            for folder_name,sub_folders, file_names in os.walk(dir):
+                for filename in file_names:
+                    file_path = os.path.join(folder_name,filename)
+                    zip_object.write(file_path)
+        with open(zip_file_name,'rb') as f:
+            aws_service_helper.s3_put_object(
+                    f,
+                    bucket["bucket_name"],
+                    f"{bucket['prefix']}{object_key}"
+                )
+    else:
+        logger.info('Invalid bucket name')
 
 
 if __name__ == "__main__":
