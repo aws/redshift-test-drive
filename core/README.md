@@ -29,57 +29,45 @@ It may take around three hours for the audit logs to be delivered to S3.
 
 1. Create an EC2 instance
     1. Recommended EC2 instance type: **m5.8xlarge**, 32GB of SSD storage, Amazon Linux AMI
-    2. The cluster must be accessible from where Workload Replicator is being run. This may entail modifying the security group inbound rules or running Workload Replicator on the same VPC as the Redshift replica cluster. 
+    2. The cluster must be accessible from where Workload Replicator is being run. This may entail modifying the security group inbound rules or running Workload Replicator on the same VPC as the Redshift replica cluster.
 2. Install Workload Replicator and libraries dependencies on the provided EC2 machine
+   1. Install Python3.
+    Check if Python is already installed by doing ``which python3``. If the python3 binary is not found, then use:
+    ```
+    sudo yum install python3
+    
+    sudo yum install python3-pip
+    ```
+   2. Install ODBC dependencies
+    ```
+    sudo yum install gcc gcc-c++ python3 python3-devel unixODBC unixODBC-devel
+    ```
+   3. (Skip this step if you have already cloned test-drive) Clone Workload Replicator scripts. Check if `git` is installed by doing ``which git``. If git binary cannot be found, then do ``yum install git`` before proceeding.
+    ```
+    git clone https://github.com/aws/redshift-test-drive.git
+    cd redshift-test-drive/
+    export REDSHIFT_TEST_DRIVE_ROOT=$(pwd)
+    ```
 
-In the newly created EC2 machine:
+   4. Install necessary Python libraries. In the root directory (`<directory you cloned the git repository into>/`), you will find the file requirements.txt. Run the following command
+    ```
+    cd $REDSHIFT_TEST_DRIVE_ROOT && make setup
+    ```
 
-2.1 Install Python3.
-Check if Python is already installed by doing ``which python3``. If the python3 binary is not found, then use:
+   5. Follow the steps provided by the [documentation](https://docs.aws.amazon.com/redshift/latest/mgmt/configure-odbc-connection.html) and install ODBC Driver for Linux
 
-```
-sudo yum install python3
+   6. Check if AWS CLI is configured in the machine. If it’s not configured, follow the steps in [installation guide](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-install.html)
+   
+   7. Configure AWS CLI:
+      * Provided IAM user should have Redshift and S3 permissions. If temporary IAM credentials are being used, ensure they do not expire before the replay ends.
+      * The IAM user needs to have permission to read the Audit logs S3 bucket configured in Step 1. This is required for the Extraction step of Workload Replicator.
+      * The IAM user needs to have Redshift::GetClusterCredentials and redshift:DescribeLoggingStatus This is required for the Replay step of Workload Replicator
+      * **IMPORTANT**: Default Region needs to be configured as well - use the region you intend to run the workload replicator against
+    ```
+    aws configure
+    ```
+                
 
-sudo yum install python3-pip
-```
-
-2.2 Install ODBC dependencies
-
-```
-sudo yum install gcc gcc-c++ python3 python3-devel unixODBC unixODBC-devel
-```
-
-2.3 Clone Workload Replicator scripts. Check if `git` is installed by doing ``which git``. If git binary cannot be found, then do ``yum install git`` before proceeding.
-
-```
-git clone https://github.com/awslabs/amazon-redshift-utils.git
-```
-
-2.4 Install Python libraries
-
-In Workload Replicator root directory, you will find the file requirements.txt. Run the following command
-
-```
-make setup
-```
-
-2.5 Install ODBC Driver for Linux
-
-Follow the steps provided by the documentation and install ODBC Driver for Linux
-https://docs.aws.amazon.com/redshift/latest/mgmt/configure-odbc-connection.html
-
-2.6 AWS CLI
-
-Check if AWS CLI is configured in the machine. If it’s not configured, follow the steps in [installation guide](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-install.html)
-
-2.7 Configure AWS CLI
-
-```
-aws configure
-```
-            * Provided IAM user should have Redshift and S3 permissions. If temporary IAM credentials are being used, ensure they do not expire before the replay ends.
-            * The IAM user needs to have permission to read the Audit logs S3 bucket configured in Step 1. This is required for the Extraction step of Workload Replicator.
-            * The IAM user needs to have Redshift::GetClusterCredentials and redshift:DescribeLoggingStatus This is required for the Replay step of Workload Replicator
 
 ### Step 3 - COPY and UNLOAD setup
 
@@ -95,17 +83,18 @@ You will need the following things setup for the COPY and UNLOAD process to exec
     Create an IAM role with read access to S3 buckets where COPY commands read from. After you create this IAM role, add write access to the role for the S3 bucket in the previous step. Make sure the IAM role has a trust relationship with Redshift. This role will be attached to the replica cluster before running Workload Replicator. More information on IAM [here](https://docs.aws.amazon.com/redshift/latest/mgmt/copy-unload-iam-role.html).
 
 ## Extract
-Extract executes a script that extracts query and connection information from user activity and connection log(retrieved from the audit logs).
+Extract executes a script that extracts query and connection information from user activity and connection log(retrieved from the audit logs). This is currently supported on both provisioned and serverless Redshift clusters. 
 
-* Extraction process supports both Redshift Provisioned cluster and Serverless endpoint
+* Extract process relies on a customer specified YAML file (`extract.yaml`). You can find this YAML file under the `config` folder in the root directory (`<folder path to cloned directory>/redshift-test-drive/config`)
 * If the source cluster end point is provided as input in the YAML file, Workload Replicator will automatically determine the location to extract the audit logs from, either it is S3 or Cloudwatch. Cloudwatch Audit Logs are now supported for both Provisioned Cluster and Serverless  
 * Customer can provide the s3 bucket or local directory in YAML file as log location if they choose not to provide the source cluster endpoint
 * Workload Replicator will extract starttime and endtime for each query from the system table automatically if the source cluster end point is provided as input in the YAML file. Recordtime from audit logs will be used otherwise. 
 * The source cluster should be accessible from wherever Workload Replicator is being run. This may entail modifying the security group inbound rules to include “My IP”, or running Workload Replicator on an EC2 instance in the same VPC.
 
-## Learn how to run Extract with steps below:
+## To run an extract job, follow the steps below:
 
-### Configuration file parameters for `extraction.yaml` :
+### Configure parameters 
+Follow the table below to configure parameters in `extract.yaml` file found in in `$REDSHIFT_TEST_DRIVE_ROOT/config/` folder.
 
 | Configuration value                                                                                                                         |Required?    | Details                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |Example  |
 |---------------------------------------------------------------------------------------------------------------------------------------------|---    |---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|---    |
@@ -125,10 +114,10 @@ external_schemas                                                                
 
 ### Command
 
-Once the above configuration parameters are set in extraction.yaml, the workload from the source cluster can be extracted using the following command:
+Once the above configuration parameters are set in extract.yaml, the workload from the source cluster can be extracted using the following command:
 
 ```
-make extract
+cd $REDSHIFT_TEST_DRIVE_ROOT && make extract
 ```
 
 ### Output
@@ -148,10 +137,10 @@ The extract functionality of the Workload Replicator produces the following outp
 
 Replay is the process of taking a workload extracted by Extract and replaying the same workload against a target cluster. Target cluster could be a Redshift Provisioned or Serverless cluster.
     
-## Learn how to run Replay with steps below:
+## To run Replay job, follow the steps below:
 
 ### Preparation
-
+We will prepare the Redshift cluster / ecosystem for our Replay run first.
 #### Replay on Provisioned 
 
 * Restore the target cluster from the source cluster snapshot.
@@ -179,23 +168,20 @@ Replay is the process of taking a workload extracted by Extract and replaying th
 
 Replay also supports generation of pdf reports which enhances auditing in the Workload Replicator process to extract information about the errors that occurred, the validity of the run, and the performance of the replay.
 
-
-
-
 #### Authorizing Access to Redshift using AWS Secrets Manager 
 Follow below steps to setup the integration between Workload Replicator and AWS Secrets Manager. It can also be used to execute workloads which rely on Redshift's native IDP integration with non-IAM identity providers ( https://docs.aws.amazon.com/redshift/latest/mgmt/redshift-iam-access-control-native-idp.html )
 
-Note: Setting up secrets manager is not required, but an optional step
+NOTE: Setting up secrets manager is not required, but an optional step
 
 * Configure admin username and password using AWS Secrets Manager - https://us-east-1.console.aws.amazon.com/secretsmanager/home
 * Select "Other type of secret"
 * Setup 1 secret with 2 Keys exactly as named below and provide their values:
   * admin_username
   * admin_password
-* Provide value of this Secrets Manager in ```secret_name``` in ```replay.yaml``` 
 * Confirm that the Role attached to EC2 from where Workload Replicator is being executed has GetSecretValue policy attached to it. It is needed for Secrets Manager. Attaching just this policy is a guideline that follows security advice of granting least required privilege 
 
-### Configuration file parameters for `replay.yaml`:
+### Configure parameters:
+Follow the table below to configure parameters in `replay.yaml` file found in the `$REDSHIFT_TEST_DRIVE_ROOT/config/` folder.
 
 | Configuration value                         |Required?     | Details                                                                                                                                                                                                                                                                                                           | Example                                                                                                                                                                                              |
 |---------------------------------------------|---    |-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
@@ -231,7 +217,7 @@ Note: Setting up secrets manager is not required, but an optional step
 ### Command
 
 ```
-make replay
+cd $REDSHIFT_TEST_DRIVE_ROOT && make replay
 ```
 
 ### Output
