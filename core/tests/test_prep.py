@@ -276,10 +276,10 @@ class TestCorrelateTransactionsWithConnections(unittest.TestCase):
         connection_log = ConnectionLog(
             datetime.datetime.now(tz=datetime.timezone.utc),
             datetime.datetime.now(tz=datetime.timezone.utc),
-            "app",
             "dev",
             "awsuser",
             123,
+            "app",
             True,
             True,
             "key",

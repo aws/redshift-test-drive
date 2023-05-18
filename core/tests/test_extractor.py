@@ -5,7 +5,7 @@ from unittest.mock import patch, Mock, mock_open
 
 from core.extract.extractor import Extractor
 
-from core.util.audit_logs_parsing import Log
+from core.replay.connections_parser import StartNodeLog
 
 
 def mock_redshift_describe_logging_status(endpoint):
@@ -172,7 +172,7 @@ class ExtractorTestCases(unittest.TestCase):
         print(f"{missing_conxns}")
 
     def get_query(self):
-        query1 = Log()
+        query1 = StartNodeLog()
         query1.xid = "123"
         query1.pid = "213"
         query1.database_name = "test"
