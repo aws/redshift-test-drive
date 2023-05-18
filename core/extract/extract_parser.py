@@ -2,7 +2,7 @@ import datetime
 import logging
 import re
 import dateutil.parser
-from core.util.audit_logs_parsing import Log, ConnectionLog
+from core.replay.connections_parser import StartNodeLog, ConnectionLog
 from core.util.log_validation import is_valid_log, is_duplicate
 
 logger = logging.getLogger("WorkloadReplicatorLogger")
@@ -35,33 +35,36 @@ def parse_log(
         _parse_user_activity_log(log_file, logs, databases, start_time, end_time)
     elif "connectionlog" in filename:
         logger.debug(f"Parsing connection log: {filename}")
-        _parse_connection_log(log_file, connections, last_connections, start_time, end_time)
+        _parse_connection_log(
+            log_file, connections, last_connections, start_time, end_time
+        )
     elif "start_node" in filename:
         logger.debug(f"Parsing start node log: {filename}")
         _parse_start_node_log(log_file, logs, databases, start_time, end_time)
 
 
 def _parse_user_activity_log(file, logs, databases, start_time, end_time):
-    user_activity_log = Log()
+    user_activity_log = StartNodeLog()
     datetime_pattern = re.compile(r"'\d+-\d+-\d+T\d+:\d+:\d+Z UTC")
     fetch_pattern = re.compile(
         r"fetch\s+(next|all|forward all|\d+|forward\s+\d+)\s+(from|in)\s+\S+",
         flags=re.IGNORECASE,
     )
     for line in file.readlines():
-
         line = line.decode("utf-8")
 
         if datetime_pattern.match(line):
-            if user_activity_log.xid and is_valid_log(user_activity_log, start_time, end_time):
+            if user_activity_log.xid and is_valid_log(
+                user_activity_log, start_time, end_time
+            ):
                 filename = user_activity_log.get_filename()
                 if filename in logs:
                     # Check if duplicate. This happens with JDBC connections.
                     prev_query = logs[filename][-1]
                     if not is_duplicate(prev_query.text, user_activity_log.text):
-                        if fetch_pattern.search(prev_query.text) and fetch_pattern.search(
-                            user_activity_log.text
-                        ):
+                        if fetch_pattern.search(
+                            prev_query.text
+                        ) and fetch_pattern.search(user_activity_log.text):
                             user_activity_log.text = f"--{user_activity_log.text}"
                             logs[filename].append(user_activity_log)
                         else:
@@ -70,11 +73,13 @@ def _parse_user_activity_log(file, logs, databases, start_time, end_time):
                     logs[filename] = [user_activity_log]
 
                 databases.add(user_activity_log.database_name)
-                user_activity_log = Log()
+                user_activity_log = StartNodeLog()
             line_split = line.split(" LOG: ")
             query_information = line_split[0].split(" ")
 
-            user_activity_log.record_time = dateutil.parser.parse(query_information[0][1:])
+            user_activity_log.record_time = dateutil.parser.parse(
+                query_information[0][1:]
+            )
             user_activity_log.username = query_information[4][5:]
             user_activity_log.database_name = query_information[3][3:]
             user_activity_log.pid = query_information[5][4:]
@@ -85,13 +90,15 @@ def _parse_user_activity_log(file, logs, databases, start_time, end_time):
 
 
 def _parse_start_node_log(file, logs, databases, start_time, end_time):
-    start_node_log = Log()
+    start_node_log = StartNodeLog()
 
     datetime_pattern = re.compile(r"'\d+-\d+-\d+ \d+:\d+:\d+ UTC")
 
     for line in file.readlines():
         if datetime_pattern.match(line):
-            if start_node_log.xid and is_valid_log(start_node_log, start_time, end_time):
+            if start_node_log.xid and is_valid_log(
+                start_node_log, start_time, end_time
+            ):
                 filename = start_node_log.get_filename()
                 if filename in logs:
                     # Check if duplicate. This happens with JDBC connections.
@@ -102,7 +109,7 @@ def _parse_start_node_log(file, logs, databases, start_time, end_time):
                     logs[filename] = [start_node_log]
 
                 databases.add(start_node_log.database_name)
-                start_node_log = Log()
+                start_node_log = StartNodeLog()
 
             line_split = line.split("LOG:  statement: ")
 
@@ -128,7 +135,6 @@ def _parse_start_node_log(file, logs, databases, start_time, end_time):
 
 def _parse_connection_log(file, connections, last_connections, start_time, end_time):
     for line in file.readlines():
-
         line = line.decode("utf-8")
 
         connection_information = line.split("|")
@@ -148,8 +154,9 @@ def _parse_connection_log(file, connections, last_connections, start_time, end_t
             and (not start_time or event_time >= start_time)
             and (not end_time or event_time <= end_time)
         ):
-
-            connection_log = ConnectionLog(event_time, end_time, database_name, username, pid)
+            connection_log = ConnectionLog(
+                event_time, end_time, database_name, username, pid
+            )
             if connection_event == "initiating session ":
                 connection_key = connection_log.get_pk()
                 # create a new connection

@@ -15,9 +15,9 @@ import redshift_connector
 from collections import OrderedDict
 from boto3 import client
 from tqdm import tqdm
-from core.util import audit_logs_parsing as audit_log_parser
 from common import aws_service as aws_service_helper
 from common import util
+from core.replay.connections_parser import ConnectionLog
 from core.util.log_validation import remove_line_comments
 from core.extract.cloudwatch_extractor import CloudwatchExtractor
 from core.extract.s3_extractor import S3Extractor
@@ -30,17 +30,25 @@ logger = logging.getLogger("WorkloadReplicatorLogger")
 
 class Extractor:
     disable_progress_bar = None
-    bar_format = "{desc}: {percentage:3.0f}%|{bar}| {n_fmt}/{total_fmt} [{elapsed}{postfix}]"
+    bar_format = (
+        "{desc}: {percentage:3.0f}%|{bar}| {n_fmt}/{total_fmt} [{elapsed}{postfix}]"
+    )
     config = None
 
-    def __init__(self, config, cloudwatch_extractor=None, s3_extractor=None, local_extractor=None):
+    def __init__(
+        self, config, cloudwatch_extractor=None, s3_extractor=None, local_extractor=None
+    ):
         self.config = config
         self.disable_progress_bar = config.get("disable_progress_bar")
         self.cloudwatch_extractor = (
-            cloudwatch_extractor if cloudwatch_extractor else CloudwatchExtractor(self.config)
+            cloudwatch_extractor
+            if cloudwatch_extractor
+            else CloudwatchExtractor(self.config)
         )
         self.s3_extractor = s3_extractor if s3_extractor else S3Extractor(self.config)
-        self.local_extractor = local_extractor if local_extractor else LocalExtractor(self.config)
+        self.local_extractor = (
+            local_extractor if local_extractor else LocalExtractor(self.config)
+        )
 
     def get_extract(self, log_location, start_time, end_time):
         """
@@ -56,11 +64,16 @@ class Extractor:
         if (
             self.config.get("source_cluster_endpoint")
             and "redshift-serverless" in self.config.get("source_cluster_endpoint")
-        ) or (self.config.get("log_location") and "/aws/" in self.config.get("log_location")):
+        ) or (
+            self.config.get("log_location")
+            and "/aws/" in self.config.get("log_location")
+        ):
             logger.info(f"Extracting and parsing logs for serverless")
             logger.info(f"Time range: {start_time or '*'} to {end_time or '*'}")
             logger.info(f"This may take several minutes...")
-            return self.cloudwatch_extractor.get_extract_from_cloudwatch(start_time, end_time)
+            return self.cloudwatch_extractor.get_extract_from_cloudwatch(
+                start_time, end_time
+            )
         else:
             logger.info(f"Extracting and parsing logs for provisioned")
             logger.info(f"Time range: {start_time or '*'} to {end_time or '*'}")
@@ -75,9 +88,13 @@ class Extractor:
                 )
             elif log_location in "cloudwatch":
                 # Function for cloudwatch logs
-                return self.cloudwatch_extractor.get_extract_from_cloudwatch(start_time, end_time)
+                return self.cloudwatch_extractor.get_extract_from_cloudwatch(
+                    start_time, end_time
+                )
             else:
-                return self.local_extractor.get_extract_locally(log_location, start_time, end_time)
+                return self.local_extractor.get_extract_locally(
+                    log_location, start_time, end_time
+                )
 
     def save_logs(
         self,
@@ -118,7 +135,9 @@ class Extractor:
         else:
             is_s3 = False
             archive_filename = output_directory + "/SQLs.json.gz"
-            logger.info(f"Creating directory {output_directory} if it doesn't already exist")
+            logger.info(
+                f"Creating directory {output_directory} if it doesn't already exist"
+            )
             pathlib.Path(output_directory).mkdir(parents=True, exist_ok=True)
 
         (
@@ -150,13 +169,17 @@ class Extractor:
                     output_prefix + "/sql_statements_skipped.txt",
                 )
             else:
-                replacements_file = open(output_directory + "/sql_statements_skipped.txt", "w")
+                replacements_file = open(
+                    output_directory + "/sql_statements_skipped.txt", "w"
+                )
                 replacements_file.write(replacements_string)
                 replacements_file.close()
 
-        logger.info(f"Generating {len(missing_audit_log_connections)} missing connections.")
+        logger.info(
+            f"Generating {len(missing_audit_log_connections)} missing connections."
+        )
         for missing_audit_log_connection_info in missing_audit_log_connections:
-            connection = audit_log_parser.ConnectionLog(
+            connection = ConnectionLog(
                 start_time,
                 end_time,  # for missing connections set start_time and end_time to our extraction range
                 missing_audit_log_connection_info[0],
@@ -191,7 +214,9 @@ class Extractor:
             copy_replacements = self.get_copy_replacements()
         logger.info("Generating the copy_replcaments........")
         logger.info(f"Exporting copy replacements to {output_directory}")
-        replacements_string = "Original location,Replacement location,Replacement IAM role\n"
+        replacements_string = (
+            "Original location,Replacement location,Replacement IAM role\n"
+        )
         for bucket in copy_replacements:
             replacements_string += (
                 bucket
@@ -211,8 +236,6 @@ class Extractor:
             replacements_file = open(output_directory + "/copy_replacements.csv", "w")
             replacements_file.write(replacements_string)
             replacements_file.close()
-
-        
 
     def get_sql_connections_replacements(self, last_connections, log_items):
         # transactions has form { "xid": xxx, "pid": xxx, etc..., queries: [] }
@@ -246,17 +269,26 @@ class Extractor:
                         }
                     query_info = {
                         "record_time": query.record_time.isoformat(),
-                        "start_time": query.start_time.isoformat() if query.start_time else None,
-                        "end_time": query.end_time.isoformat() if query.end_time else None,
+                        "start_time": query.start_time.isoformat()
+                        if query.start_time
+                        else None,
+                        "end_time": query.end_time.isoformat()
+                        if query.end_time
+                        else None,
                     }
                 except AttributeError:
-                    logger.error(f"Query is missing header info, skipping {filename}: {query}")
+                    logger.error(
+                        f"Query is missing header info, skipping {filename}: {query}"
+                    )
                     continue
 
                 query.text = remove_line_comments(query.text).strip()
 
                 if self.config["log_location"]:
-                    if "copy " in query.text.lower() and "from 's3:" in query.text.lower():
+                    if (
+                        "copy " in query.text.lower()
+                        and "from 's3:" in query.text.lower()
+                    ):
                         bucket = re.search(
                             r"from 's3:\/\/[^']*", query.text, re.IGNORECASE
                         ).group()[6:]
@@ -286,7 +318,10 @@ class Extractor:
                 query_info["text"] = query.text
 
                 sql_json["transactions"][query.xid]["queries"].append(query_info)
-                if not hash((query.database_name, query.username, query.pid)) in last_connections:
+                if (
+                    not hash((query.database_name, query.username, query.pid))
+                    in last_connections
+                ):
                     missing_audit_log_connections.add(
                         (query.database_name, query.username, query.pid)
                     )
@@ -457,7 +492,9 @@ class Extractor:
         :param config: from extract.yaml
         :return: extraction_name, start_time, end_time, log_location
         """
-        now_iso_format = datetime.datetime.now().replace(tzinfo=datetime.timezone.utc).isoformat()
+        now_iso_format = (
+            datetime.datetime.now().replace(tzinfo=datetime.timezone.utc).isoformat()
+        )
         if self.config.get("source_cluster_endpoint"):
             extraction_name = f'Extraction_{self.config.get("source_cluster_endpoint").split(".")[0]}_{now_iso_format}'
         else:
@@ -465,9 +502,9 @@ class Extractor:
 
         start_time = ""
         if self.config.get("start_time"):
-            start_time = dateutil.parser.parse(self.config.get("start_time")).astimezone(
-                dateutil.tz.tzutc()
-            )
+            start_time = dateutil.parser.parse(
+                self.config.get("start_time")
+            ).astimezone(dateutil.tz.tzutc())
 
         end_time = ""
         if self.config.get("end_time"):
@@ -492,7 +529,8 @@ class Extractor:
                     )
                     log_location = None
                 elif (
-                    "LogDestinationType" in result and result["LogDestinationType"] == "cloudwatch"
+                    "LogDestinationType" in result
+                    and result["LogDestinationType"] == "cloudwatch"
                 ):
                     log_location = "cloudwatch"
                 else:
@@ -508,14 +546,19 @@ class Extractor:
                 log_location = "cloudwatch"
                 return (extraction_name, start_time, end_time, log_location)
         else:
-            logger.error("Either log_location or source_cluster_endpoint must be specified.")
+            logger.error(
+                "Either log_location or source_cluster_endpoint must be specified."
+            )
             exit(-1)
 
         return (extraction_name, start_time, end_time, log_location)
 
     def retrieve_cluster_endpoint_info(self, extraction_name):
         source_cluster_endpoint = self.config.get("source_cluster_endpoint")
-        if source_cluster_endpoint and "redshift-serverless" not in source_cluster_endpoint:
+        if (
+            source_cluster_endpoint
+            and "redshift-serverless" not in source_cluster_endpoint
+        ):
             logger.info(f"Retrieving info from {source_cluster_endpoint}")
             source_cluster_urls = self.get_connection_string(
                 source_cluster_endpoint,
@@ -554,7 +597,9 @@ class Extractor:
         :param audit_logs: number of audit logs
         :return: None
         """
-        logger.debug(f"Found {len(connections)} connection logs, {len(audit_logs)} audit logs")
+        logger.debug(
+            f"Found {len(connections)} connection logs, {len(audit_logs)} audit logs"
+        )
 
         if len(audit_logs) == 0 or len(connections) == 0:
             logger.warning(
