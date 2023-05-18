@@ -1,6 +1,6 @@
 import unittest
 
-from core.replay.connections_parser import StartNodeLog
+from core.replay.connections_parser import UserActivityLog
 from core.util.log_validation import (
     is_duplicate,
     get_logs_in_range,
@@ -33,7 +33,7 @@ def mock_get_local_logs(log_directory_path, start_time, end_time):
 
 class TestIsValidLog(unittest.TestCase):
     def test_with_username_rdsdb(self):
-        log = StartNodeLog()
+        log = UserActivityLog()
         log.username = "rdsdb"
         self.assertFalse(
             is_valid_log(
@@ -44,7 +44,7 @@ class TestIsValidLog(unittest.TestCase):
         )
 
     def test_with_start_time_after_record_time(self):
-        log = StartNodeLog()
+        log = UserActivityLog()
         log.username = "test"
         log.record_time = datetime.datetime.fromisoformat("2023-01-10T12:59:27+00:00")
         self.assertFalse(
@@ -56,7 +56,7 @@ class TestIsValidLog(unittest.TestCase):
         )
 
     def test_with_end_time_before_record_time(self):
-        log = StartNodeLog()
+        log = UserActivityLog()
         log.username = "test"
         log.record_time = datetime.datetime.fromisoformat("2023-01-15T17:59:27+00:00")
         self.assertFalse(
@@ -68,7 +68,7 @@ class TestIsValidLog(unittest.TestCase):
         )
 
     def test_with_text_containing_problem_keywords(self):
-        log = StartNodeLog()
+        log = UserActivityLog()
         log.username = "test"
         log.record_time = datetime.datetime.fromisoformat("2023-01-10T14:59:27+00:00")
         log.text = "UNLISTEN *"
@@ -81,7 +81,7 @@ class TestIsValidLog(unittest.TestCase):
         )
 
     def test_with_text_containing_potential_problem_keywords(self):
-        log = StartNodeLog()
+        log = UserActivityLog()
         log.username = "test"
         log.record_time = datetime.datetime.fromisoformat("2023-01-10T14:59:27+00:00")
         log.text = "BIND"
@@ -94,7 +94,7 @@ class TestIsValidLog(unittest.TestCase):
         )
 
     def test_with_parameter_markers_incorrect_query(self):
-        log = StartNodeLog()
+        log = UserActivityLog()
         log.username = "test"
         log.record_time = datetime.datetime.fromisoformat("2023-01-10T14:59:27+00:00")
         log.text = "PREPARE fooplan (int, text, bool, numeric) AS INSERT INTO foo VALUES($1, $2, $3, $4);EXECUTE fooplan(1, 'Hunter Valley', 't', 200.00);--test"
@@ -107,7 +107,7 @@ class TestIsValidLog(unittest.TestCase):
         )
 
     def test_with_parameter_markers_correct_query(self):
-        log = StartNodeLog()
+        log = UserActivityLog()
         log.username = "test"
         log.record_time = datetime.datetime.fromisoformat("2023-01-10T14:59:27+00:00")
         log.text = "SELECT * FROM id;"
