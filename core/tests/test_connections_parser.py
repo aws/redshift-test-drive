@@ -14,10 +14,10 @@ open_mock_1 = mock_open(
         """[{
   "session_initiation_time": "2023-01-09 15:48:15.313000+00:00",
   "disconnection_time": "2023-01-09 15:48:15.872000+00:00",
-  "application_name": "",
   "database_name": "dev",
   "username": "awsuser",
   "pid": "1073815778",
+   "application_name": "",
   "time_interval_between_transactions": "True",
   "time_interval_between_queries": "transaction"
 }]"""
@@ -29,10 +29,10 @@ open_mock_2 = mock_open(
         """[{
                 "session_initiation_time": "",
                 "disconnection_time": "2023-01-09 15:48:15.872000+00:00",
-                "application_name": "",
                 "database_name": "dev",
                 "username": "awsuser",
                 "pid": "1073815778",
+                "application_name": "",
                 "time_interval_between_transactions": "True",
                 "time_interval_between_queries": "transaction"
             }]"""
@@ -46,10 +46,10 @@ open_mock_3 = mock_open(
             {
                 "session_initiation_time": "2023-01-09 15:48:15.313000+00:00",
                 "disconnection_time": "",
-                "application_name": "",
                 "database_name": "dev",
                 "username": "awsuser",
                 "pid": "1073815778",
+                "application_name": "",
                 "time_interval_between_transactions": "True",
                 "time_interval_between_queries": "transaction"
             }
@@ -65,10 +65,10 @@ open_mock_4 = mock_open(
     {
        "session_initiation_time_error": "2023-01-09 15:48:15.313000+00:00",
        "disconnection_time_error": "2023-01-09 15:48:15.872000+00:00",
-       "application_name": "",
        "database_name": "dev",
        "username": "awsuser",
        "pid": "1073815778",
+       "application_name": "",
        "time_interval_between_transactions": true,
        "time_interval_between_queries": "transaction"
     }
@@ -89,10 +89,10 @@ class TestConnectionsParser(unittest.TestCase):
             {
                 "session_initiation_time": "2023-01-09 15:48:15.313000+00:00",
                 "disconnection_time": "2023-01-09 15:48:15.872000+00:00",
-                "application_name": "",
                 "database_name": "dev",
                 "username": "awsuser",
                 "pid": "1073815778",
+                "application_name": "",
                 "time_interval_between_transactions": True,
                 "time_interval_between_queries": "transaction",
             }

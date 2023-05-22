@@ -11,10 +11,10 @@ class TestFilters(unittest.TestCase):
         self._connection = ConnectionLog(
             datetime.datetime.now(),
             datetime.datetime.now(),
-            "app",
             "db1",
             "user1",
             123,
+            "app",
             True,
             True,
             "key",
