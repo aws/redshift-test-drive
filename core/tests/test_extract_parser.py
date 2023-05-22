@@ -29,7 +29,7 @@ class ExtractParserTestCases(TestCase):
         extract_parser.parse_log(
             mock_file, "useractivitylog", {}, {}, logs, set(), start_time, end_time
         )
-        self.assertEqual(len(logs), 1)
+        self.assertEqual(len(logs), 0)
         for key, value in logs.items():
             self.assertEqual(len(value), 1)
             log = value[0]

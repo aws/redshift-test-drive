@@ -90,7 +90,7 @@ def parse_connections(
     return connections, total_connections
 
 
-class UserActivityLog:
+class Log:
     def __init__(self):
         self.record_time = ""
         self.start_time = ""

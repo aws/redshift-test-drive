@@ -2,7 +2,7 @@ import datetime
 import logging
 import re
 import dateutil.parser
-from core.replay.connections_parser import UserActivityLog, ConnectionLog
+from core.replay.connections_parser import Log, ConnectionLog
 from core.util.log_validation import is_valid_log, is_duplicate
 
 logger = logging.getLogger("WorkloadReplicatorLogger")
@@ -21,7 +21,7 @@ def parse_log(
     """
     This function parses the different logs and send it to the respective function
 
-    :param log_file: filname(either connectionlog, useractivitylog or startnodelog)
+    :param log_file: filname(either connectionlog, Log or startnodelog)
     :param filename: name of the file from s3
     :param connections: the connections dict
     :param last_connections: last_connections dict
@@ -30,7 +30,7 @@ def parse_log(
     :param start_time: start_time of extract
     :param end_time: end_time of extract
     """
-    if "useractivitylog" in filename:
+    if "Log" in filename:
         logger.debug(f"Parsing user activity log: {filename}")
         _parse_user_activity_log(log_file, logs, databases, start_time, end_time)
     elif "connectionlog" in filename:
@@ -44,7 +44,7 @@ def parse_log(
 
 
 def _parse_user_activity_log(file, logs, databases, start_time, end_time):
-    user_activity_log = UserActivityLog()
+    user_activity_log = Log()
     datetime_pattern = re.compile(r"'\d+-\d+-\d+T\d+:\d+:\d+Z UTC")
     fetch_pattern = re.compile(
         r"fetch\s+(next|all|forward all|\d+|forward\s+\d+)\s+(from|in)\s+\S+",
@@ -71,9 +71,8 @@ def _parse_user_activity_log(file, logs, databases, start_time, end_time):
                             logs[filename].append(user_activity_log)
                 else:
                     logs[filename] = [user_activity_log]
-
                 databases.add(user_activity_log.database_name)
-                user_activity_log = UserActivityLog()
+                user_activity_log = Log()
             line_split = line.split(" LOG: ")
             query_information = line_split[0].split(" ")
 
@@ -90,7 +89,7 @@ def _parse_user_activity_log(file, logs, databases, start_time, end_time):
 
 
 def _parse_start_node_log(file, logs, databases, start_time, end_time):
-    start_node_log = UserActivityLog()
+    start_node_log = Log()
 
     datetime_pattern = re.compile(r"'\d+-\d+-\d+ \d+:\d+:\d+ UTC")
 
@@ -109,7 +108,7 @@ def _parse_start_node_log(file, logs, databases, start_time, end_time):
                     logs[filename] = [start_node_log]
 
                 databases.add(start_node_log.database_name)
-                start_node_log = UserActivityLog()
+                start_node_log = Log()
 
             line_split = line.split("LOG:  statement: ")
 
