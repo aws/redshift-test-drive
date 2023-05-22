@@ -21,7 +21,7 @@ def parse_log(
     """
     This function parses the different logs and send it to the respective function
 
-    :param log_file: filname(either connectionlog, Log or startnodelog)
+    :param log_file: filname(either connectionlog, useractivitylog or startnodelog)
     :param filename: name of the file from s3
     :param connections: the connections dict
     :param last_connections: last_connections dict
@@ -30,7 +30,7 @@ def parse_log(
     :param start_time: start_time of extract
     :param end_time: end_time of extract
     """
-    if "Log" in filename:
+    if "useractivitylog" in filename:
         logger.debug(f"Parsing user activity log: {filename}")
         _parse_user_activity_log(log_file, logs, databases, start_time, end_time)
     elif "connectionlog" in filename:

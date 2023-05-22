@@ -205,7 +205,7 @@ class ExtractorTestCases(unittest.TestCase):
             }
         )
         e.save_logs(
-            {"Log": [self.get_query()]},
+            {"useractivitylog": [self.get_query()]},
             {},
             "s3://test",
             {},
@@ -234,7 +234,7 @@ class ExtractorTestCases(unittest.TestCase):
                 }
             )
             e.save_logs(
-                {"Log": [self.get_query()]},
+                {"useractivitylog": [self.get_query()]},
                 {},
                 "/test",
                 {},
