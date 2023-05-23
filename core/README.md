@@ -251,3 +251,4 @@ The analysis folder structure is as follows :
   * Compilation time metric is not available for Serverless. So elapsed and execution times will include compilation time as well.
   * Commit time metric is not available for Serverless.
   * Replay analysis currently only supports CSV format. PDF report generation is work in progress.
+* Workload Replicator does not support replaying federated users as this is a limitation for `GetClusterCredentials `API call.
