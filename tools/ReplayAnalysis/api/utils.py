@@ -75,7 +75,6 @@ def list_replays(bucket_url, session):
             ):  # if info.json does not exist in folder, do not add to list
                 continue
             else:
-                print(traceback.print_exception(e))
                 print(f"Unable to access replay. {e}")
 
     # use tabulate lib to format output
