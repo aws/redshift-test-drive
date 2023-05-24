@@ -37,6 +37,9 @@ sed -i "s#workload_location: \".*\"#workload_location: \"$WORKLOAD_LOCATION\"#g"
 sed -i "s#target_cluster_endpoint: \".*\"#target_cluster_endpoint: \"$CLUSTER_ENDPOINT\"#g" config/replay.yaml
 sed -i "s#replay_output: \".*\"#replay_output: \"s3://$BUCKET_NAME/$REPLAY_PREFIX/$WHAT_IF_TIMESTAMP/$CLUSTER_IDENTIFIER\"#g" config/replay.yaml
 sed -i "s#target_cluster_region: \".*\"#target_cluster_region: \"$TARGET_CLUSTER_REGION\"#g" config/replay.yaml
+sed -i "s#analysis_iam_role: \".*\"#analysis_iam_role: \"$SIMPLE_REPLAY_ANALYSIS_IAM_ROLE\"#g" config/replay.yaml
+sed -i "s#analysis_output: \".*\"#analysis_output: \"$SIMPLE_REPLAY_ANALYSIS_S3_PATH\"#g" config/replay.yaml
+
 if [[ "$account_id" == "$SNAPSHOT_ACCOUNT_ID" ]]; then
    sed -i "s#execute_copy_statements: \"false\"#execute_copy_statements: \"true\"#g" config/replay.yaml
    aws s3 cp $WORKLOAD_LOCATION/copy_replacements.csv . || true
