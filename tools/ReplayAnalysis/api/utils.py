@@ -1,5 +1,4 @@
 import re
-import traceback
 from datetime import datetime, timezone
 
 import boto3
