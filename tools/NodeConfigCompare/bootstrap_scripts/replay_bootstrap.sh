@@ -11,6 +11,7 @@ echo "redshift_iam_role: $REDSHIFT_IAM_ROLE"
 echo "workload_location: $WORKLOAD_LOCATION"
 echo "cluster_endpoint: $CLUSTER_ENDPOINT"
 echo "cluster_identifier: $CLUSTER_IDENTIFIER"
+echo "execute_unload_statements: $SIMPLE_REPLAY_UNLOAD_STATEMENTS"
 echo "snapshot_account_id: $SNAPSHOT_ACCOUNT_ID"
 account_id=`aws sts get-caller-identity --query Account --output text`
 echo "account_id: $account_id"
@@ -33,6 +34,8 @@ if [[ "$SIMPLE_REPLAY_OVERWRITE_S3_PATH" != "N/A" ]]; then
 fi
 
 sed -i "s#master_username: \".*\"#master_username: \"$REDSHIFT_USER_NAME\"#g" config/replay.yaml
+sed -i "s#execute_unload_statements: \".*\"#execute_unload_statements: \"$SIMPLE_REPLAY_UNLOAD_STATEMENTS\"#g" config/replay.yaml
+sed -i "s#unload_iam_role: \".*\"#unload_iam_role: \"$REDSHIFT_IAM_ROLE\"#g" replay.yaml
 sed -i "s#workload_location: \".*\"#workload_location: \"$WORKLOAD_LOCATION\"#g" config/replay.yaml
 sed -i "s#target_cluster_endpoint: \".*\"#target_cluster_endpoint: \"$CLUSTER_ENDPOINT\"#g" config/replay.yaml
 sed -i "s#replay_output: \".*\"#replay_output: \"s3://$BUCKET_NAME/$REPLAY_PREFIX/$WHAT_IF_TIMESTAMP/$CLUSTER_IDENTIFIER\"#g" config/replay.yaml
