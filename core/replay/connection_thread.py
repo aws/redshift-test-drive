@@ -91,10 +91,10 @@ class ConnectionThread(threading.Thread):
                 )
             )
 
-        if "psql" in self.connection_log.application_name.lower():
+        if self.connection_log.application_name == 'psql':
             interface = "psql"
         elif (
-            "odbc" in self.connection_log.application_name.lower()
+            self.connection_log.application_name == 'odbc'
             and self.odbc_driver is not None
         ):
             interface = "odbc"
