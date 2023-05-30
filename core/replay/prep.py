@@ -87,7 +87,7 @@ class ReplayPrep:
                 first_event_time = connection.session_initiation_time
             if connection.disconnection_time and connection.disconnection_time > last_event_time:
                 last_event_time = connection.disconnection_time
-            if connection.time_interval_between_queries or t.time_interval.lower() == "true":
+            if connection.time_interval_between_queries or t.time_interval:
                 for index, sql in enumerate(t.queries[1:]):
                     prev_sql = t.queries[index]
                     prev_sql.time_interval = (sql.start_time - prev_sql.end_time).total_seconds()
