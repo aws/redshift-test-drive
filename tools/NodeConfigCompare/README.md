@@ -2,13 +2,13 @@
 
 ### ** Note: This readme walks you through the latest version of this utility which now supports Redshift Serverless to test your workload for performance.If you want to either explore different Redshift Serverless configurations or combination of Redshift Provisioned and Serverless configurations based on your workload, please follow instructions in this readme. If you are still using the previous version which only supports provisioned clusters, please refer to this [readme](https://github.com/aws-samples/amazon-redshift-config-compare/blob/main/README-v1.md) **
 
-Amazon Redshift Node Configuration Comparison utility answers a very common question on which instance type and number of nodes should we choose for your workload on Amazon Redshift. You can use this utility to find the right datawarehouse configuration for your workload based on your query performance expectation for sequential or concurrently running queries. If you are already using Amazon Redshift, you may also run your past workloads using [Amazon Redshift Workload Replicator utility](https://github.com/aws/redshift-test-drive/tree/main/core) to evaluate performance metrics for different Amazon Redshift configurations to meet your needs. It helps you find the best Amazon Redshift datawarehouse configuration based on your price performance expectation.
+Redshift Test Drive's NodeConfigCompare utility answers a very common question on which instance type and number of nodes should we choose for your workload on Amazon Redshift. You can use this utility to find the right datawarehouse configuration for your workload based on your query performance expectation for sequential or concurrently running queries. If you are already using Amazon Redshift, you may also run your past workloads using [Amazon Redshift Workload Replicator utility](https://github.com/aws/redshift-test-drive/tree/main/core) to evaluate performance metrics for different Amazon Redshift configurations to meet your needs. It helps you find the best Amazon Redshift datawarehouse configuration based on your price performance expectation.
 
 ## Solution Overview
 
 The solution uses [AWS Step Functions](https://aws.amazon.com/step-functions/), [AWS Lambda](https://aws.amazon.com/lambda/) and [AWS Batch](https://aws.amazon.com/batch/) to run an end-to-end automated orchestration to find the best [Amazon Redshift](https://aws.amazon.com/redshift/) configuration based on your price/performance requirements. [AWS CloudFormation template](https://aws.amazon.com/cloudformation/) is used to deploy and run this solution in your AWS Account. Along with other resources, this template also creates an [Amazon S3](https://aws.amazon.com/s3/) bucket to store all data and metadata related to this process.
 
-![Architecture Diagram](https://github.com/aws-samples/amazon-redshift-config-compare/blob/main/serverless-v2/images/architecure-serverless.png)  
+![Architecture Diagram](https://github.com/aws/redshift-test-drive/blob/main/tools/NodeConfigCompare/images/architecure-serverless.png)  
 
 You need to create a JSON file to provide your input configurations for your test:
 
@@ -18,7 +18,7 @@ You need to create a JSON file to provide your input configurations for your tes
 4. SQL Script to conduct sequential and concurrency test (Optional)
 5. Amazon Redshift Audit Log location and Workload Replicator time window (Optional)
 
-You need to store this file in an existing Amazon S3 bucket and then use [this AWS CloudFormation template](https://amazon-redshift-node-config-compare.s3.amazonaws.com/cfn/redshift_node_config_compare_v2.yaml) to deploy this solution, which will also initiate an iteration of this test by invoking an Amazon Step Functions state machine in your AWS account.
+You need to store this file in an existing Amazon S3 bucket and then use [this AWS CloudFormation template](https://redshift-test-drive-node-config.s3.amazonaws.com/cfn/cloud_formation_template.yaml) to deploy this solution, which will also initiate an iteration of this test by invoking an Amazon Step Functions state machine in your AWS account.
 
 ## Prerequisites
 
@@ -46,7 +46,7 @@ At the end of this test, you would like to compare various metrics like total, a
 | Redshift Serverless | 64 | auto scaling |
 | Redshift Serverless | 128 | auto scaling |
 
-To perform this test using [Amazon Redshift node configuration comparison utility](https://github.com/aws-samples/amazon-redshift-config-compare), you would like to provide these configurations in a [JSON file](https://github.com/aws-samples/amazon-redshift-config-compare/blob/main/serverless-v2/user_config.json) and store it in an Amazon S3 bucket. You may then use [AWS CloudFormation Template](https://console.aws.amazon.com/cloudformation/home?#/stacks/new?stackName=redshift-node-config-comparison&templateURL=https://amazon-redshift-node-config-compare.s3.amazonaws.com/cfn/redshift_node_config_compare_v2.yaml) to deploy this utility, which would perform the end-to-end performance testing in all above configurations in parallel and produce a price/performance evaluation summary. Based on that summary, you would be easily deciding which configuration works best for you.
+To perform this test using [Amazon Redshift node configuration comparison utility](https://github.com/aws/redshift-test-drive/blob/main/tools/NodeConfigCompare), start by providing these configurations in a [JSON file](https://github.com/aws/redshift-test-drive/blob/main/config/user_config.json) and store it in an Amazon S3 bucket. You may then use [AWS CloudFormation Template](https://console.aws.amazon.com/cloudformation/home?#/stacks/new?stackName=redshift-test-drive-nodeconfigcompare&templateURL=https://redshift-test-drive-node-config.s3.amazonaws.com/cfn/cloud_formation_template.yaml) to deploy this utility, which would perform the end-to-end performance testing in all above configurations in parallel and produce a price/performance evaluation summary. Based on that summary, you would be easily deciding which configuration works best for you.
 
 ## Input JSON File
 
@@ -102,30 +102,30 @@ Here is a sample configuration JSON file, used to implement this example use-cas
 
   "CONFIGURATIONS": [
   	{
-  	"TYPE": "Provisioned",
-  	"NODE_TYPE": "dc2.8xlarge",
-  	"NUMBER_OF_NODES": "2",
-  	"WLM_CONFIG_S3_PATH": "N/A"
+        "TYPE": "Provisioned",
+        "NODE_TYPE": "dc2.8xlarge",
+        "NUMBER_OF_NODES": "2",
+        "WLM_CONFIG_S3_PATH": "N/A"
   	},
   	{
-  	"TYPE": "Provisioned",
-  	"NODE_TYPE": "ra3.4xlarge",
-  	"NUMBER_OF_NODES": "4",
-  	"WLM_CONFIG_S3_PATH": "N/A"
+        "TYPE": "Provisioned",
+        "NODE_TYPE": "ra3.4xlarge",
+        "NUMBER_OF_NODES": "4",
+        "WLM_CONFIG_S3_PATH": "N/A"
   	},
   	{
-  	"TYPE": "Provisioned",
-  	"NODE_TYPE": "ra3.4xlarge",
-  	"NUMBER_OF_NODES": "4",
-  	"WLM_CONFIG_S3_PATH": "s3://NodeConfigCompare-bucket/wlmconfig.json"
+        "TYPE": "Provisioned",
+        "NODE_TYPE": "ra3.4xlarge",
+        "NUMBER_OF_NODES": "4",
+        "WLM_CONFIG_S3_PATH": "s3://NodeConfigCompare-bucket/wlmconfig.json"
   	},
   	{
-  	"TYPE": "Serverless",
-  	"BASE_RPU": "64"
+        "TYPE": "Serverless",
+        "BASE_RPU": "64"
   	},
   	{
-  	"TYPE": "Serverless",
-  	"BASE_RPU": "128"
+        "TYPE": "Serverless",
+        "BASE_RPU": "128"
   	}
   ]
   }
@@ -135,7 +135,8 @@ Here is a sample configuration JSON file, used to implement this example use-cas
 
 ## Deployment using AWS CloudFormation
 
-Once the configuration JSON file is saved in an Amazon S3 bucket, you may use [this AWS CloudFormation template](https://console.aws.amazon.com/cloudformation/home?#/stacks/new?stackName=redshift-node-config-comparison&templateURL=https://amazon-redshift-node-config-compare.s3.amazonaws.com/cfn/redshift_node_config_compare_v2.yaml) to deploy this solution.This template provisions the required AWS Resources except the Amazon Redshift provisioned clusters and/or Serverless workgroups, which gets created in the subsequent step by an AWS Step Functions state machine. This template requires you to provide the following parameters:
+Once the configuration JSON file is saved in an Amazon S3 bucket, you may use [this AWS CloudFormation template](https://console.aws.amazon.com/cloudformation/home?#/stacks/new?stackName=redshift-test-drive-nodeconfigcompare&templateURL=https://redshift-test-drive-node-config.s3.amazonaws.com/cfn/cloud_formation_template.yaml) to deploy this solution.
+This template provisions the required AWS Resources except the Amazon Redshift provisioned clusters and/or Serverless workgroups, which gets created in the subsequent step by an AWS Step Functions state machine. This template requires you to provide the following parameters:
 
 | **CloudFormation Parameter** | **Valid Values** | **Description** |
 | --- | --- | --- |
@@ -169,13 +170,13 @@ This solution uses AWS Step Functions state machine to orchestrate the end-to-en
 
 You need to start a new execution of the state machine after the CloudFormation stack is deployed in your account. Subsequently, you may re-upload your input parameter JSON file to try changing different parameter values ( for e.g adding new Redshift datawarehouse configuration ) and then rerun this state machine from the [AWS Console](https://console.aws.amazon.com/states/home). Following diagram shows this AWS Step Functions State Machine workflow:
 
-![Step Function](https://github.com/aws-samples/amazon-redshift-config-compare/blob/main/serverless-v2/images/statemachine.png)  
+![Step Function](https://github.com/aws/redshift-test-drive/blob/main/tools/NodeConfigCompare/images/statemachine.png)  
 
 
 For the example use-case, below Amazon Redshift provisioned clusters and serverless workgroups got created as part of the state machine execution.
 
-![Redshift Clusters](https://github.com/aws-samples/amazon-redshift-config-compare/blob/main/serverless-v2/images/redshift-clusters-provisioned.png)  
-![Redshift Clusters](https://github.com/aws-samples/amazon-redshift-config-compare/blob/main/serverless-v2/images/redshift-clusters-serverless.png)  
+![Redshift Clusters](https://github.com/aws/redshift-test-drive/blob/main/tools/NodeConfigCompare/images/redshift-clusters-provisioned.png)  
+![Redshift Clusters](https://github.com/aws/redshift-test-drive/blob/main/tools/NodeConfigCompare/images/redshift-clusters-serverless.png)  
 
 ## Performance Evaluation
 
@@ -233,7 +234,7 @@ The CloudFormation template provisions all the required resources using security
 
 Access permissions for all the resources are controlled using AWS Identity and Access Management (IAM) roles granting appropriate permissions to Amazon Redshift, AWS Lambda, AWS Step Functions, AWS Glue, and AWS Batch. Read and write access privileges are granted to the Amazon Redshift clusters and AWS Batch jobs on the S3 bucket created by the CloudFormation template so that it can read and update data and metadata configurations from that bucket. Read and write access privileges are also granted on the S3 bucket where the user configuration JSON file is uploaded. AWS Batch requires internet access in order to pull images from Amazon ECR public repository. AWS LakeFormation is used to manage access control on the AWS Glue catalog tables created for performance evaluation, this is optional, based on the UseAWSLakeFormationForGlueCatalog parameter in the CloudFormation template.
 
-You can find [here](https://github.com/aws-samples/amazon-redshift-config-compare/blob/main/IAM_Permissions.pdf) the list of IAM permissions used in the utility.
+You can find [here](https://github.com/aws/redshift-test-drive/blob/main/tools/NodeConfigCompare/IAM_Permissions.pdf) the list of IAM permissions used in the utility.
 
 ## Troubleshooting
 
@@ -241,11 +242,11 @@ AWS Batch jobs can fail with error **– CannotPullContainerError**, if the subn
 
 There might be some rare instances in which failures occur in the state machine running this solution. To troubleshoot, refer to its logs, along with logs from the AWS Batch jobs in [Amazon CloudWatch Logs](https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/WhatIsCloudWatchLogs.html). To view the AWS Batch logs, navigate to the [Amazon CloudWatch](https://aws.amazon.com/cloudwatch/) console and choose **Logs** in the navigation pane. Find the log group with name **`<`Your CloudFormation Stack Name`>`/log** and choose the latest log streams.
 
-![Cloudwatch Console](https://github.com/aws-samples/amazon-redshift-config-compare/blob/main/serverless-v2/images/batch-cw-log-group.png)  
+![Cloudwatch Console](https://github.com/aws/redshift-test-drive/blob/main/tools/NodeConfigCompare/images/batch-cw-log-group.png)  
 
 To view the Step Functions logs, navigate to the state machine’s latest run on the Step Functions console and choose CloudWatch Logs for the failed Step Functions step.
 
-![State Machine Console](https://github.com/aws-samples/amazon-redshift-config-compare/blob/main/serverless-v2/images/statemachine-log.png)  
+![State Machine Console](https://github.com/aws/redshift-test-drive/blob/main/tools/NodeConfigCompare/images/statemachine-log.png)  
 
 After you fix the issue, you can restart the state machine by choosing New execution.
 
