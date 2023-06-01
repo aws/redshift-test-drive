@@ -35,6 +35,7 @@ if [[ "$SIMPLE_REPLAY_OVERWRITE_S3_PATH" != "N/A" ]]; then
 fi
 
 sed -i "s#master_username: \".*\"#master_username: \"$REDSHIFT_USER_NAME\"#g" config/replay.yaml
+sed -i "s#unload_iam_role: \".*\"#unload_iam_role: \"$REDSHIFT_IAM_ROLE\"#g" config/replay.yaml
 sed -i "s#workload_location: \".*\"#workload_location: \"$WORKLOAD_LOCATION\"#g" config/replay.yaml
 sed -i "s#target_cluster_endpoint: \".*\"#target_cluster_endpoint: \"$CLUSTER_ENDPOINT\"#g" config/replay.yaml
 sed -i "s#target_cluster_region: \".*\"#target_cluster_region: \"$TARGET_CLUSTER_REGION\"#g" config/replay.yaml

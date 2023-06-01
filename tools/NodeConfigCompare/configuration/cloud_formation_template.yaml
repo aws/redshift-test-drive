@@ -341,8 +341,8 @@ Resources:
               - s3:ListBucketMultipartUploads
               - s3:ListObjects
             Resource:
-              - arn:aws:s3:::amazon-redshift-node-config-compare/*
-              - arn:aws:s3:::amazon-redshift-node-config-compare
+              - arn:aws:s3:::redshift-test-drive-node-config/*
+              - arn:aws:s3:::redshift-test-drive-node-config
               - !Sub
                 - arn:aws:s3:::${RedshiftWhatIfConfigJsonBucket}/*
                 - {RedshiftWhatIfConfigJsonBucket: !Select [2, !Split ["/", !Ref ConfigJsonS3Path]]}

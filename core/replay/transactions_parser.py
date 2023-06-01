@@ -22,8 +22,8 @@ class TransactionsParser:
         self.config = config
         self.workload_directory = config["workload_location"]
         self.filters = config["filters"]
-        self.execute_copy_statements = config["execute_copy_statements"]
-        self.execute_unload_statements = config["execute_unload_statements"]
+        self.execute_copy_statements = config.get("execute_copy_statements", "")
+        self.execute_unload_statements = config.get("execute_unload_statements", "")
         self.replay_id = replay_id
 
     def parse_transactions(self):
