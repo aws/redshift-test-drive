@@ -242,7 +242,7 @@ class ConnectionThread(threading.Thread):
             )
             if time_until_start_ms > 10:
                 time.sleep(time_until_start_ms / 1000.0)
-            if self.config.get("split_multi", True):
+            if self.config.get("split_multi", True) and query.text is not None:
                 formatted_query = query.text.lower()
                 if not formatted_query.startswith(("begin", "start")):
                     formatted_query = "begin;" + formatted_query
@@ -329,7 +329,7 @@ class ConnectionThread(threading.Thread):
             self.thread_stats["transaction_error_log"][transaction.get_base_filename()] = errors
 
     def should_execute_sql(self, sql_text):
-        return (
+        return sql_text is not None and (
             (
                 self.config.get("execute_copy_statements", "") == "true"
                 and "from 's3:" in sql_text.lower()
