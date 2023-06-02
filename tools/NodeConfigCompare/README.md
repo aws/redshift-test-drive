@@ -52,29 +52,30 @@ To perform this test using [Amazon Redshift node configuration comparison utilit
 
 You need to provide a configuration JSON file to use this solution. Below are the input parameters for this JSON file.
 
-| **JSON Parameter** | **Valid Values** | **Description** |
-| --- | --- | --- |
-| SNAPSHOT\_ID | N/A, Redshift Snapshot Identifier | Input Snapshot Identifier, if you would like to create new Amazon Redshift provisioned clusters and Serverless workgroups by restoring from a snapshot. If you are using this solution in a different AWS account, please make sure to share your Amazon Redshift provisioned cluster snapshot with this account. Please read the [documentation](https://aws.amazon.com/premiumsupport/knowledge-center/account-transfer-redshift/) for more. Input N/A if not applicable |
-| SNAPSHOT\_ACCOUNT\_ID | N/A,AWS Account ID | AWS Account ID where above snapshot was created. Input N/A if not applicable |
-| PARAMETER\_GROUP\_CONFIG\_S3\_PATH | N/A,Amazon S3 URI | If you may use a custom parameter group for this testing, please input its S3 URI. You may get this JSON by running this command in AWS Command Line interface: &quot;aws redshift describe-cluster-parameters --parameter-group-name your-custom-param-group --output json&quot; Input N/A if not applicable |
-| DDL\_AND\_COPY\_SCRIPT\_S3\_PATH | N/A,Amazon S3 URI | If you may create tables and load data on them before performing the testing, please input its S3 URI. InputN/A if not applicable |
-| SQL\_SCRIPT\_S3\_PATH | N/A,Amazon S3 URI | If you may run performance testing of your queries, input S3 URI of your script consisting of all your SQL commands. These commands should be deliminated by semicolon (;). InputN/A if not applicable |
-| NUMBER\_OF\_PARALLEL\_SESSIONS\_LIST | N/A | Input comma separated numbers to denote number of parallel sessions in which you would like to run above script |
-| SIMPLE\_REPLAY\_LOG\_LOCATION | N/A,Amazon S3 URI | If you are already running Amazon Redshift workload and your provisioned cluster has audit logging enabled. Please input the S3 URI of your Redshift Audit Logging location. If you are using this solution in a different AWS account, please make sure to copy these logs from your source clusters&#39; audit logging bucket to an Amazon S3 bucket in this account. |
-| SIMPLE\_REPLAY\_EXTRACT\_START\_TIME | N/A,Amazon S3 URI | If using simple-replay in this testing to replay your past workload, input the start time of that workload in ISO-8601 format (e.g. 2021-01-26T21:41:16+00:00) |
-| SIMPLE\_REPLAY\_EXTRACT\_END\_TIME | N/A, Amazon S3 URI | If using simple-replay in this testing to replay your past workload, input the end time of that workload in ISO-8601 format (e.g. 2021-01-26T21:41:16+00:00) |
-| SIMPLE\_REPLAY\_EXTRACT\_OVERWRITE\_S3\_PATH | N/A,Amazon S3 URI | If using simple-replay and you may like to use a custom extract.yaml file, please input its S3 URI |
-| SIMPLE\_REPLAY\_OVERWRITE\_S3\_PATH | N/A,Amazon S3 URI | If using simple-replay and you may like to use a custom replay.yaml file, please input its S3 URI |
-| AUTO\_PAUSE | true,false | Input true if you would like to automatically pause all Amazon Redshift provisioned clusters after completion of the step function |
-| DATABASE\_NAME | N/A,Redshift database name | Specify the primary database name of your Redshift endpoint. If you’re using Workload Replicator, provide the database name for which you want to replay the workload. Amazon Redshift automatically creates a default database named dev, which may not be your primary database|
-| CONFIGURATIONS | JSON Array with parameters NODE\_TYPE, NUMBER\_OF\_NODES, WLM\_CONFIG\_S3\_PATH | Input a JSON Array mentioning your Amazon Redshift provisioned cluster and/or Serverless workgroups configurations, for which you may like to perform this testing. Below are the parameters for this: |
-|  |  |  |
-| NODE\_TYPE | ra3.xlplus, ra3.4xlarge, ra3.16xlarge, dc2.large, dc2.8xlarge, ds2.xlarge, ds2.8xlarge | Input Amazon Redshift provisioned cluster Node Type for which, you would like to run this testing. This is applicable only for provisioned cluster. |
-| NUMBER\_OF\_NODES | a number between 1 and 128 | Input number of nodes for your Amazon Redshift provisioned cluster. This is applicable only for provisioned cluster. |
-| WLM\_CONFIG\_S3\_PATH | N/A,Amazon S3 URI | If you may like to use custom workload management settings if different Amazon Redshift provisioned clusters, please provide the S3 URI for that. This is applicable only for provisioned cluster. |
-| TYPE | Provisioned, Serverless  | Input Redshift datawarehouse type for which you would like to replay your workload |
-| MAINTENANCE_TRACK | N/A, Trailing, Current  | Amazon Redshift version against which you would like to replay your workload. This is applicable only for provisioned cluster. |
-| BASE_RPU | Base capacity setting from 32 RPUs to 512 RPUs  | This setting specifies the base data warehouse capacity of your Amazon Redshift serverless workgroup. This is applicable only for Serverless workgroup. |
+| **JSON Parameter**                           | **Valid Values**                                                                       | **Description**                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+|----------------------------------------------|----------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| SNAPSHOT\_ID                                 | N/A, Redshift Snapshot Identifier                                                      | Input Snapshot Identifier, if you would like to create new Amazon Redshift provisioned clusters and Serverless workgroups by restoring from a snapshot. If you are using this solution in a different AWS account, please make sure to share your Amazon Redshift provisioned cluster snapshot with this account. Please read the [documentation](https://aws.amazon.com/premiumsupport/knowledge-center/account-transfer-redshift/) for more. Input N/A if not applicable |
+| SNAPSHOT\_ACCOUNT\_ID                        | N/A,AWS Account ID                                                                     | AWS Account ID where above snapshot was created. Input N/A if not applicable                                                                                                                                                                                                                                                                                                                                                                                              |
+| PARAMETER\_GROUP\_CONFIG\_S3\_PATH           | N/A,Amazon S3 URI                                                                      | If you may use a custom parameter group for this testing, please input its S3 URI. You may get this JSON by running this command in AWS Command Line interface: &quot;aws redshift describe-cluster-parameters --parameter-group-name your-custom-param-group --output json&quot; Input N/A if not applicable                                                                                                                                                             |
+| DDL\_AND\_COPY\_SCRIPT\_S3\_PATH             | N/A,Amazon S3 URI                                                                      | If you may create tables and load data on them before performing the testing, please input its S3 URI. InputN/A if not applicable                                                                                                                                                                                                                                                                                                                                         |
+| SQL\_SCRIPT\_S3\_PATH                        | N/A,Amazon S3 URI                                                                      | If you may run performance testing of your queries, input S3 URI of your script consisting of all your SQL commands. These commands should be deliminated by semicolon (;). InputN/A if not applicable                                                                                                                                                                                                                                                                    |
+| NUMBER\_OF\_PARALLEL\_SESSIONS\_LIST         | N/A                                                                                    | Input comma separated numbers to denote number of parallel sessions in which you would like to run above script                                                                                                                                                                                                                                                                                                                                                           |
+| SIMPLE\_REPLAY\_LOG\_LOCATION                | N/A,Amazon S3 URI                                                                      | If you are already running Amazon Redshift workload and your provisioned cluster has audit logging enabled. Please input the S3 URI of your Redshift Audit Logging location. If you are using this solution in a different AWS account, please make sure to copy these logs from your source clusters&#39; audit logging bucket to an Amazon S3 bucket in this account.                                                                                                   |
+| SIMPLE\_REPLAY\_EXTRACT\_START\_TIME         | N/A,Amazon S3 URI                                                                      | If using simple-replay in this testing to replay your past workload, input the start time of that workload in ISO-8601 format (e.g. 2021-01-26T21:41:16+00:00)                                                                                                                                                                                                                                                                                                            |
+| SIMPLE\_REPLAY\_EXTRACT\_END\_TIME           | N/A, Amazon S3 URI                                                                     | If using simple-replay in this testing to replay your past workload, input the end time of that workload in ISO-8601 format (e.g. 2021-01-26T21:41:16+00:00)                                                                                                                                                                                                                                                                                                              |
+| SIMPLE\_REPLAY\_EXTRACT\_OVERWRITE\_S3\_PATH | N/A,Amazon S3 URI                                                                      | If using simple-replay and you may like to use a custom extract.yaml file, please input its S3 URI                                                                                                                                                                                                                                                                                                                                                                        |
+| SIMPLE\_REPLAY\_OVERWRITE\_S3\_PATH          | N/A,Amazon S3 URI                                                                      | If using simple-replay and you may like to use a custom replay.yaml file, please input its S3 URI                                                                                                                                                                                                                                                                                                                                                                         |
+| SIMPLE\_REPLAY\_ANALYSIS\_EXECUTION          | true,false                                                                             | Enabling WorkloadReplicator analysis files to be generated                                                                                                                                                                                                                                                                                                                                                                                                                |
+| AUTO\_PAUSE                                  | true,false                                                                             | Input true if you would like to automatically pause all Amazon Redshift provisioned clusters after completion of the step function                                                                                                                                                                                                                                                                                                                                        |
+| DATABASE\_NAME                               | N/A,Redshift database name                                                             | Specify the primary database name of your Redshift endpoint. If you’re using Workload Replicator, provide the database name for which you want to replay the workload. Amazon Redshift automatically creates a default database named dev, which may not be your primary database                                                                                                                                                                                         |
+| CONFIGURATIONS                               | JSON Array with parameters NODE\_TYPE, NUMBER\_OF\_NODES, WLM\_CONFIG\_S3\_PATH        | Input a JSON Array mentioning your Amazon Redshift provisioned cluster and/or Serverless workgroups configurations, for which you may like to perform this testing. Below are the parameters for this:                                                                                                                                                                                                                                                                    |
+|                                              |                                                                                        |                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| NODE\_TYPE                                   | ra3.xlplus, ra3.4xlarge, ra3.16xlarge, dc2.large, dc2.8xlarge, ds2.xlarge, ds2.8xlarge | Input Amazon Redshift provisioned cluster Node Type for which, you would like to run this testing. This is applicable only for provisioned cluster.                                                                                                                                                                                                                                                                                                                       |
+| NUMBER\_OF\_NODES                            | a number between 1 and 128                                                             | Input number of nodes for your Amazon Redshift provisioned cluster. This is applicable only for provisioned cluster.                                                                                                                                                                                                                                                                                                                                                      |
+| WLM\_CONFIG\_S3\_PATH                        | N/A,Amazon S3 URI                                                                      | If you may like to use custom workload management settings if different Amazon Redshift provisioned clusters, please provide the S3 URI for that. This is applicable only for provisioned cluster.                                                                                                                                                                                                                                                                        |
+| TYPE                                         | Provisioned, Serverless                                                                | Input Redshift datawarehouse type for which you would like to replay your workload                                                                                                                                                                                                                                                                                                                                                                                        |
+| MAINTENANCE_TRACK                            | N/A, Trailing, Current                                                                 | Amazon Redshift version against which you would like to replay your workload. This is applicable only for provisioned cluster.                                                                                                                                                                                                                                                                                                                                            |
+| BASE_RPU                                     | Base capacity setting from 32 RPUs to 512 RPUs                                         | This setting specifies the base data warehouse capacity of your Amazon Redshift serverless workgroup. This is applicable only for Serverless workgroup.                                                                                                                                                                                                                                                                                                                   |
 
 
 Here is a sample configuration JSON file, used to implement this example use-case:   
@@ -83,52 +84,48 @@ Here is a sample configuration JSON file, used to implement this example use-cas
 {
   "SNAPSHOT_ID": "redshift-cluster-manual-snapshot",
   "SNAPSHOT_ACCOUNT_ID": "123456789012",
-
-  "PARAMETER_GROUP_CONFIG_S3_PATH": "s3://NodeConfigCompare-bucket/pg_config.json",
-
-  "DDL_AND_COPY_SCRIPT_S3_PATH": "s3://NodeConfigCompare-bucket/ddl.sql",
-  "SQL_SCRIPT_S3_PATH":"s3://NodeConfigCompare-bucket/test_queries.sql",
+  "PARAMETER_GROUP_CONFIG_S3_PATH": "s3://node-config-compare-bucket/pg_config.json",
+  "DDL_AND_COPY_SCRIPT_S3_PATH": "s3://node-config-compare-bucket/ddl.sql",
+  "SQL_SCRIPT_S3_PATH": "s3://node-config-compare-bucket/test_queries.sql",
   "NUMBER_OF_PARALLEL_SESSIONS_LIST": "1",
-
-  "SIMPLE_REPLAY_LOG_LOCATION":"s3://redshift-logging-xxxxxxxx/RSLogs/",
-  "SIMPLE_REPLAY_EXTRACT_START_TIME":"2021-08-28T11:15:00+00:00",
-  "SIMPLE_REPLAY_EXTRACT_END_TIME":"2021-08-28T12:00:00+00:00",
-
-  "SIMPLE_REPLAY_EXTRACT_OVERWRITE_S3_PATH":"N/A",
-  "SIMPLE_REPLAY_OVERWRITE_S3_PATH":"N/A",
-
+  "SIMPLE_REPLAY_LOG_LOCATION": "s3://redshift-logging-xxxxxxxx/RSLogs/",
+  "SIMPLE_REPLAY_EXTRACT_START_TIME": "2021-08-28T11:15:00+00:00",
+  "SIMPLE_REPLAY_EXTRACT_END_TIME": "2021-08-28T12:00:00+00:00",
+  "SIMPLE_REPLAY_UNLOAD_STATEMENTS": true,
+  "SIMPLE_REPLAY_ANALYSIS_EXECUTION": true,
+  "SIMPLE_REPLAY_EXTRACT_OVERWRITE_S3_PATH": "N/A",
+  "SIMPLE_REPLAY_OVERWRITE_S3_PATH": "N/A",
   "AUTO_PAUSE": true,
   "DATABASE_NAME": "database_name",
-
   "CONFIGURATIONS": [
-  	{
-        "TYPE": "Provisioned",
-        "NODE_TYPE": "dc2.8xlarge",
-        "NUMBER_OF_NODES": "2",
-        "WLM_CONFIG_S3_PATH": "N/A"
-  	},
-  	{
-        "TYPE": "Provisioned",
-        "NODE_TYPE": "ra3.4xlarge",
-        "NUMBER_OF_NODES": "4",
-        "WLM_CONFIG_S3_PATH": "N/A"
-  	},
-  	{
-        "TYPE": "Provisioned",
-        "NODE_TYPE": "ra3.4xlarge",
-        "NUMBER_OF_NODES": "4",
-        "WLM_CONFIG_S3_PATH": "s3://NodeConfigCompare-bucket/wlmconfig.json"
-  	},
-  	{
-        "TYPE": "Serverless",
-        "BASE_RPU": "64"
-  	},
-  	{
-        "TYPE": "Serverless",
-        "BASE_RPU": "128"
-  	}
+    {
+      "TYPE": "Provisioned",
+      "NODE_TYPE": "dc2.8xlarge",
+      "NUMBER_OF_NODES": "2",
+      "WLM_CONFIG_S3_PATH": "N/A"
+    },
+    {
+      "TYPE": "Provisioned",
+      "NODE_TYPE": "ra3.4xlarge",
+      "NUMBER_OF_NODES": "4",
+      "WLM_CONFIG_S3_PATH": "N/A"
+    },
+    {
+      "TYPE": "Provisioned",
+      "NODE_TYPE": "ra3.4xlarge",
+      "NUMBER_OF_NODES": "4",
+      "WLM_CONFIG_S3_PATH": "s3://node-config-compare-bucket/wlmconfig.json"
+    },
+    {
+      "TYPE": "Serverless",
+      "BASE_RPU": "64"
+    },
+    {
+      "TYPE": "Serverless",
+      "BASE_RPU": "128"
+    }
   ]
-  }
+}
 ```
 
 **Please Note:** Make sure to use same Amazon S3 bucket to store all your configurations for this testing. For example, we used Amazon S3 bucket node-config-compare-bucket to store all configuration scripts. After populating all parameters in this JSON file, please save this JSON file in the same Amazon S3 bucket in your AWS Account.
