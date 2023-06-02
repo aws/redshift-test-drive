@@ -45,13 +45,10 @@ if [[ "$SIMPLE_REPLAY_UNLOAD_STATEMENTS" == "true" ]]; then
     sed -i "s#replay_output: \".*\"#replay_output: \"s3://$BUCKET_NAME/$REPLAY_PREFIX/$WHAT_IF_TIMESTAMP/$CLUSTER_IDENTIFIER\"#g" config/replay.yaml
 fi
 
-
-if [["$SIMPLE_REPLAY_ANALYSIS_EXECUTION" == "true"]]; then
+if [[ "$SIMPLE_REPLAY_ANALYSIS_EXECUTION" == "true" ]]; then
     sed -i "s#analysis_iam_role: \".*\"#analysis_iam_role: \"$REDSHIFT_IAM_ROLE\"#g" config/replay.yaml
     sed -i "s#analysis_output: \".*\"#analysis_output: \"$WORKLOAD_LOCATION\"#g" config/replay.yaml
 fi
-
-
 
 if [[ "$account_id" == "$SNAPSHOT_ACCOUNT_ID" ]]; then
    sed -i "s#execute_copy_statements: \"false\"#execute_copy_statements: \"true\"#g" config/replay.yaml
