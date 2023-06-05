@@ -1380,10 +1380,6 @@ def run_replay(
                         "value": execute_unload_statements,
                     },
                     {
-                        "name": "SIMPLE_REPLAY_ANALYSIS_EXECUTION",
-                        "value": execute_replay_analysis,
-                    },
-                    {
                         "name": "SIMPLE_REPLAY_LOG_LOCATION",
                         "value": simple_replay_log_location,
                     },

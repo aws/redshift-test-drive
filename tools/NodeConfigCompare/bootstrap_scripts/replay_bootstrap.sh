@@ -12,7 +12,6 @@ echo "workload_location: $WORKLOAD_LOCATION"
 echo "cluster_endpoint: $CLUSTER_ENDPOINT"
 echo "cluster_identifier: $CLUSTER_IDENTIFIER"
 echo "execute_unload_statements: $SIMPLE_REPLAY_UNLOAD_STATEMENTS"
-echo "execute_replay_analysis : $SIMPLE_REPLAY_ANALYSIS_EXECUTION"
 echo "snapshot_account_id: $SNAPSHOT_ACCOUNT_ID"
 account_id=`aws sts get-caller-identity --query Account --output text`
 echo "account_id: $account_id"
@@ -39,18 +38,13 @@ sed -i "s#unload_iam_role: \".*\"#unload_iam_role: \"$REDSHIFT_IAM_ROLE\"#g" con
 sed -i "s#workload_location: \".*\"#workload_location: \"$WORKLOAD_LOCATION\"#g" config/replay.yaml
 sed -i "s#target_cluster_endpoint: \".*\"#target_cluster_endpoint: \"$CLUSTER_ENDPOINT\"#g" config/replay.yaml
 sed -i "s#target_cluster_region: \".*\"#target_cluster_region: \"$TARGET_CLUSTER_REGION\"#g" config/replay.yaml
+sed -i "s#analysis_iam_role: \".*\"#analysis_iam_role: \"$REDSHIFT_IAM_ROLE\"#g" config/replay.yaml
+sed -i "s#analysis_output: \".*\"#analysis_output: \"$WORKLOAD_LOCATION\"#g" config/replay.yaml
 
-if [ "$SIMPLE_REPLAY_UNLOAD_STATEMENTS" = true ]; then
+if [ "$SIMPLE_REPLAY_UNLOAD_STATEMENTS" == "true" ]; then
     sed -i "s#unload_iam_role: \".*\"#unload_iam_role: \"$REDSHIFT_IAM_ROLE\"#g" config/replay.yaml
     sed -i "s#replay_output: \".*\"#replay_output: \"s3://$BUCKET_NAME/$REPLAY_PREFIX/$WHAT_IF_TIMESTAMP/$CLUSTER_IDENTIFIER\"#g" config/replay.yaml
 fi
-
-
-if [ "$SIMPLE_REPLAY_ANALYSIS_EXECUTION" = true ]; then
-    sed -i "s#analysis_iam_role: \".*\"#analysis_iam_role: \"$REDSHIFT_IAM_ROLE\"#g" config/replay.yaml
-    sed -i "s#analysis_output: \".*\"#analysis_output: \"$WORKLOAD_LOCATION\"#g" config/replay.yaml
-fi
-
 
 
 if [[ "$account_id" == "$SNAPSHOT_ACCOUNT_ID" ]]; then
