@@ -324,9 +324,6 @@ def handler(event, context):
                     simple_replay_log_location=user_config.get(
                         "SIMPLE_REPLAY_LOG_LOCATION"
                     ),
-                    execute_replay_analysis=user_config.get(
-                        "SIMPLE_REPLAY_ANALYSIS_EXECUTION"
-                    ),
                     execute_unload_statements=user_config.get(
                         "SIMPLE_REPLAY_UNLOAD_STATEMENTS"
                     ),
@@ -1311,7 +1308,6 @@ def run_replay(
     extract_s3_path,
     simple_replay_log_location,
     simple_replay_overwrite_s3_path,
-    execute_replay_analysis,
     execute_unload_statements,
     bucket_name,
     redshift_user_name,
