@@ -4,7 +4,7 @@ import yaml
 import json
 
 rs_client = boto3.client("redshift")
-with open("replay.yaml", "r") as fr:
+with open("config/replay.yaml", "r") as fr:
     config_read = yaml.safe_load(fr)
 target_cluster_endpoint = config_read["target_cluster_endpoint"]
 cluster_endpoint_split = target_cluster_endpoint.split(".")
@@ -31,7 +31,10 @@ except rs_client.exceptions.ClientError as e:
         )
         exit(-1)
     elif e.response["Error"]["Code"] == "ResourceNotFoundException":
-        print(f"Serverless endpoint could not be found " f"RedshiftServerless:GetCredentials. {e}")
+        print(
+            f"Serverless endpoint could not be found "
+            f"RedshiftServerless:GetCredentials. {e}"
+        )
         exit(-1)
     else:
         print(f"Got exception retrieving credentials ({e.response['Error']['Code']})")
