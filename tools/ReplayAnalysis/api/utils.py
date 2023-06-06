@@ -4,6 +4,7 @@ from datetime import datetime, timezone
 import boto3
 import json
 from urllib.parse import urlparse
+import urllib
 
 import botocore
 import pandas as pd
@@ -28,7 +29,7 @@ def bucket_dict(bucket_url):
         path = f"{path}/"
     if path == "replays/":
         path = ""
-    return {"url": bucket_url, "bucket_name": bucket, "prefix": path}
+    return {"url": bucket_url, "bucket_name": bucket, "prefix": path + "analysis/"}
 
 
 def list_replays(bucket_url, session):
@@ -38,14 +39,17 @@ def list_replays(bucket_url, session):
     table = []
     bucket = bucket_dict(bucket_url)
     try:
+        print(bucket.get("prefix"))
         if not session:
             resp = client("s3").list_objects_v2(
-                Bucket=bucket.get("bucket_name"), Delimiter="/", Prefix="analysis/"
+                Bucket=bucket.get("bucket_name"), Delimiter="/", Prefix=bucket.get("prefix")
             )
+            s3_resource = boto3.resource("s3")
         else:
             resp = session.client("s3").list_objects_v2(
-                Bucket=bucket.get("bucket_name"), Delimiter="/", Prefix="analysis/"
+                Bucket=bucket.get("bucket_name"), Delimiter="/", Prefix=bucket.get("prefix")
             )
+            s3_resource = session.resource("s3")
         if resp["KeyCount"] == 0:
             print(
                 f"No replays available in S3. Please run a replay with replay analysis to access replays "
