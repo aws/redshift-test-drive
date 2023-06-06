@@ -50,11 +50,11 @@ def request_s3_data(filename):
     df = pd.DataFrame()
 
     for replay in selected_replays:
-        temp = None  # temporary df for individual replay
+        parsed = bucket_dict(replay["workload"])
         try:
             response = s3_client.get_object(
-                Bucket=replay["bucket"],
-                Key=f"analysis/{replay['replay_id']}/raw_data/{filename}",
+                Bucket=parsed.get("bucket_name"),
+                Key=f"{parsed.get('prefix')}{replay['replay_id']}/raw_data/{filename}",
             )
             temp = pd.read_csv(response.get("Body")).fillna(0)
         except Exception as e:

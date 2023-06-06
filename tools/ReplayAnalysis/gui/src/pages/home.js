@@ -31,7 +31,7 @@ export const HomePage = () => {
         if (uri !== '' && uri.startsWith('s3://')) {
             setSearching(true);
 
-            fetch(`/search?uri=${uri}`).then(response => response.json())
+            fetch(`/search?uri=${encodeURIComponent(uri)}`).then(response => response.json())
                 .then(response => {
                     if (!response.success) {
                         setValid(false)
