@@ -81,14 +81,14 @@ export const HomePage = () => {
                 <Container
                     header={
                         <Header variant="h1" description="An analysis tool provided by Redshift.">
-                            Simple Replay Analysis
+                            Test Drive Replay Analysis
                         </Header>
                     }>
                     <SpaceBetween size={"l"}>
                         <AccessControl profiles={profiles}></AccessControl>
 
 
-                        <FormField label="Replay Bucket"
+                        <FormField label="Replay analysis file location"
                                    errorText={!valid && "Unable to access S3. Please check the provided URI."}
                                    secondaryControl={
                                        <Button
