@@ -112,9 +112,9 @@ Follow the table below to configure parameters in `extract.yaml` file found in i
 | source_cluster_system_table_unload_iam_role                                                                                                 |Optional    | Required only if source_cluster_system_table_unload_location is provided. IAM role to perform system table unloads to Amazon S3 and should have required access to the S3 location. Used only if source_cluster_endpoint is provided.                                                                                                                                                                                                                                                                                                                                                       |“arn:aws:iam::0123456789012:role/MyRedshiftUnloadRole”  |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |""  
 external_schemas                                                                                                 |Optional    | Add all the external_schemas in the form of a list and it is required only if the external sql statements are to be avoided in replay step.                                                                                                                                                                                                                                                                                                                                                      |[“external_schema_list”]  |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |""   |
 
-### Command
+### Extract Command
 
-Once the above configuration parameters are set in extract.yaml, the workload from the source cluster can be extracted using the following command:
+Once the above configuration parameters are set in extract.yaml, run following command to extract workload from the source cluster:
 
 ```
 cd $REDSHIFT_TEST_DRIVE_ROOT && make extract
@@ -214,8 +214,10 @@ Follow the table below to configure parameters in `replay.yaml` file found in th
 | nlb_nat_dns                                 |Optional    | NLB / NAT endpoint that will be used to connect to Target Cluster.                                                                                                                                                                                                                                                | “”                                                                                                                                                                                                   |
 
 
-### Command
+### Replay Command
 
+Once replay.yaml is configured, run the following command to replay extracted workload:
+    
 ```
 cd $REDSHIFT_TEST_DRIVE_ROOT && make replay
 ```
