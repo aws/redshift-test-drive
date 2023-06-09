@@ -239,6 +239,7 @@ The analysis folder structure is as follows :
 <br>
 <br>
 
+    
 
 ## Limitations 
 
@@ -254,3 +255,42 @@ The analysis folder structure is as follows :
   * Commit time metric is not available for Serverless.
   * Replay analysis currently only supports CSV format. PDF report generation is work in progress.
 * Workload Replicator does not support replaying federated users as this is a limitation for `GetClusterCredentials `API call.
+
+## IAM Permissions
+Below is a list of IAM permissions required to run Extract and Replay, ensure that you assume a role with the following permissions:
+- Policy Needed: arn:aws:iam::aws:policy/CloudWatchLogsReadOnlyAccess
+- IAM permission list:
+    - s3:GetBucketLocation
+    - s3:GetObject
+    - s3:ListMultipartUploadParts
+    - s3:ListBucket
+    - s3:ListBucketMultipartUploads
+    - s3:PutObject
+    - s3:ListObjects
+    - redshift:resumeCluster
+    - redshift:pauseCluster
+    - redshift:describeClusters
+    - redshift:modifyClusterParameterGroup
+    - redshift:createClusterParameterGroup
+    - redshift:describeClusterParameters
+    - redshift:GetClusterCredentials
+    - redshift:RebootCluster
+    - redshift-data:ExecuteStatement
+    - redshift-data:ListStatements
+    - redshift-data:GetStatementResult
+    - redshift-data:DescribeStatement
+    - redshift:DescribeLoggingStatus
+    - redshift:DescribeClusters
+    - redshift:DescribeClusterParameters
+    
+- If using serverless, also include:
+    - redshift-serverless:ListSnapshots
+    - redshift-serverless:UntagResource
+    - redshift-serverless:GetSnapshot
+    - redshift-serverless:GetCredentials
+    - redshift-serverless:ListTagsForResource
+    - redshift-serverless:GetNamespace
+    - redshift-serverless:GetWorkgroup
+    - redshift-serverless:ListNamespaces
+    - redshift-serverless:ListWorkgroups
+
