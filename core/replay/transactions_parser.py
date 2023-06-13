@@ -165,7 +165,7 @@ class TransactionsParser:
                 replacement_copy_location = replacements[existing_copy_location][0]
             except KeyError:
                 logger.info(f"No COPY replacement found for {existing_copy_location}")
-                return
+                return ''
 
             if not replacement_copy_location:
                 replacement_copy_location = existing_copy_location
