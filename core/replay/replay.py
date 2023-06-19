@@ -4,6 +4,7 @@ import hashlib
 import logging
 import sys
 import os
+import traceback
 import zipfile
 import yaml
 import common.config as config_helper
@@ -55,15 +56,13 @@ def main():
     replay_start_timestamp = datetime.datetime.now(tz=datetime.timezone.utc)
     logger.info(f"Replay start time: {replay_start_timestamp}")
 
-    id_hash = hashlib.sha1(
-        replay_start_timestamp.isoformat().encode("UTF-8")
-    ).hexdigest()[:5]
+    id_hash = hashlib.sha1(replay_start_timestamp.isoformat().encode("UTF-8")).hexdigest()[:5]
     if g_config.get("tag", "") != "":
-        replay_id = f'{replay_start_timestamp.isoformat()}_{cluster.get("id")}_{g_config["tag"]}_{id_hash}'
-    else:
         replay_id = (
-            f'{replay_start_timestamp.isoformat()}_{cluster.get("id")}_{id_hash}'
+            f'{replay_start_timestamp.isoformat()}_{cluster.get("id")}_{g_config["tag"]}_{id_hash}'
         )
+    else:
+        replay_id = f'{replay_start_timestamp.isoformat()}_{cluster.get("id")}_{id_hash}'
 
     # Setup Logging
     level = logging.getLevelName(g_config.get("log_level", "INFO").upper())
@@ -137,6 +136,7 @@ def main():
     except Exception as e:
         replay_id += "_INCOMPLETE"
         logger.error(f"Replay terminated. {e}")
+        logger.debug("".join(traceback.format_exception(*sys.exc_info())))
         raise e
 
     if len(errors) > 0:
@@ -189,6 +189,7 @@ def main():
             )
         except Exception as e:
             logger.error(f"Could not complete replay analysis. {e}")
+            logger.debug("".join(traceback.format_exception(*sys.exc_info())))
     else:
         logger.info("Analysis not enabled for this replay.")
 
@@ -207,24 +208,22 @@ def main():
     # uploading replay logs to s3
 
     bucket = bucket_dict(g_config["workload_location"])
-    object_key = 'replay_logs.zip'
-    zip_file_name = f'replay_logs.zip'
-    if bucket.get('bucket_name', ''):
+    object_key = "replay_logs.zip"
+    zip_file_name = f"replay_logs.zip"
+    if bucket.get("bucket_name", ""):
         logger.info(f"Uploading replay logs to {bucket['bucket_name']}/{bucket['prefix']}")
         dir = f"core/logs/replay/replay_log-{replay_id}"
         with zipfile.ZipFile(zip_file_name, "w", zipfile.ZIP_DEFLATED) as zip_object:
-            for folder_name,sub_folders, file_names in os.walk(dir):
+            for folder_name, sub_folders, file_names in os.walk(dir):
                 for filename in file_names:
-                    file_path = os.path.join(folder_name,filename)
+                    file_path = os.path.join(folder_name, filename)
                     zip_object.write(file_path)
-        with open(zip_file_name,'rb') as f:
+        with open(zip_file_name, "rb") as f:
             aws_service_helper.s3_put_object(
-                    f,
-                    bucket["bucket_name"],
-                    f"{bucket['prefix']}{object_key}"
-                )
+                f, bucket["bucket_name"], f"{bucket['prefix']}{object_key}"
+            )
     else:
-        logger.info('Invalid bucket name')
+        logger.info("Invalid bucket name")
 
 
 if __name__ == "__main__":

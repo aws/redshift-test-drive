@@ -1,6 +1,8 @@
 import datetime
 import json
 import logging
+import sys
+import traceback
 
 import dateutil.parser
 from boto3 import client
@@ -30,9 +32,7 @@ def parse_connections(
         )
         connections_json = json.loads(s3_object["Body"].read())
     else:
-        with open(
-            workload_directory.rstrip("/") + "/connections.json", "r"
-        ) as connections_file:
+        with open(workload_directory.rstrip("/") + "/connections.json", "r") as connections_file:
             connections_json = json.loads(connections_file.read())
             connections_file.close()
 
@@ -82,6 +82,7 @@ def parse_connections(
             total_connections += 1
         except Exception as err:
             logger.error(f"Could not parse connection: \n{str(connection_json)}\n{err}")
+            logger.debug("".join(traceback.format_exception(*sys.exc_info())))
 
     connections.sort(
         key=lambda conxn: conxn.session_initiation_time
@@ -182,19 +183,15 @@ class ConnectionLog:
             and self.database_name == other.database_name
             and self.username == other.username
             and self.pid == other.pid
-            and self.time_interval_between_transactions
-            == other.time_interval_between_transactions
-            and self.time_interval_between_queries
-            == other.time_interval_between_queries
+            and self.time_interval_between_transactions == other.time_interval_between_transactions
+            and self.time_interval_between_queries == other.time_interval_between_queries
         )
 
     def __hash__(self):
         return hash((self.database_name, self.username, self.pid))
 
     def get_pk(self):
-        return hash(
-            (self.session_initiation_time, self.database_name, self.username, self.pid)
-        )
+        return hash((self.session_initiation_time, self.database_name, self.username, self.pid))
 
     def __str__(self):
         return (
