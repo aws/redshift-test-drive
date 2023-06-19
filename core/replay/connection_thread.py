@@ -6,6 +6,7 @@ import re
 import threading
 import time
 import sys
+import traceback
 from contextlib import contextmanager
 from pathlib import Path
 
@@ -137,6 +138,8 @@ class ConnectionThread(threading.Thread):
             yield conn
         except Exception as e:
             self.logger.error(f"Exception in connect: {e}", exc_info=True)
+            self.logger.debug("".join(traceback.format_exception(*sys.exc_info())))
+
         finally:
             self.logger.debug(f"Context closing for pid: {self.connection_log.pid}")
             if conn is not None:
