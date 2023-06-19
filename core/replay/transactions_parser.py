@@ -103,14 +103,18 @@ class TransactionsParser:
         )
 
     @staticmethod
-    def get_unload_replacements(query_text, replay_output, replay_name, unload_iam_role):
+    def get_unload_replacements(
+        query_text, replay_output, replay_name, unload_iam_role
+    ):
         to_text = re.search(r"to 's3:\/\/[^']*", query_text, re.IGNORECASE).group()[9:]
 
         if to_text:
             existing_unload_location = re.search(
                 r"to 's3:\/\/[^']*", query_text, re.IGNORECASE
             ).group()[4:]
-            replacement_unload_location = replay_output + "/" + replay_name + "/UNLOADs/" + to_text
+            replacement_unload_location = (
+                replay_output + "/" + replay_name + "/UNLOADs/" + to_text
+            )
 
             new_query_text = query_text.replace(
                 existing_unload_location, replacement_unload_location
@@ -165,7 +169,7 @@ class TransactionsParser:
                 replacement_copy_location = replacements[existing_copy_location][0]
             except KeyError:
                 logger.info(f"No COPY replacement found for {existing_copy_location}")
-                return ''
+                return ""
 
             if not replacement_copy_location:
                 replacement_copy_location = existing_copy_location
@@ -178,9 +182,12 @@ class TransactionsParser:
                 )
                 sys.exit(-1)
 
-            query_text = query_text.replace(existing_copy_location, replacement_copy_location)
+            query_text = query_text.replace(
+                existing_copy_location, replacement_copy_location
+            )
 
             iam_replacements = [
+                (r"iam_role''", f" IAM_ROLE '{replacement_copy_iam_role}'"),
                 (
                     r"IAM_ROLE 'arn:aws:iam::\d+:role/\S+'",
                     f" IAM_ROLE '{replacement_copy_iam_role}'",
@@ -197,14 +204,15 @@ class TransactionsParser:
                     f" IAM_ROLE '{replacement_copy_iam_role}'",
                 ),
             ]
-
             for r in iam_replacements:
                 query_text = re.sub(r[0], r[1], query_text, flags=re.IGNORECASE)
         return query_text
 
 
 class Transaction:
-    def __init__(self, time_interval, database_name, username, pid, xid, queries, transaction_key):
+    def __init__(
+        self, time_interval, database_name, username, pid, xid, queries, transaction_key
+    ):
         self.time_interval = time_interval
         self.database_name = database_name
         self.username = username
@@ -227,7 +235,9 @@ class Transaction:
         )
 
     def get_base_filename(self):
-        return self.database_name + "-" + self.username + "-" + self.pid + "-" + self.xid
+        return (
+            self.database_name + "-" + self.username + "-" + self.pid + "-" + self.xid
+        )
 
     def start_time(self):
         return self.queries[0].start_time
@@ -265,7 +275,9 @@ class Query:
 def retrieve_compressed_json(location):
     """Load a gzipped json file from the specified location, either local or s3"""
     sql_gz = load_file(location)
-    json_content = gzip.GzipFile(fileobj=io.BytesIO(sql_gz), mode="rb").read().decode("utf-8")
+    json_content = (
+        gzip.GzipFile(fileobj=io.BytesIO(sql_gz), mode="rb").read().decode("utf-8")
+    )
     return json.loads(json_content)
 
 
