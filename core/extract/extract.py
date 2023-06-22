@@ -5,6 +5,7 @@ import datetime
 import yaml
 import os
 import zipfile
+import time
 import common.config as config_helper
 import common.log as log_helper
 from common import aws_service as aws_service_helper
@@ -15,6 +16,9 @@ logger = logging.getLogger("WorkloadReplicatorLogger")
 
 
 def main():
+
+    extract_start_time = time.time()
+
     # Parse config file
     config = config_helper.get_config_file_from_args()
     config_helper.validate_config_file_for_extract(config)
@@ -101,6 +105,8 @@ def main():
                 f, bucket_name, f"{output_prefix}/{object_key}"
             )
 
+    total_extract_time = str(datetime.timedelta(seconds=(time.time() - extract_start_time)))
+    logger.info(f"Extract completed in {total_extract_time}")
 
 if __name__ == "__main__":
     main()
