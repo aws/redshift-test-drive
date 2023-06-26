@@ -23,16 +23,6 @@ import report_gen
 from unload_sys_table import UnloadSysTable
 import common.aws_service as aws_service_helper
 
-g_total_connections = 0
-g_queries_executed = 0
-g_exit = False
-
-g_config = {}
-
-g_replay_timestamp = None
-
-g_is_serverless = False
-
 logger = logging.getLogger("WorkloadReplicatorLogger")
 
 
@@ -43,46 +33,43 @@ class ClusterNotExist(Exception):
 
 def main():
     # Parse config file
-    global g_config
-    g_config = config_helper.get_config_file_from_args()
-    config_helper.validate_config_for_replay(g_config)
+    config = config_helper.get_config_file_from_args()
+    config_helper.validate_config_for_replay(config)
 
-    global g_is_serverless
+    is_serverless_endpoint = is_serverless(config)
 
-    g_is_serverless = is_serverless(g_config)
-
-    cluster = cluster_dict(g_config["target_cluster_endpoint"], g_is_serverless)
+    cluster = cluster_dict(config["target_cluster_endpoint"], is_serverless_endpoint)
 
     replay_start_timestamp = datetime.datetime.now(tz=datetime.timezone.utc)
     logger.info(f"Replay start time: {replay_start_timestamp}")
 
     id_hash = hashlib.sha1(replay_start_timestamp.isoformat().encode("UTF-8")).hexdigest()[:5]
-    if g_config.get("tag", "") != "":
+    if config.get("tag", "") != "":
         replay_id = (
-            f'{replay_start_timestamp.isoformat()}_{cluster.get("id")}_{g_config["tag"]}_{id_hash}'
+            f'{replay_start_timestamp.isoformat()}_{cluster.get("id")}_{config["tag"]}_{id_hash}'
         )
     else:
         replay_id = f'{replay_start_timestamp.isoformat()}_{cluster.get("id")}_{id_hash}'
 
     # Setup Logging
-    level = logging.getLevelName(g_config.get("log_level", "INFO").upper())
+    level = logging.getLevelName(config.get("log_level", "INFO").upper())
     log_helper.init_logging(
         "replay_log",
         dir=f"core/logs/replay/replay_log-{replay_id}",
         level=level,
-        preamble=yaml.dump(g_config),
-        backup_count=g_config.get("backup_count", 2),
+        preamble=yaml.dump(config),
+        backup_count=config.get("backup_count", 2),
         script_type="replay",
         log_id=replay_id,
     )
     log_helper.log_version()
 
-    if not g_config["replay_output"]:
-        g_config["replay_output"] = None
+    if not config["replay_output"]:
+        config["replay_output"] = None
 
-    prep = ReplayPrep(g_config)
-    g_config["filters"] = ReplayPrep.validate_and_normalize_filters(
-        ConnectionLog, g_config.get("filters", {})
+    prep = ReplayPrep(config)
+    config["filters"] = ReplayPrep.validate_and_normalize_filters(
+        ConnectionLog, config.get("filters", {})
     )
     (
         connection_logs,
@@ -92,9 +79,6 @@ def main():
         last_event_time,
         total_connections,
     ) = prep.correlate_transactions_with_connections(replay_id)
-
-    global g_total_connections
-    g_total_connections = len(connection_logs)
 
     # test connection
     try:
@@ -121,7 +105,7 @@ def main():
     aggregated_stats = {}
     errors = []
     try:
-        replayer = Replayer(g_config)
+        replayer = Replayer(config)
         aggregated_stats = replayer.start_replay(
             connection_logs,
             first_event_time,
@@ -140,7 +124,7 @@ def main():
         raise e
 
     if len(errors) > 0:
-        bucket = bucket_dict(g_config["analysis_output"])
+        bucket = bucket_dict(config["analysis_output"])
         with open("replayerrors000", "w", newline="") as output_file:
             try:
                 dict_writer = csv.DictWriter(output_file, fieldnames=errors[0].keys())
@@ -160,7 +144,7 @@ def main():
     replay_end_time = datetime.datetime.now(tz=datetime.timezone.utc)
     replay_summary = summarize(
         connection_logs,
-        g_config,
+        config,
         replay_start_timestamp,
         aggregated_stats,
         query_count,
@@ -169,21 +153,21 @@ def main():
         replay_end_time,
     )
 
-    if g_config.get("analysis_iam_role") and g_config.get("analysis_output"):
+    if config.get("analysis_iam_role") and config.get("analysis_output"):
         try:
             report_gen.replay_pdf_generator(
                 replay=replay_id,
-                cluster_endpoint=g_config["target_cluster_endpoint"],
+                cluster_endpoint=config["target_cluster_endpoint"],
                 start_time=replay_start_timestamp,
                 end_time=replay_end_time,
-                bucket_url=g_config["analysis_output"],
-                iam_role=g_config["analysis_iam_role"],
-                user=g_config["master_username"],
-                tag=g_config["tag"],
-                workload=g_config["workload_location"],
-                is_serverless=g_is_serverless,
-                secret_name=g_config["secret_name"],
-                nlb_nat_dns=g_config["nlb_nat_dns"],
+                bucket_url=config["analysis_output"],
+                iam_role=config["analysis_iam_role"],
+                user=config["master_username"],
+                tag=config["tag"],
+                workload=config["workload_location"],
+                is_serverless=is_serverless_endpoint,
+                secret_name=config["secret_name"],
+                nlb_nat_dns=config["nlb_nat_dns"],
                 complete=complete,
                 summary=replay_summary,
             )
@@ -194,20 +178,20 @@ def main():
         logger.info("Analysis not enabled for this replay.")
 
     if (
-        g_config["replay_output"]
-        and g_config["unload_system_table_queries"]
-        and g_config["target_cluster_system_table_unload_iam_role"]
+        config["replay_output"]
+        and config["unload_system_table_queries"]
+        and config["target_cluster_system_table_unload_iam_role"]
     ):
-        logger.info(f'Exporting system tables to {g_config["replay_output"]}')
+        logger.info(f'Exporting system tables to {config["replay_output"]}')
 
-        unload_table = UnloadSysTable(g_config, replay_id)
+        unload_table = UnloadSysTable(config, replay_id)
         unload_table.unload_system_table()
 
-        logger.info(f'Exported system tables to {g_config["replay_output"]}')
+        logger.info(f'Exported system tables to {config["replay_output"]}')
 
     # uploading replay logs to s3
 
-    bucket = bucket_dict(g_config["workload_location"])
+    bucket = bucket_dict(config["workload_location"])
     object_key = "replay_logs.zip"
     zip_file_name = f"replay_logs.zip"
     if bucket.get("bucket_name", ""):
