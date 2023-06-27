@@ -943,9 +943,13 @@ Resources:
                 file.retrieve(url, f'/tmp/{filename}')
               
               files = glob.glob('*')
-              for file in files:  
-                s3_client.meta.client.upload_file(file, Bucket, Key=f'{path}/{file}')
-              cfnresponse.send(event, context, cfnresponse.SUCCESS, {'Data': 'Copy Succeeded'})
+              try:
+                for file in files:  
+                  s3_client.meta.client.upload_file(file, Bucket, Key=f'{path}/{file}')
+                cfnresponse.send(event, context, cfnresponse.SUCCESS, {'Data': 'Copy Succeeded'})
+              except Exception as e:
+                print(e)
+                cfnresponse.send(event, context, cfnresponse.FAILED, {'Data': 'Copy Failed'})
 
   CopyRedshiftConfigTestingCode:
     Type: Custom::CopyRedshiftConfigTestingCode
