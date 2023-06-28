@@ -39,7 +39,6 @@ def list_replays(bucket_url, session):
     table = []
     bucket = bucket_dict(bucket_url)
     try:
-        print(bucket.get("prefix"))
         if not session:
             resp = client("s3").list_objects_v2(
                 Bucket=bucket.get("bucket_name"), Delimiter="/", Prefix=bucket.get("prefix")
@@ -62,15 +61,16 @@ def list_replays(bucket_url, session):
     except botocore.errorfactory.NoSuchBucket as e:
         return None, e
 
-    s3 = boto3.resource("s3")
-
     for x in resp["CommonPrefixes"]:
         try:
-            s3.Object(bucket.get("bucket_name"), f'{x.get("Prefix")}info.json').load()
-            content_object = s3.Object(bucket.get("bucket_name"), f'{x.get("Prefix")}info.json')
+            s3_resource.Object(bucket.get("bucket_name"), f'{x.get("Prefix")}info.json').load()
+            content_object = s3_resource.Object(
+                bucket.get("bucket_name"), f'{x.get("Prefix")}info.json'
+            )
             file_content = content_object.get()["Body"].read().decode("utf-8")
             json_content = json.loads(file_content)
             json_content["bucket"] = bucket.get("bucket_name")
+            json_content["s3_prefix"] = x.get("Prefix")
             table.append(json_content)
         except ClientError as e:
             if (

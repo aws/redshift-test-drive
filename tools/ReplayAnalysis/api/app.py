@@ -34,10 +34,11 @@ def after_request(response):
     return response
 
 
-def request_s3_data(filename):
+def request_s3_data(filename, should_error_if_missing):
     """Iterates through selected replays to compile data results of given file in one data frame
     Analysis uses replayerrors000, sys_query_history000, and sys_load_history000 as of 08/08/22
     @param filename: str, filename of unloaded sys view data in S3
+    :param should_error_if_missing:
     """
 
     global boto3_session
@@ -50,15 +51,22 @@ def request_s3_data(filename):
     df = pd.DataFrame()
 
     for replay in selected_replays:
-        parsed = bucket_dict(replay["workload"])
         try:
             response = s3_client.get_object(
-                Bucket=parsed.get("bucket_name"),
-                Key=f"{parsed.get('prefix')}{replay['replay_id']}/raw_data/{filename}",
+                Bucket=replay["bucket"],
+                Key=f"{replay['s3_prefix']}raw_data/{filename}",
             )
             temp = pd.read_csv(response.get("Body")).fillna(0)
         except Exception as e:
-            temp = pd.DataFrame()
+            if should_error_if_missing:
+                print(
+                    f"Could not get object from Bucket: {replay['bucket']}, "
+                    f"with Key: {replay['s3_prefix']}raw_data/{filename}"
+                )
+                print(e)
+                raise e
+            else:
+                temp = pd.DataFrame()
 
         temp["sid"] = replay["sid"]  # associate short id with entries in df
 
@@ -206,7 +214,7 @@ def time_range():
         return jsonify({"success": False}), 400
 
     if selected_query_data is None:
-        selected_query_data = request_s3_data("sys_query_history000")
+        selected_query_data = request_s3_data("sys_query_history000", True)
 
     users = selected_query_data["user_name"].unique()
     time_max = 0
@@ -229,7 +237,7 @@ def compare_throughput():
     if not selected_replays:
         return jsonify({"success": False}), 400
     if selected_query_data is None:
-        selected_query_data = request_s3_data("sys_query_history000")
+        selected_query_data = request_s3_data("sys_query_history000", True)
 
     q_types = [d["label"] for d in json.loads(request.args.get("qtype"))]
     users = [d["label"] for d in json.loads(request.args.get("user"))]
@@ -268,7 +276,7 @@ def agg_metrics():
     duration = [int(request.args.get("start")), int(request.args.get("end"))]
 
     if selected_query_data is None:
-        selected_query_data = request_s3_data("sys_query_history000")
+        selected_query_data = request_s3_data("sys_query_history000", True)
 
     metrics = pd.DataFrame(columns=["sid", "p25", "p50", "p75", "p99", "avg", "std"])
 
@@ -302,7 +310,7 @@ def query_latency():
     global selected_replays
 
     if selected_query_data is None:
-        selected_query_data = request_s3_data("sys_query_history000")
+        selected_query_data = request_s3_data("sys_query_history000", True)
 
     all_bins = []
     all_hist = []
@@ -340,7 +348,7 @@ def top_queries():
             201,
         )
 
-    df = request_s3_data("sys_query_history000")
+    df = request_s3_data("sys_query_history000", True)
 
     if df is not None:
         df = df.sort_values(by="elapsed_time", ascending=False)
@@ -360,7 +368,7 @@ def perf_diff():
 
     global selected_query_data
     if selected_query_data is None:
-        selected_query_data = request_s3_data("sys_query_history000")
+        selected_query_data = request_s3_data("sys_query_history000", True)
 
     baseline_data = selected_query_data.loc[selected_query_data["sid"] == baseline]
     baseline_data = baseline_data[baseline_data["query_hash"] != 0]
@@ -404,7 +412,7 @@ def err_table():
             201,
         )
 
-    df = request_s3_data("replayerrors000")
+    df = request_s3_data("replayerrors000", False)
     if df is not None:
         return (
             jsonify({"success": True, "data": json.loads(df.to_json(orient="records"))}),
@@ -475,9 +483,9 @@ def copy_agg():
     duration = [int(request.args.get("start")), int(request.args.get("end"))]
 
     if selected_query_data is None:
-        selected_query_data = request_s3_data("sys_query_history000")
+        selected_query_data = request_s3_data("sys_query_history000", True)
     if selected_copy_data is None:
-        selected_copy_data = request_s3_data("sys_load_history000")
+        selected_copy_data = request_s3_data("sys_load_history000", True)
 
     if selected_copy_data.empty:
         return jsonify({"success": True, "data": []}), 201
@@ -512,9 +520,9 @@ def copy_diff():
     global selected_replays
 
     if selected_query_data is None:
-        selected_query_data = request_s3_data("sys_query_history000")
+        selected_query_data = request_s3_data("sys_query_history000", True)
     if selected_copy_data is None:
-        selected_copy_data = request_s3_data("sys_load_history000")
+        selected_copy_data = request_s3_data("sys_load_history000", True)
 
     if selected_copy_data.empty:
         return jsonify({"success": True, "data": []}), 201
