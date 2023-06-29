@@ -57,6 +57,7 @@ Parameters:
     Description: SNS email endpoint to receive step function state change alerts
     Type: String
     Default: "N/A"
+
 Metadata:
   AWS::CloudFormation::Interface:
     ParameterGroups:
@@ -74,6 +75,7 @@ Metadata:
           - GrantS3ReadOnlyAccessToRedshift
           - UseAWSLakeFormationForGlueCatalog
           - NotificationEmail
+
 Conditions:
   GrantS3ReadOnlyAccessToRedshift:
     !Equals
@@ -135,6 +137,8 @@ Mappings:
       ConfigTestingLambdaScript: 'RedshiftConfigTestingLambda.py.zip'
       ConfigTestingStepFunctionScript: 'RedshiftConfigTestingStepFunction.json'
       ExternalPublicBucket: 'redshift-test-drive-node-config'
+      StartUpLambdaScript: 'StartUpLambda.py.zip'
+
     Pricing:
       Uri: 'https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonRedshift/current/index.csv'
       File: 'pricing/redshift_pricing.csv'
@@ -677,6 +681,20 @@ Resources:
       Description: boto3 latest
       LayerName: boto3-latest
       LicenseInfo: MIT
+  
+  StartUpLambdaLayer:
+    Type: AWS::Lambda::LayerVersion
+    DependsOn: CopyRedshiftConfigTestingCode
+    Properties:
+      CompatibleRuntimes:
+        - python3.7
+        - python3.8
+      Content:
+        S3Bucket: !Ref RedshiftConfigTestingBucket
+        S3Key: configurations/python.zip
+      Description: cfn response V1.1.2 without dependencies
+      LayerName: cfnResponse_without_deps
+      LicenseInfo: MIT
 
   RedshiftConfigTestingLambda:
     Type: AWS::Lambda::Function
@@ -781,7 +799,7 @@ Resources:
     Type: AWS::Lambda::Function
     Properties:
       Description: lambda to add iam role with access on simple replay S3 bucket to source redshift cluster
-      Handler: index.handler
+      Handler: StartUpLambda.handler
       Runtime: python3.8
       Role: !GetAtt 'StartUpLambdaIAMRole.Arn'
       Timeout: 60
@@ -869,96 +887,21 @@ Resources:
             - s3://${RedshiftConfigTestingBucket}/${DataPrefix}/${PricingFile}
             - {DataPrefix: !FindInMap [ ConfigTesting, S3, DataPrefix],PricingFile: !FindInMap [ ConfigTesting, Pricing, File]}
       Code:
-        ZipFile: |
-          import boto3
-          import botocore.exceptions as be
-          import traceback
-          import json
-          import cfnresponse
-          import urllib3
-          import os
-          def handler(event, context):
-              print(event)
-              res = {}
-              if event['RequestType'] != 'Delete':
-                  try:
-                      system_config = {}
-                      for item, value in sorted(os.environ.items(), key=lambda x: x[0]):
-                          system_config[item] = value
-                      user_config =  get_json_config_from_s3(os.environ['USER_CONFIG_JSON_S3_PATH'])
-                      master_user_name, database_name,port, source_node_type, source_number_of_nodes = get_db_params(user_config)
-                      system_config["MASTER_USER_NAME"] = master_user_name
-                      system_config["DATABASE_NAME"] = database_name
-                      system_config["PORT"] = port
-                      system_config["SOURCE_NODE_TYPE"] = source_node_type
-                      system_config["SOURCE_NUMBER_OF_NODES"] = source_number_of_nodes
-                      save_pricing_data(os.environ['PRICING_URI'], int(os.environ['REMOVE_HEADER_LENGTH']), os.environ['PRICING_FILE'])
-                      system_config["EXTERNAL_SCHEMA_SCRIPT"] = "create external schema "+ os.environ['GLUE_DATABASE_NAME'] + " from data catalog database '"+ os.environ['GLUE_DATABASE_NAME'] +"' iam_role '"+ os.environ['REDSHIFT_IAM_ROLE'] +"'"
-                      workgroup_subnet_list = event['ResourceProperties']['RedshiftSubnetList']
-                      system_config["WORKGROUP_SUBNET"] = ','.join(workgroup_subnet_list)
-                      s3_put_config_file(system_config, os.environ['SYSTEM_CONFIG_JSON_S3_PATH'])
-                      #response = boto3.client('stepfunctions').start_execution(
-                      #    stateMachineArn=os.environ['STEP_FUNCTION_ARN']
-                      #)
-                      response = 'Step function started'
-                      res = {'master_user_name': master_user_name, 'database_name': database_name, 'port': port}
-                  except Exception as e:
-                      res = {'error': e.response['Error']['Code'] if isinstance(e, be.ClientError) else 'failed'}
-                      print(traceback.format_exc())
-                      cfnresponse.send(event, context, cfnresponse.FAILED, res)
-                      raise
-                  print(response)
-              cfnresponse.send(event, context, cfnresponse.SUCCESS, res)
-          def get_json_config_from_s3(script_s3_path):
-              bucket, key = script_s3_path.replace("s3://", "").split("/", 1)
-              obj = boto3.client('s3').get_object(Bucket=bucket, Key=key)
-              return json.loads(obj['Body'].read().decode('utf-8'))
-          def s3_put_config_file(dict_obj, s3_path):
-              s3 = boto3.client('s3')
-              bucket, key = s3_path.replace("s3://", "").split("/", 1)
-              s3.put_object(Body=json.dumps(dict_obj), Bucket=bucket, Key=key)
-          def save_pricing_data(pricing_uri, remove_header_length, price_info_file_s3_path):
-              bucket, key = price_info_file_s3_path.replace("s3://", "").split("/", 1)
-              price_content = urllib3.PoolManager().request('GET', pricing_uri).data.decode("utf-8")
-              pricing_content_list = price_content.split('\n')
-              new_content = '\n'.join(pricing_content_list[remove_header_length:])
-              boto3.client('s3').put_object(Body=new_content, Bucket=bucket, Key=key)
-          def get_clusters(client, cluster_identifier):
-              try:
-                  cluster_identifiers = []
-                  for cluster in client.describe_clusters().get('Clusters'):
-                      if cluster_identifier in cluster.get('ClusterIdentifier'):
-                          cluster_identifiers.append(cluster.get('ClusterIdentifier'))
-                  return cluster_identifiers
-              except be.ClientError as e:
-                  msg = e.response['Error']['Code']
-                  if msg == 'ClusterNotFound':
-                      status = 'N/A'
-                  else:
-                      raise
-              return status
-          def get_db_params(user_config:dict):
-              if user_config.get('SNAPSHOT_ID') is None or user_config.get('SNAPSHOT_ID') == "N/A":
-                  master_user_name=os.environ['DEFAULT_MASTER_USER']
-                  database_name=os.environ['DEFAULT_DATABASE_NAME']
-                  port=os.environ['DEFAULT_PORT']
-                  source_node_type=""
-                  source_number_of_nodes=0
-              else:
-                  resp = boto3.client('redshift').describe_cluster_snapshots(SnapshotIdentifier=user_config.get('SNAPSHOT_ID'))
-                  master_user_name = resp['Snapshots'][0]['MasterUsername']
-                  database_name = resp['Snapshots'][0]['DBName']
-                  port = resp['Snapshots'][0]['Port']
-                  source_node_type=resp['Snapshots'][0]['NodeType']
-                  source_number_of_nodes=resp['Snapshots'][0]['NumberOfNodes']
-              return (master_user_name, database_name, port, source_node_type, source_number_of_nodes)
+        S3Bucket: !Ref RedshiftConfigTestingBucket
+        S3Key: !Sub
+          - ${ScriptPrefix}/${StartUpLambdaScript}
+          - {ScriptPrefix: !FindInMap [ ConfigTesting, S3, ScriptPrefix], StartUpLambdaScript: !FindInMap [ ConfigTesting, S3, StartUpLambdaScript]}
+      Layers: 
+        - !Ref StartUpLambdaLayer
+        
   StartUp:
     Type: Custom::StartUpLambda
+    DependsOn: LambdaFunctionGitHubCopy 
     Properties:
       ServiceToken: !GetAtt [StartUpLambda, Arn]
       RedshiftSubnetList: !Ref RedshiftSubnetId
 
-  LambdaFunctionS3Copy:
+  LambdaFunctionGitHubCopy:
     Type: "AWS::Lambda::Function"
     Properties:
       Description: lambda to copy files
@@ -968,49 +911,82 @@ Resources:
       Timeout: 60
       Code:
         ZipFile: |
+          import urllib.request
+          from urllib.parse import urlparse
           import boto3
+          import logging
+          import json
+          import os
+          import glob
           import cfnresponse
-          import traceback
+
+          os.chdir('/tmp')
+
+          logger = logging.getLogger("copyFiles")
+          logger.setLevel(logging.INFO)
+
+          s3_client = boto3.resource('s3')
+
           def handler(event, context):
-              print(event)
-              source_folder_s3_path = event['ResourceProperties']['source_folder_s3_path']
+              
+            try:
+              logger.info(json.dumps(str(event)))
+              
+              source_paths = event['ResourceProperties']['URLs']
               target_folder_s3_path = event['ResourceProperties']['target_folder_s3_path']
-              s3 = boto3.resource('s3')
-              if event['RequestType'] == 'Delete':
-                  try:
-                      bucket_name = target_folder_s3_path.split('/')[2]
-                      prefix = target_folder_s3_path.split('/')[3] + '/'
-                      bucket = s3.Bucket(bucket_name)
-                      bucket.objects.filter(Prefix=prefix).delete()
-                  except Exception as e:
-                      print(e)
-                      print(traceback.format_exc())
-                  cfnresponse.send(event, context, cfnresponse.SUCCESS, {'Data': 'Delete complete'})
-              else:
-                  try:
-                      source_bucket, source_prefix = source_folder_s3_path.replace("s3://", "").split("/", 1)
-                      target_bucket, target_prefix = target_folder_s3_path.replace("s3://", "").split("/", 1)
-                      for obj in s3.Bucket(source_bucket).objects.filter(Prefix=source_prefix):
-                          source_object = {'Bucket': source_bucket, 'Key': obj.key}
-                          new_key = obj.key.replace(source_prefix, target_prefix, 1)
-                          target_object = s3.Bucket(target_bucket).Object(new_key)
-                          target_object.copy(source_object)
-                      cfnresponse.send(event, context, cfnresponse.SUCCESS, {'Data': 'Copy complete'})
-                  except Exception as e:
-                      print(e)
-                      print(traceback.format_exc())
-                      cfnresponse.send(event, context, cfnresponse.FAILED, {'Data': 'Copy failed'})
+              branch = event['ResourceProperties']['branch']
+
+              logger.info(branch)
+
+              parsed = urlparse(target_folder_s3_path)
+              Bucket, path = parsed.netloc, parsed.path
+              
+              # remove the "/" in the path
+              path = path[1:]
+              
+              for file_path in source_paths:
+                url = f'https://raw.githubusercontent.com/aws/redshift-test-drive/{branch}/tools/NodeConfigCompare/'+ file_path
+                filename = url.split('/')[-1]
+                file = urllib.request.URLopener()
+                file.retrieve(url, f'/tmp/{filename}')
+              
+              files = glob.glob('*')
+              for file in files:  
+                s3_client.meta.client.upload_file(file, Bucket, Key=f'{path}/{file}')
+              cfnresponse.send(event, context, cfnresponse.SUCCESS, {'Data': 'Copy Succeeded'})
+            except Exception as e:
+              print(e)
+              cfnresponse.send(event, context, cfnresponse.FAILED, {'Data': 'Copy Failed'})
+
   CopyRedshiftConfigTestingCode:
     Type: Custom::CopyRedshiftConfigTestingCode
     Properties:
       ServiceToken:
-        Fn::GetAtt : [LambdaFunctionS3Copy, Arn]
-      source_folder_s3_path: !Sub
-        - s3://${ExternalPublicBucket}/${ScriptPrefix}
-        - {ExternalPublicBucket: !FindInMap [ ConfigTesting, S3, ExternalPublicBucket],ScriptPrefix: !FindInMap [ ConfigTesting, S3, ScriptPrefix]}
+        Fn::GetAtt : [LambdaFunctionGitHubCopy, Arn]
+      URLs:  [
+        "python_scripts/RedshiftConfigTestingLambda.py.zip",
+        "python_scripts/StartUpLambda.py.zip",
+        "python_scripts/boto3-redshift-serverless.zip",
+        "python_scripts/create_external_schema.py",
+        "python_scripts/redshift-performance-test.py",
+        "python_scripts/python.zip",
+
+        "bootstrap_scripts/extract_bootstrap.sh",
+        "bootstrap_scripts/performance_test_bootstrap.sh",
+        "bootstrap_scripts/replay_bootstrap.sh",
+
+        "configuration/RedshiftConfigTestingStepFunction.json",
+        "configuration/parameter_group_config.json",
+
+        "sql/gather_comparison_stats.sql",
+        "sql/gather_comparison_stats_serverless.sql",
+        "sql/populate_comparison_results.sql"
+        ]
       target_folder_s3_path: !Sub
         - s3://${RedshiftConfigTestingBucket}/${ScriptPrefix}
         - {ScriptPrefix: !FindInMap [ ConfigTesting, S3, ScriptPrefix]}
+      branch: "main"
+
   LakeFormationPermissionGlueCrawler:
     Type: AWS::LakeFormation::Permissions
     Condition: UseAWSLakeFormationForGlueCatalog
