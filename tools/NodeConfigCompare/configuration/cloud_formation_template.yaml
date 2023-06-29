@@ -57,10 +57,6 @@ Parameters:
     Description: SNS email endpoint to receive step function state change alerts
     Type: String
     Default: "N/A"
-  Branch:
-    Description: Choose GitHub branch from where node config core files need to be copied
-    Type: String
-    Default: "main"
 
 Metadata:
   AWS::CloudFormation::Interface:
@@ -79,7 +75,6 @@ Metadata:
           - GrantS3ReadOnlyAccessToRedshift
           - UseAWSLakeFormationForGlueCatalog
           - NotificationEmail
-          - Branch
 
 Conditions:
   GrantS3ReadOnlyAccessToRedshift:
@@ -990,7 +985,7 @@ Resources:
       target_folder_s3_path: !Sub
         - s3://${RedshiftConfigTestingBucket}/${ScriptPrefix}
         - {ScriptPrefix: !FindInMap [ ConfigTesting, S3, ScriptPrefix]}
-      branch: !Ref Branch
+      branch: "main"
 
   LakeFormationPermissionGlueCrawler:
     Type: AWS::LakeFormation::Permissions
