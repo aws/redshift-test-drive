@@ -57,6 +57,11 @@ Parameters:
     Description: SNS email endpoint to receive step function state change alerts
     Type: String
     Default: "N/A"
+  Branch:
+    Description: Choose GitHub branch from where node config core files need to be copied
+    Type: String
+    Default: "main"
+
 Metadata:
   AWS::CloudFormation::Interface:
     ParameterGroups:
@@ -74,6 +79,8 @@ Metadata:
           - GrantS3ReadOnlyAccessToRedshift
           - UseAWSLakeFormationForGlueCatalog
           - NotificationEmail
+          - Branch
+
 Conditions:
   GrantS3ReadOnlyAccessToRedshift:
     !Equals
@@ -927,29 +934,34 @@ Resources:
 
           def handler(event, context):
               
+            try:
               logger.info(json.dumps(str(event)))
               
-              source_urls = event['ResourceProperties']['URLs']
+              source_paths = event['ResourceProperties']['URLs']
               target_folder_s3_path = event['ResourceProperties']['target_folder_s3_path']
+              branch = event['ResourceProperties']['branch']
+
+              logger.info(branch)
+
               parsed = urlparse(target_folder_s3_path)
               Bucket, path = parsed.netloc, parsed.path
               
               # remove the "/" in the path
               path = path[1:]
               
-              for url in source_urls:
+              for file_path in source_paths:
+                url = f'https://raw.githubusercontent.com/aws/redshift-test-drive/{branch}/tools/NodeConfigCompare/'+ file_path
                 filename = url.split('/')[-1]
                 file = urllib.request.URLopener()
                 file.retrieve(url, f'/tmp/{filename}')
               
               files = glob.glob('*')
-              try:
-                for file in files:  
-                  s3_client.meta.client.upload_file(file, Bucket, Key=f'{path}/{file}')
-                cfnresponse.send(event, context, cfnresponse.SUCCESS, {'Data': 'Copy Succeeded'})
-              except Exception as e:
-                print(e)
-                cfnresponse.send(event, context, cfnresponse.FAILED, {'Data': 'Copy Failed'})
+              for file in files:  
+                s3_client.meta.client.upload_file(file, Bucket, Key=f'{path}/{file}')
+              cfnresponse.send(event, context, cfnresponse.SUCCESS, {'Data': 'Copy Succeeded'})
+            except Exception as e:
+              print(e)
+              cfnresponse.send(event, context, cfnresponse.FAILED, {'Data': 'Copy Failed'})
 
   CopyRedshiftConfigTestingCode:
     Type: Custom::CopyRedshiftConfigTestingCode
@@ -957,27 +969,28 @@ Resources:
       ServiceToken:
         Fn::GetAtt : [LambdaFunctionGitHubCopy, Arn]
       URLs:  [
-        "https://raw.githubusercontent.com/aws/redshift-test-drive/main/tools/NodeConfigCompare/python_scripts/RedshiftConfigTestingLambda.py.zip",
-        "https://raw.githubusercontent.com/aws/redshift-test-drive/main/tools/NodeConfigCompare/python_scripts/StartUpLambda.py.zip",
-        "https://raw.githubusercontent.com/aws/redshift-test-drive/main/tools/NodeConfigCompare/python_scripts/boto3-redshift-serverless.zip",
-        "https://raw.githubusercontent.com/aws/redshift-test-drive/main/tools/NodeConfigCompare/python_scripts/create_external_schema.py",
-        "https://raw.githubusercontent.com/aws/redshift-test-drive/main/tools/NodeConfigCompare/python_scripts/redshift-performance-test.py",
-        "https://raw.githubusercontent.com/aws/redshift-test-drive/main/tools/NodeConfigCompare/python_scripts/python.zip",
+        "python_scripts/RedshiftConfigTestingLambda.py.zip",
+        "python_scripts/StartUpLambda.py.zip",
+        "python_scripts/boto3-redshift-serverless.zip",
+        "python_scripts/create_external_schema.py",
+        "python_scripts/redshift-performance-test.py",
+        "python_scripts/python.zip",
 
-        "https://raw.githubusercontent.com/aws/redshift-test-drive/main/tools/NodeConfigCompare/bootstrap_scripts/extract_bootstrap.sh",
-        "https://raw.githubusercontent.com/aws/redshift-test-drive/main/tools/NodeConfigCompare/bootstrap_scripts/performance_test_bootstrap.sh",
-        "https://raw.githubusercontent.com/aws/redshift-test-drive/main/tools/NodeConfigCompare/bootstrap_scripts/replay_bootstrap.sh",
+        "bootstrap_scripts/extract_bootstrap.sh",
+        "bootstrap_scripts/performance_test_bootstrap.sh",
+        "bootstrap_scripts/replay_bootstrap.sh",
 
-        "https://raw.githubusercontent.com/aws/redshift-test-drive/main/tools/NodeConfigCompare/configuration/RedshiftConfigTestingStepFunction.json",
-        "https://raw.githubusercontent.com/aws/redshift-test-drive/main/tools/NodeConfigCompare/configuration/parameter_group_config.json",
+        "configuration/RedshiftConfigTestingStepFunction.json",
+        "configuration/parameter_group_config.json",
 
-        "https://raw.githubusercontent.com/aws/redshift-test-drive/main/tools/NodeConfigCompare/sql/gather_comparison_stats.sql",
-        "https://raw.githubusercontent.com/aws/redshift-test-drive/main/tools/NodeConfigCompare/sql/gather_comparison_stats_serverless.sql",
-        "https://raw.githubusercontent.com/aws/redshift-test-drive/main/tools/NodeConfigCompare/sql/populate_comparison_results.sql"
+        "sql/gather_comparison_stats.sql",
+        "sql/gather_comparison_stats_serverless.sql",
+        "sql/populate_comparison_results.sql"
         ]
       target_folder_s3_path: !Sub
         - s3://${RedshiftConfigTestingBucket}/${ScriptPrefix}
         - {ScriptPrefix: !FindInMap [ ConfigTesting, S3, ScriptPrefix]}
+      branch: !Ref Branch
 
   LakeFormationPermissionGlueCrawler:
     Type: AWS::LakeFormation::Permissions
