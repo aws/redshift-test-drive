@@ -5,6 +5,7 @@ repos:
   hooks:
   -   id: check-yaml
       types: [yaml]
+      exclude: cloud_formation_template.yaml
   -   id: end-of-file-fixer
       types: [python]
   -   id: trailing-whitespace

@@ -641,7 +641,6 @@ Resources:
 
   RedshiftConfigTestingLambdaIamRole:
     Type: AWS::IAM::Role
-    DependsOn: RedshiftIAMRole
     Properties:
       AssumeRolePolicyDocument:
         Statement:
@@ -881,9 +880,6 @@ Resources:
           RAW_COMPARISON_RESULTS_S3_PATH: !Sub
             - s3://${RedshiftConfigTestingBucket}/${DataPrefix}/${RawResultsLocation}
             - {DataPrefix: !FindInMap [ ConfigTesting, S3, DataPrefix],RawResultsLocation: !FindInMap [ ConfigTesting, S3, RawResultsLocation]}
-          RAW_COMPARISON_RESULTS_S3_PATH: !Sub
-            - s3://${RedshiftConfigTestingBucket}/${DataPrefix}/${RawResultsLocation}
-            - {DataPrefix: !FindInMap [ ConfigTesting, S3, DataPrefix],RawResultsLocation: !FindInMap [ ConfigTesting, S3, RawResultsLocation]}
           CLUSTER_CONFIG_S3_PATH: !Sub
             - s3://${RedshiftConfigTestingBucket}/${DataPrefix}/${ClusterConfigLocation}
             - {DataPrefix: !FindInMap [ ConfigTesting, S3, DataPrefix],ClusterConfigLocation: !FindInMap [ ConfigTesting, S3, ClusterConfigLocation]}
@@ -1028,7 +1024,6 @@ Resources:
     Condition: UseAWSLakeFormationForGlueCatalog
     DependsOn:
       - GlueDatabase 
-      - IamRoleGlueCrawler
     Properties:
       DataLakePrincipal:
         DataLakePrincipalIdentifier: !GetAtt IamRoleGlueCrawler.Arn
@@ -1044,7 +1039,6 @@ Resources:
     Type: AWS::LakeFormation::Permissions
     Condition: UseAWSLakeFormationForGlueCatalog
     DependsOn: 
-      - RedshiftIAMRole
       - GlueDatabase
     Properties:
       DataLakePrincipal:
