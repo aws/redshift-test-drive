@@ -151,7 +151,7 @@ Mappings:
       QueryLabelPrefix: 'redshift-performance-test-concurrency-'
   Glue:
     Database:
-      Name: 'redshift_config_comparison_121'
+      Name: 'redshift_config_comparison'
   Region:
     us-west-2:
       Name: 'US West (Oregon)'
