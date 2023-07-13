@@ -264,6 +264,7 @@ Resources:
     Type: "AWS::SecretsManager::Secret"
     Properties:
       Description: "Secrets Manager to store Redshift master user credentials"
+      KmsKeyId: alias/aws/secretsmanager
       GenerateSecretString:
         SecretStringTemplate: !Sub
         - '{"username": "${MasterUsername}"}'
@@ -285,6 +286,28 @@ Resources:
         DestinationBucketName: !Ref LoggingBucket
         LogFilePrefix: NodeConfigCompare
   
+  S3BucketPolicyConfigTestingBucket:
+    Type: 'AWS::S3::BucketPolicy'
+    Properties: 
+      Bucket: !Ref RedshiftConfigTestingBucket
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Action:
+            - 's3:PutObject'
+            - 's3:GetObject'
+            - 's3:ListBucket'
+            Effect: Allow
+            Resource:
+              - !Join ['',['arn:aws:s3:::',!Ref RedshiftConfigTestingBucket]]
+              - !Join ['',['arn:aws:s3:::',!Ref RedshiftConfigTestingBucket, '/*']]
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+                - batch.amazonaws.com
+                - redshift.amazonaws.com
+                - states.amazonaws.com
+            
   LoggingBucket:
     Type: 'AWS::S3::Bucket'
     Properties:
@@ -298,7 +321,7 @@ Resources:
     Properties:
       Bucket: !Ref LoggingBucket
       PolicyDocument:
-        Version: 2012-10-17
+        Version: "2012-10-17"
         Statement:
           - Action:
               - 's3:PutObject'
@@ -422,18 +445,25 @@ Resources:
               - !Sub "arn:aws:redshift:${AWS::Region}:${AWS::AccountId}:parametergroup:${ClusterIdentifierPrefix}*"
           - Effect: Allow
             Action:
-              - ec2:Describe*
               - redshift:restoreFromClusterSnapshot
               - redshift:describeClusterSnapshots
-              - redshift-data:ExecuteStatement
-              - redshift-data:ListStatements
-              - redshift-data:GetStatementResult
-              - redshift-data:DescribeStatement
               - redshift:DescribeLoggingStatus
               - redshift:DescribeClusters
               - redshift:DescribeClusterParameters
             Resource:
-              - '*'
+              - !Sub "arn:aws:redshift:${AWS::Region}:${AWS::AccountId}:cluster:*"
+              - !Sub "arn:aws:redshift:${AWS::Region}:${AWS::AccountId}:snapshot:*"
+              - !Sub "arn:aws:redshift:${AWS::Region}:${AWS::AccountId}:dbname:*"
+              - !Sub "arn:aws:redshift:${AWS::Region}:${AWS::AccountId}:dbuser:*"
+              - !Sub "arn:aws:redshift:${AWS::Region}:${AWS::AccountId}:parametergroup:*"
+          - Effect: Allow
+            Action:
+              - ec2:Describe*
+              - redshift-data:ExecuteStatement
+              - redshift-data:ListStatements
+              - redshift-data:GetStatementResult
+              - redshift-data:DescribeStatement
+            Resource: "*"
   RedshiftServerlessIAMPolicy:
     Type: 'AWS::IAM::ManagedPolicy'
     Properties:
@@ -472,7 +502,16 @@ Resources:
             Action:
               - redshift-serverless:RestoreFromSnapshot
               - redshift:GetClusterCredentials
-            Resource: '*'
+            Resource: 
+              - !Sub "arn:aws:redshift-serverless:${AWS::Region}:${AWS::AccountId}:namespace/*"
+              - !Sub "arn:aws:redshift-serverless:${AWS::Region}:${AWS::AccountId}:workgroup/*"
+              - !Sub "arn:aws:redshift-serverless:${AWS::Region}:${AWS::AccountId}:managedvpcendpoint/*"
+              - !Sub "arn:aws:redshift-serverless:${AWS::Region}:${AWS::AccountId}:recovery-point/*"
+              - !Sub "arn:aws:redshift-serverless:${AWS::Region}:${AWS::AccountId}:snapshot/*"
+              - !Sub "arn:aws:redshift:${AWS::Region}:${AWS::AccountId}:dbuser:*"
+              - !Sub "arn:aws:redshift:${AWS::Region}:${AWS::AccountId}:dbgroup:*"
+              - !Sub "arn:aws:redshift:${AWS::Region}:${AWS::AccountId}:dbname:*"
+
   KMSAccessPolicy:
     Condition: EncryptedSourceCluster
     Type: 'AWS::IAM::ManagedPolicy'
@@ -503,7 +542,18 @@ Resources:
             Action:
               - glue:Get*
               - glue:BatchGetPartition
-            Resource: '*'
+            Resource: 
+              - !Sub "arn:aws:glue:${AWS::Region}:${AWS::AccountId}:catalog"
+              - !Sub "arn:aws:glue:${AWS::Region}:${AWS::AccountId}:database/*"
+              - !Sub "arn:aws:glue:${AWS::Region}:${AWS::AccountId}:table/*"
+              - !Sub "arn:aws:glue:${AWS::Region}:${AWS::AccountId}:userDefinedFunction/*"
+              - !Sub "arn:aws:glue:${AWS::Region}:${AWS::AccountId}:connection/*"
+              - !Sub "arn:aws:glue:${AWS::Region}:${AWS::AccountId}:session/*"
+              - !Sub "arn:aws:glue:${AWS::Region}:${AWS::AccountId}:crawler/*"
+              - !Sub "arn:aws:glue:${AWS::Region}:${AWS::AccountId}:job/*"
+              - !Sub "arn:aws:glue:${AWS::Region}:${AWS::AccountId}:trigger/*"
+              - !Sub "arn:aws:glue:${AWS::Region}:${AWS::AccountId}:devEndpoint/*"
+              - !Sub "arn:aws:glue:${AWS::Region}:${AWS::AccountId}:mlTransform/*"
 
   RedshiftMLAccessPolicy:
     Type: 'AWS::IAM::ManagedPolicy'
@@ -512,18 +562,18 @@ Resources:
         Version: '2012-10-17'
         Statement:
           - Sid: 'RedshiftMLAccessPolicy'
-            Effect: 'Allow'
+            Effect: Allow
             Action:
-              - cloudwatch:PutMetricData
               - logs:CreateLogGroup
               - logs:CreateLogStream
               - logs:DescribeLogStreams
               - logs:PutLogEvents
+              - cloudwatch:PutMetricData
               - ecr:BatchCheckLayerAvailability
               - ecr:BatchGetImage
               - ecr:GetAuthorizationToken
               - ecr:GetDownloadUrlForLayer
-            Resource: '*'
+            Resource: "*"
 
   AWSBatchIamRole:
     Type: AWS::IAM::Role
@@ -698,7 +748,8 @@ Resources:
               - Effect: Allow
                 Action:
                   - glue:StartCrawler
-                Resource: "*"
+                Resource: 
+                  - !Sub "arn:aws:glue:${AWS::Region}:${AWS::AccountId}:crawler/*"
 
   LambdaLayer:
     Type: AWS::Lambda::LayerVersion
@@ -824,9 +875,9 @@ Resources:
                 -
                   Effect: "Allow"
                   Action:
-                  - states:StartExecution
                   - redshift:DescribeClusterSnapshots
-                  Resource: "*"
+                  Resource: 
+                    - !Sub "arn:aws:redshift:${AWS::Region}:${AWS::AccountId}:snapshot:*/*"
 
   StartUpLambda:
     Type: AWS::Lambda::Function
