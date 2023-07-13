@@ -347,7 +347,7 @@ Resources:
       SecurityGroupEgress:
         - Description: Allow all outbound traffic
           IpProtocol: -1
-          CidrIp: !Ref OnPremisesCIDR
+          CidrIp: 0.0.0.0/0
       VpcId: !Ref VPC
 
   SecurityGroupSelfReference:
