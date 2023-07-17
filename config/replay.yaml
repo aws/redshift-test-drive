@@ -96,3 +96,6 @@ split_multi: true
 # In case of Serverless, set up a secret to store admin username and password. Specify the name of the secret below
 # Note: This admin username maps to the username specified as `master_username` in this file.  This will be updated to `admin_username` in a future release.
 secret_name: ""
+
+# S3 location to store query results from UNLOAD commands. If not provided, UNLOAD results will output to replay_output
+unload_destination_location: ""
