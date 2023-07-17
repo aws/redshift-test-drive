@@ -286,7 +286,7 @@ Resources:
         DestinationBucketName: !Ref LoggingBucket
         LogFilePrefix: NodeConfigCompare
   
-  S3BucketPolicyConfigTestingBucket:
+  S3ConfigTestingBucketPolicy:
     Type: 'AWS::S3::BucketPolicy'
     Properties: 
       Bucket: !Ref RedshiftConfigTestingBucket
@@ -328,11 +328,8 @@ Resources:
             Effect: Allow
             Principal:
               Service: logging.s3.amazonaws.com
-            Resource: !Join 
-              - ''
-              - - 'arn:aws:s3:::'
-                - !Ref LoggingBucket
-                - /*
+            Resource: 
+              - !Join ['',['arn:aws:s3:::', !Ref LoggingBucket, '/*']]
 
   SecurityGroupBatchRedshift:
     Type: AWS::EC2::SecurityGroup
@@ -458,12 +455,28 @@ Resources:
               - !Sub "arn:aws:redshift:${AWS::Region}:${AWS::AccountId}:parametergroup:*"
           - Effect: Allow
             Action:
-              - ec2:Describe*
               - redshift-data:ExecuteStatement
               - redshift-data:ListStatements
               - redshift-data:GetStatementResult
               - redshift-data:DescribeStatement
             Resource: "*"
+          - Effect: Allow
+            Action:
+              - ec2:Describe*
+            Resource:
+              - !Sub "arn:aws:ec2:${AWS::Region}:${AWS::AccountId}:elastic-ip/*"
+              - !Sub "arn:aws:ec2:${AWS::Region}:${AWS::AccountId}:client-vpn-endpoint/*"
+              - !Sub "arn:aws:ec2:${AWS::Region}:${AWS::AccountId}:image/*"
+              - !Sub "arn:aws:ec2:${AWS::Region}:${AWS::AccountId}:fleet/*"
+              - !Sub "arn:aws:ec2:${AWS::Region}:${AWS::AccountId}:fpga-image/*"
+              - !Sub "arn:aws:ec2:${AWS::Region}:${AWS::AccountId}:instance/*"
+              - !Sub "arn:aws:ec2:${AWS::Region}:${AWS::AccountId}:snapshot/*"
+              - !Sub "arn:aws:ec2:${AWS::Region}:${AWS::AccountId}:spot-fleet-request/*"
+              - !Sub "arn:aws:ec2:${AWS::Region}:${AWS::AccountId}:volumne/*"
+              - !Sub "arn:aws:ec2:${AWS::Region}:${AWS::AccountId}:elastic-ip/*"
+              - !Sub "arn:aws:ec2:${AWS::Region}:${AWS::AccountId}:vpc/*"
+              - !Sub "arn:aws:ec2:${AWS::Region}:${AWS::AccountId}:vpc-endpoint-service/*"
+
   RedshiftServerlessIAMPolicy:
     Type: 'AWS::IAM::ManagedPolicy'
     Properties:
