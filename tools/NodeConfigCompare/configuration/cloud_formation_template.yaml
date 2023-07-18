@@ -264,6 +264,7 @@ Resources:
     Type: "AWS::SecretsManager::Secret"
     Properties:
       Description: "Secrets Manager to store Redshift master user credentials"
+      KmsKeyId: alias/aws/secretsmanager
       GenerateSecretString:
         SecretStringTemplate: !Sub
         - '{"username": "${MasterUsername}"}'
@@ -281,6 +282,54 @@ Resources:
         ServerSideEncryptionConfiguration:
           - ServerSideEncryptionByDefault:
               SSEAlgorithm: AES256
+      LoggingConfiguration:
+        DestinationBucketName: !Ref LoggingBucket
+        LogFilePrefix: NodeConfigCompare
+  
+  S3ConfigTestingBucketPolicy:
+    Type: 'AWS::S3::BucketPolicy'
+    Properties: 
+      Bucket: !Ref RedshiftConfigTestingBucket
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Action:
+            - 's3:PutObject'
+            - 's3:GetObject'
+            - 's3:ListBucket'
+            Effect: Allow
+            Resource:
+              - !Join ['',['arn:aws:s3:::',!Ref RedshiftConfigTestingBucket]]
+              - !Join ['',['arn:aws:s3:::',!Ref RedshiftConfigTestingBucket, '/*']]
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+                - batch.amazonaws.com
+                - redshift.amazonaws.com
+                - states.amazonaws.com
+            
+  LoggingBucket:
+    Type: 'AWS::S3::Bucket'
+    Properties:
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+
+  S3BucketPolicy:
+    Type: 'AWS::S3::BucketPolicy'
+    Properties:
+      Bucket: !Ref LoggingBucket
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Action:
+              - 's3:PutObject'
+            Effect: Allow
+            Principal:
+              Service: logging.s3.amazonaws.com
+            Resource: 
+              - !Join ['',['arn:aws:s3:::', !Ref LoggingBucket, '/*']]
 
   SecurityGroupBatchRedshift:
     Type: AWS::EC2::SecurityGroup
@@ -292,6 +341,10 @@ Resources:
           IpProtocol: tcp
           FromPort: !FindInMap [ Redshift, Port, Number]
           ToPort:  !FindInMap [ Redshift, Port, Number]
+      SecurityGroupEgress:
+        - Description: Allow all outbound traffic
+          IpProtocol: -1
+          CidrIp: 0.0.0.0/0
       VpcId: !Ref VPC
 
   SecurityGroupSelfReference:
@@ -389,18 +442,41 @@ Resources:
               - !Sub "arn:aws:redshift:${AWS::Region}:${AWS::AccountId}:parametergroup:${ClusterIdentifierPrefix}*"
           - Effect: Allow
             Action:
-              - ec2:Describe*
               - redshift:restoreFromClusterSnapshot
               - redshift:describeClusterSnapshots
-              - redshift-data:ExecuteStatement
-              - redshift-data:ListStatements
-              - redshift-data:GetStatementResult
-              - redshift-data:DescribeStatement
               - redshift:DescribeLoggingStatus
               - redshift:DescribeClusters
               - redshift:DescribeClusterParameters
             Resource:
-              - '*'
+              - !Sub "arn:aws:redshift:${AWS::Region}:${AWS::AccountId}:cluster:*"
+              - !Sub "arn:aws:redshift:${AWS::Region}:${AWS::AccountId}:snapshot:*"
+              - !Sub "arn:aws:redshift:${AWS::Region}:${AWS::AccountId}:dbname:*"
+              - !Sub "arn:aws:redshift:${AWS::Region}:${AWS::AccountId}:dbuser:*"
+              - !Sub "arn:aws:redshift:${AWS::Region}:${AWS::AccountId}:parametergroup:*"
+          - Effect: Allow
+            Action:
+              - redshift-data:ExecuteStatement
+              - redshift-data:ListStatements
+              - redshift-data:GetStatementResult
+              - redshift-data:DescribeStatement
+            Resource: "*"
+          - Effect: Allow
+            Action:
+              - ec2:Describe*
+            Resource:
+              - !Sub "arn:aws:ec2:${AWS::Region}:${AWS::AccountId}:elastic-ip/*"
+              - !Sub "arn:aws:ec2:${AWS::Region}:${AWS::AccountId}:client-vpn-endpoint/*"
+              - !Sub "arn:aws:ec2:${AWS::Region}:${AWS::AccountId}:image/*"
+              - !Sub "arn:aws:ec2:${AWS::Region}:${AWS::AccountId}:fleet/*"
+              - !Sub "arn:aws:ec2:${AWS::Region}:${AWS::AccountId}:fpga-image/*"
+              - !Sub "arn:aws:ec2:${AWS::Region}:${AWS::AccountId}:instance/*"
+              - !Sub "arn:aws:ec2:${AWS::Region}:${AWS::AccountId}:snapshot/*"
+              - !Sub "arn:aws:ec2:${AWS::Region}:${AWS::AccountId}:spot-fleet-request/*"
+              - !Sub "arn:aws:ec2:${AWS::Region}:${AWS::AccountId}:volumne/*"
+              - !Sub "arn:aws:ec2:${AWS::Region}:${AWS::AccountId}:elastic-ip/*"
+              - !Sub "arn:aws:ec2:${AWS::Region}:${AWS::AccountId}:vpc/*"
+              - !Sub "arn:aws:ec2:${AWS::Region}:${AWS::AccountId}:vpc-endpoint-service/*"
+
   RedshiftServerlessIAMPolicy:
     Type: 'AWS::IAM::ManagedPolicy'
     Properties:
@@ -439,7 +515,16 @@ Resources:
             Action:
               - redshift-serverless:RestoreFromSnapshot
               - redshift:GetClusterCredentials
-            Resource: '*'
+            Resource: 
+              - !Sub "arn:aws:redshift-serverless:${AWS::Region}:${AWS::AccountId}:namespace/*"
+              - !Sub "arn:aws:redshift-serverless:${AWS::Region}:${AWS::AccountId}:workgroup/*"
+              - !Sub "arn:aws:redshift-serverless:${AWS::Region}:${AWS::AccountId}:managedvpcendpoint/*"
+              - !Sub "arn:aws:redshift-serverless:${AWS::Region}:${AWS::AccountId}:recovery-point/*"
+              - !Sub "arn:aws:redshift-serverless:${AWS::Region}:${AWS::AccountId}:snapshot/*"
+              - !Sub "arn:aws:redshift:${AWS::Region}:${AWS::AccountId}:dbuser:*"
+              - !Sub "arn:aws:redshift:${AWS::Region}:${AWS::AccountId}:dbgroup:*"
+              - !Sub "arn:aws:redshift:${AWS::Region}:${AWS::AccountId}:dbname:*"
+
   KMSAccessPolicy:
     Condition: EncryptedSourceCluster
     Type: 'AWS::IAM::ManagedPolicy'
@@ -470,7 +555,18 @@ Resources:
             Action:
               - glue:Get*
               - glue:BatchGetPartition
-            Resource: '*'
+            Resource: 
+              - !Sub "arn:aws:glue:${AWS::Region}:${AWS::AccountId}:catalog"
+              - !Sub "arn:aws:glue:${AWS::Region}:${AWS::AccountId}:database/*"
+              - !Sub "arn:aws:glue:${AWS::Region}:${AWS::AccountId}:table/*"
+              - !Sub "arn:aws:glue:${AWS::Region}:${AWS::AccountId}:userDefinedFunction/*"
+              - !Sub "arn:aws:glue:${AWS::Region}:${AWS::AccountId}:connection/*"
+              - !Sub "arn:aws:glue:${AWS::Region}:${AWS::AccountId}:session/*"
+              - !Sub "arn:aws:glue:${AWS::Region}:${AWS::AccountId}:crawler/*"
+              - !Sub "arn:aws:glue:${AWS::Region}:${AWS::AccountId}:job/*"
+              - !Sub "arn:aws:glue:${AWS::Region}:${AWS::AccountId}:trigger/*"
+              - !Sub "arn:aws:glue:${AWS::Region}:${AWS::AccountId}:devEndpoint/*"
+              - !Sub "arn:aws:glue:${AWS::Region}:${AWS::AccountId}:mlTransform/*"
 
   RedshiftMLAccessPolicy:
     Type: 'AWS::IAM::ManagedPolicy'
@@ -479,18 +575,18 @@ Resources:
         Version: '2012-10-17'
         Statement:
           - Sid: 'RedshiftMLAccessPolicy'
-            Effect: 'Allow'
+            Effect: Allow
             Action:
-              - cloudwatch:PutMetricData
               - logs:CreateLogGroup
               - logs:CreateLogStream
               - logs:DescribeLogStreams
               - logs:PutLogEvents
+              - cloudwatch:PutMetricData
               - ecr:BatchCheckLayerAvailability
               - ecr:BatchGetImage
               - ecr:GetAuthorizationToken
               - ecr:GetDownloadUrlForLayer
-            Resource: '*'
+            Resource: "*"
 
   AWSBatchIamRole:
     Type: AWS::IAM::Role
@@ -608,7 +704,6 @@ Resources:
 
   RedshiftConfigTestingLambdaIamRole:
     Type: AWS::IAM::Role
-    DependsOn: RedshiftIAMRole
     Properties:
       AssumeRolePolicyDocument:
         Statement:
@@ -666,7 +761,8 @@ Resources:
               - Effect: Allow
                 Action:
                   - glue:StartCrawler
-                Resource: "*"
+                Resource: 
+                  - !Sub "arn:aws:glue:${AWS::Region}:${AWS::AccountId}:crawler/*"
 
   LambdaLayer:
     Type: AWS::Lambda::LayerVersion
@@ -705,6 +801,7 @@ Resources:
       Runtime: python3.8
       Role: !GetAtt 'RedshiftConfigTestingLambdaIamRole.Arn'
       Timeout: 300
+      ReservedConcurrentExecutions: 100
       Code:
         S3Bucket: !Ref RedshiftConfigTestingBucket
         S3Key: !Sub
@@ -791,9 +888,9 @@ Resources:
                 -
                   Effect: "Allow"
                   Action:
-                  - states:StartExecution
                   - redshift:DescribeClusterSnapshots
-                  Resource: "*"
+                  Resource: 
+                    - !Sub "arn:aws:redshift:${AWS::Region}:${AWS::AccountId}:snapshot:*/*"
 
   StartUpLambda:
     Type: AWS::Lambda::Function
@@ -803,6 +900,7 @@ Resources:
       Runtime: python3.8
       Role: !GetAtt 'StartUpLambdaIAMRole.Arn'
       Timeout: 60
+      ReservedConcurrentExecutions: 1
       Environment:
         Variables:
           USER_CONFIG_JSON_S3_PATH: !Ref ConfigJsonS3Path
@@ -843,9 +941,6 @@ Resources:
           COMPARISON_STATS_S3_PATH: !Sub
             - s3://${RedshiftConfigTestingBucket}/${DataPrefix}/
             - {DataPrefix: !FindInMap [ ConfigTesting, S3, DataPrefix]} 
-          RAW_COMPARISON_RESULTS_S3_PATH: !Sub
-            - s3://${RedshiftConfigTestingBucket}/${DataPrefix}/${RawResultsLocation}
-            - {DataPrefix: !FindInMap [ ConfigTesting, S3, DataPrefix],RawResultsLocation: !FindInMap [ ConfigTesting, S3, RawResultsLocation]}
           RAW_COMPARISON_RESULTS_S3_PATH: !Sub
             - s3://${RedshiftConfigTestingBucket}/${DataPrefix}/${RawResultsLocation}
             - {DataPrefix: !FindInMap [ ConfigTesting, S3, DataPrefix],RawResultsLocation: !FindInMap [ ConfigTesting, S3, RawResultsLocation]}
@@ -909,6 +1004,7 @@ Resources:
       Runtime: python3.8
       Role: !GetAtt 'StartUpLambdaIAMRole.Arn'
       Timeout: 60
+      ReservedConcurrentExecutions: 1
       Code:
         ZipFile: |
           import urllib.request
@@ -992,7 +1088,6 @@ Resources:
     Condition: UseAWSLakeFormationForGlueCatalog
     DependsOn:
       - GlueDatabase 
-      - IamRoleGlueCrawler
     Properties:
       DataLakePrincipal:
         DataLakePrincipalIdentifier: !GetAtt IamRoleGlueCrawler.Arn
@@ -1008,7 +1103,6 @@ Resources:
     Type: AWS::LakeFormation::Permissions
     Condition: UseAWSLakeFormationForGlueCatalog
     DependsOn: 
-      - RedshiftIAMRole
       - GlueDatabase
     Properties:
       DataLakePrincipal:
