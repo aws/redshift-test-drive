@@ -105,11 +105,8 @@ class ReplayPrep:
             total_connections,
         )
 
-    def get_connection_credentials(
-        self, username, database=None, max_attempts=10, skip_cache=False
-    ):
+    def get_connection_credentials(self, username, database=None, skip_cache=False):
         credentials_timeout_sec = 3600
-        retry_delay_sec = 10
 
         # how long to cache credentials per user
         cache_timeout_sec = 1800
@@ -155,8 +152,6 @@ class ReplayPrep:
                 "verify": False,
             }
 
-        response = None
-
         if is_serverless(self.config) and self.config.get("secret_name", None) is not None:
             logger.info(f"Fetching secrets from: {self.config['secret_name']}")
             secret_keys = ["admin_username", "admin_password"]
@@ -179,6 +174,7 @@ class ReplayPrep:
                 cluster_id=cluster_id,
                 duration=credentials_timeout_sec,
                 auto_create=False,
+                additional_args=additional_args,
             )
 
         if response is None:
