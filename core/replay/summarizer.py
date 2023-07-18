@@ -92,7 +92,7 @@ def export_errors(connection_errors, transaction_errors, workload_location, repl
                 )
             else:
                 key_loc = "%s/connection_errors/%s.txt" % (replay_name, filename)
-            aws_service_helper.s3_put_object(bucket_name, connection_error_text, key_loc)
+            aws_service_helper.s3_put_object(connection_error_text,bucket_name, key_loc)
         else:
             error_file = open(connection_error_location + "/" + filename + ".txt", "w")
             error_file.write(connection_error_text)
