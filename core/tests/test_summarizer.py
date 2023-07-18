@@ -151,8 +151,8 @@ class TestSummarizer(unittest.TestCase):
         )
 
         mock_s3.assert_called_once_with(
-            "test-location",
             4,
+            "test-location",
             "2023-02-07T19:17:11.472063+00:00_cluster-testing_1ddab/connection_errors/conn_test.txt",
         )
         mock_client.assert_called_once_with(
@@ -183,8 +183,8 @@ class TestSummarizer(unittest.TestCase):
         )
 
         mock_s3.assert_called_once_with(
-            "test-location",
             4,
+            "test-location",
             "test/2023-02-07T19:17:11.472063+00:00_cluster-testing_1ddab/connection_errors/conn_test.txt",
         )
         mock_client.assert_called_once_with(
