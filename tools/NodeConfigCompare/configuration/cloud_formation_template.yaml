@@ -298,7 +298,7 @@ Resources:
           - Action:
               - 's3:*'
             Effect: Deny
-            Principal: *
+            Principal: '*'
             Resource:
               - !Join ['',['arn:aws:s3:::',!Ref RedshiftConfigTestingBucket]]
               - !Join ['',['arn:aws:s3:::',!Ref RedshiftConfigTestingBucket, '/*']]
@@ -340,7 +340,7 @@ Resources:
           - Action:
               - 's3:*'
             Effect: Deny
-            Principal: *
+            Principal: '*'
             Resource:
               - !Join [ '',[ 'arn:aws:s3:::', !Ref LoggingBucket, '/*' ] ]
             Condition:
