@@ -267,7 +267,7 @@ def initiate_connection(username, cluster):
 
     if cluster.get("is_serverless"):
         if cluster.get("secret_name"):
-            logger.info(f"Fetching secrets from: {cluster.get['secret_name']}")
+            logger.info(f"Fetching secrets from: {cluster.get('secret_name')}")
             secret_name = common.aws_service.get_secret(
                 cluster.get("secret_name"), cluster.get("region")
             )
