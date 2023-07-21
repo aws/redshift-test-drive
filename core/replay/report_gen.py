@@ -367,10 +367,11 @@ def unload(unload_location, iam_role, cluster, user, replay):
                 # replace start and end times in sql with variables
                 query = re.sub(r"{{START_TIME}}", f"'{cluster.get('start_time')}'", query)
                 query = re.sub(r"{{END_TIME}}", f"'{cluster.get('end_time')}'", query)
+                parsed_location = f"s3://{unload_location.get('bucket_name')}/{unload_location.get('prefix')}"
 
                 # format unload query with actual query from sql/
                 unload_query = (
-                    f"unload ($${query}$$) to '{unload_location.get('url')}/analysis/{replay}/raw_data/"
+                    f"unload ($${query}$$) to '{parsed_location}analysis/{replay}/raw_data/"
                     f"{query_name}' iam_role '{iam_role}' CSV header allowoverwrite parallel off;"
                 )
                 try:
