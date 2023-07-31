@@ -1,6 +1,7 @@
 import datetime
 import logging
 import os
+from tqdm import tqdm
 
 from boto3 import client
 
@@ -70,8 +71,8 @@ def export_errors(connection_errors, transaction_errors, workload_location, repl
 
     connection_error_location = workload_location + "/" + replay_name + "/connection_errors"
     transaction_error_location = workload_location + "/" + replay_name + "/transaction_errors"
-    logger.info(f"Exporting connection errors to {connection_error_location}/")
-    logger.info(f"Exporting transaction errors to {transaction_error_location}/")
+
+
 
     if workload_location.startswith("s3://"):
         workload_s3_location = workload_location[5:].partition("/")
@@ -82,7 +83,16 @@ def export_errors(connection_errors, transaction_errors, workload_location, repl
         os.makedirs(connection_error_location)
         os.makedirs(transaction_error_location)
 
-    for filename, connection_error_text in connection_errors.items():
+    logger.info(f"Exporting connection errors to {connection_error_location}/")
+    bar_format = "{desc}: {percentage:3.0f}%|{bar}| {n_fmt}/{total_fmt} [{elapsed}{postfix}]"
+    for filename, connection_error_text in tqdm(
+            connection_errors.items(),
+            disable=False,
+            unit="files",
+            desc="Files processed",
+            bar_format=bar_format,
+        ):
+    
         if workload_location.startswith("s3://"):
             if prefix:
                 key_loc = "%s/%s/connection_errors/%s.txt" % (
@@ -98,7 +108,14 @@ def export_errors(connection_errors, transaction_errors, workload_location, repl
             error_file.write(connection_error_text)
             error_file.close()
 
-    for filename, transaction_errors in transaction_errors.items():
+    logger.info(f"Exporting transaction errors to {transaction_error_location}/")
+    for filename, transaction_errors in tqdm(
+            transaction_errors.items(),
+            disable=False,
+            unit="files",
+            desc="Files processed",
+            bar_format=bar_format,
+        ):
         error_file_text = ""
         for transaction_error in transaction_errors:
             error_file_text += f"{transaction_error[0]}\n{transaction_error[1]}\n\n"
