@@ -122,7 +122,7 @@ def get_logs_in_range(audit_objects, start_time, end_time):
     filenames = []
     for index, log in list(enumerate(audit_objects)):
         filename = log["Key"].split("/")[-1]
-        file_datetime = dateutil.parser.parse(filename.split("_")[-1][:-3]).replace(
+        file_datetime = dateutil.parser.parse(filename.split("_")[-1][:-3].replace("_", ":")).replace(
             tzinfo=datetime.timezone.utc
         )
         if start_time and file_datetime < start_time:
