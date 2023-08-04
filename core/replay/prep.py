@@ -155,8 +155,6 @@ class ReplayPrep:
                 "verify": False,
             }
 
-        response = None
-
         if is_serverless(self.config) and self.config.get("secret_name", None) is not None:
             logger.info(f"Fetching secrets from: {self.config['secret_name']}")
             secret_keys = ["admin_username", "admin_password"]
@@ -179,6 +177,7 @@ class ReplayPrep:
                 cluster_id=cluster_id,
                 duration=credentials_timeout_sec,
                 auto_create=False,
+                additional_client_args=additional_args,
             )
 
         if response is None:

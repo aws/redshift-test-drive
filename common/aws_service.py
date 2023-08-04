@@ -34,9 +34,15 @@ def redshift_describe_logging_status(source_cluster_endpoint):
 
 
 def redshift_get_cluster_credentials(
-    region, user, database_name, cluster_id, duration=900, auto_create=False
+    region,
+    user,
+    database_name,
+    cluster_id,
+    duration=900,
+    auto_create=False,
+    additional_client_args={},
 ):
-    rs_client = boto3.client("redshift", region)
+    rs_client = boto3.client("redshift", region, **additional_client_args)
     try:
         response = rs_client.get_cluster_credentials(
             DbUser=user,
