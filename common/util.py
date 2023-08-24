@@ -10,7 +10,7 @@ logger = logging.getLogger("WorkloadReplicatorLogger")
 
 LOG_DATE_FORMAT = "%Y-%m-%d %H:%M:%S"
 serverless_cluster_endpoint_pattern = (
-    r"(.+)\.(.+)\.(.+).redshift-serverless(-dev)?\.amazonaws\.com:[0-9]{4}\/(.)+"
+    r"(.+)\.(.+)\.(.+).redshift-serverless(-dev)?\.amazonaws\.com:[0-9]{4,5}\/(.)+"
 )
 
 
