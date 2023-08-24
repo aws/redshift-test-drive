@@ -206,28 +206,6 @@ class ConnectionThread(threading.Thread):
             for transaction in self.connection_log.transactions:
                 self.execute_transaction(transaction, connection)
 
-    def save_query_stats(self, start_time, end_time, xid, query_idx):
-        with self.perf_lock:
-            sr_dir = (
-                self.config.get("logging_dir", "core/logs/replay")
-                + "/"
-                + self.replay_start.isoformat()
-            )
-            Path(sr_dir).mkdir(parents=True, exist_ok=True)
-            filename = f"{sr_dir}/{self.process_idx}_times.csv"
-            elapsed_sec = 0
-            if end_time is not None:
-                elapsed_sec = "{:.6f}".format((end_time - start_time).total_seconds())
-            with open(filename, "a+") as fp:
-                if fp.tell() == 0:
-                    fp.write("# process,query,start_time,end_time,elapsed_sec,rows\n")
-                query_id = f"{xid}-{query_idx}"
-                fp.write(
-                    "{},{},{},{},{},{}\n".format(
-                        self.process_idx, query_id, start_time, end_time, elapsed_sec, 0
-                    )
-                )
-
     def execute_transaction(self, transaction, connection):
         errors = []
         cursor = connection.cursor()
@@ -312,7 +290,6 @@ class ConnectionThread(threading.Thread):
                         )
                     )
 
-                self.save_query_stats(exec_start, exec_end, transaction.xid, transaction_query_idx)
             if success:
                 self.thread_stats["query_success"] += 1
             else:
