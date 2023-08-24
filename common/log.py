@@ -20,11 +20,12 @@ def init_logging(
     filename,
     dir="",
     level=logging.DEBUG,
-    backup_count=5,
+    backup_count=10,
     preamble="",
     script_type="",
     logger_name="WorkloadReplicatorLogger",
     log_id="",
+    replace_if_exists=True
 ):
     """Initialize logging to stdio"""
     logger = logging.getLogger(logger_name)
@@ -42,7 +43,7 @@ def init_logging(
     fh = logging.handlers.RotatingFileHandler(filename, backupCount=backup_count)
 
     # if the file exists from a previous run, rotate it
-    if file_exists:
+    if replace_if_exists and file_exists:
         fh.doRollover()
 
     # dump the preamble to the file first

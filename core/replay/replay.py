@@ -58,9 +58,10 @@ def main():
         dir=f"core/logs/replay/replay_log-{replay_id}",
         level=level,
         preamble=yaml.dump(config),
-        backup_count=config.get("backup_count", 2),
+        backup_count=config.get("backup_count", 5),
         script_type="replay",
         log_id=replay_id,
+        replace_if_exists=False
     )
     log_helper.log_version()
 

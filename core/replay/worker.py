@@ -52,12 +52,13 @@ class ReplayWorker:
         transactions, and then repeats."""
         # Logging needs to be separately initialized so that the worker can log to a separate log file
         init_logging(
-            f"replay_worker-{self.process_idx}",
-            dir=f"core/logs/replay_log-{self.replay_id}",
-            logger_name="WorkloadReplicatorWorkerLogger",
+            f"replay_log",
+            dir=f"core/logs/replay/replay_log-{self.replay_id}",
+            logger_name="WorkloadReplicatorLogger",
             level=self.config.get("log_level", "INFO"),
             script_type=f"replay worker - {self.process_idx}",
-            log_id=self.replay_id
+            log_id=self.replay_id,
+            replace_if_exists=False
         )
 
         # map thread to stats dict
