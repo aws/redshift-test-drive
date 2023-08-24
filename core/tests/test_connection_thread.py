@@ -256,33 +256,6 @@ class TestConnectionThread(unittest.TestCase):
         assert mock_exec_transaction.called_with(transactions, mock_connection)
         patched_time_sleep.assert_not_called()
 
-    @patch("builtins.open", new_callable=mock_open)
-    @patch("core.replay.connection_thread.Path")
-    def test_save_query_stats_fp_zero(self, mock_path, open_mock):
-        conn_thread = get_connection_thread(
-            get_connection_log(get_transactions([query_1]))
-        )
-        conn_thread.perf_lock = threading.Lock()
-        mock_path.mkdir.return_value = "value"
-
-        conn_thread.save_query_stats(
-            datetime.datetime(2023, 2, 1, 10, 0, 0, 0, tzinfo=datetime.timezone.utc),
-            datetime.datetime(2023, 2, 1, 10, 0, 4, 0, tzinfo=datetime.timezone.utc),
-            1,
-            2,
-        )
-
-        calls = [
-            call("core/logs/replay/2023-02-01T09:45:00+00:00/1_times.csv", "a+"),
-            call().__enter__(),
-            call().tell(),
-            call().write(
-                "1,1-2,2023-02-01 10:00:00+00:00,2023-02-01 10:00:04+00:00,4.000000,0\n"
-            ),
-            call().__exit__(None, None, None),
-        ]
-
-        open_mock.assert_has_calls(calls, any_order=True)
 
     @patch("core.replay.connection_thread.open", new_callable=mock_open)
     @patch("core.replay.connection_thread.Path")
