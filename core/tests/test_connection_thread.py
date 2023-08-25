@@ -257,46 +257,11 @@ class TestConnectionThread(unittest.TestCase):
         patched_time_sleep.assert_not_called()
 
 
-    @patch("core.replay.connection_thread.open", new_callable=mock_open)
-    @patch("core.replay.connection_thread.Path")
-    def test_save_query_stats_fp_not_zero(self, mock_path, op_mock):
-        conn_thread = get_connection_thread(
-            get_connection_log(get_transactions([query_1]))
-        )
-        conn_thread.perf_lock = threading.Lock()
-        mock_path.mkdir.return_value = "value"
-        mock_fp = MagicMock()
-        op_mock.return_value.__enter__.return_value = mock_fp
-        mock_fp.tell.return_value = 0
-
-        conn_thread.save_query_stats(
-            datetime.datetime(2023, 2, 1, 10, 0, 0, 0, tzinfo=datetime.timezone.utc),
-            datetime.datetime(2023, 2, 1, 10, 0, 4, 0, tzinfo=datetime.timezone.utc),
-            1,
-            2,
-        )
-
-        calls = [
-            call("core/logs/replay/2023-02-01T09:45:00+00:00/1_times.csv", "a+"),
-            call().__enter__(),
-            call().__enter__().tell(),
-            call()
-            .__enter__()
-            .write("# process,query,start_time,end_time,elapsed_sec,rows\n"),
-            call()
-            .__enter__()
-            .write(
-                "1,1-2,2023-02-01 10:00:00+00:00,2023-02-01 10:00:04+00:00,4.000000,0\n"
-            ),
-            call().__exit__(None, None, None),
-        ]
-        op_mock.assert_has_calls(calls, any_order=True)
 
     @patch("time.sleep")
-    @patch.object(ConnectionThread, "save_query_stats")
     @patch.object(ConnectionThread, "should_execute_sql", lambda a, b: True)
     def test_execute_transaction_valid_sql_success(
-        self, mock_save_query_stats, patched_time_sleep
+        self, patched_time_sleep
     ):
         mock_connection = Mock()
         mock_cursor = Mock()
@@ -309,14 +274,12 @@ class TestConnectionThread(unittest.TestCase):
         mock_cursor.close.assert_called()
         mock_connection.commit.assert_called()
         patched_time_sleep.assert_not_called()
-        mock_save_query_stats.assert_called()
         self.assertTrue(conn_thread.thread_stats.get("query_success"))
 
     @patch("time.sleep")
-    @patch.object(ConnectionThread, "save_query_stats")
     @patch.object(ConnectionThread, "should_execute_sql", lambda a, b: False)
     def test_execute_transaction_query_execution_with_invalid_query(
-        self, mock_save_query_stats, patched_time_sleep
+        self, patched_time_sleep
     ):
         mock_connection = Mock()
         mock_cursor = Mock()
@@ -331,14 +294,12 @@ class TestConnectionThread(unittest.TestCase):
         mock_cursor.close.assert_called()
         mock_connection.commit.assert_called()
         patched_time_sleep.assert_not_called()
-        mock_save_query_stats.assert_called()
 
     @patch("time.sleep")
     @patch("core.replay.connection_thread.parse_error", lambda a, b, c, d: "Test")
-    @patch.object(ConnectionThread, "save_query_stats")
     @patch.object(ConnectionThread, "should_execute_sql", lambda a, b: True)
     def test_execute_transaction_execution_error(
-        self, mock_save_query_stats, patched_time_sleep
+        self, patched_time_sleep
     ):
         mock_connection = Mock()
         mock_cursor = Mock()
@@ -354,7 +315,6 @@ class TestConnectionThread(unittest.TestCase):
         mock_cursor.close.assert_called()
         mock_connection.commit.assert_called()
         patched_time_sleep.assert_not_called()
-        mock_save_query_stats.assert_called()
         self.assertFalse(conn_thread.thread_stats.get("query_success"))
 
     def test_should_execute_sql_copy_from_s3_in_sql(self):
