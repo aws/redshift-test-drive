@@ -255,6 +255,7 @@ The analysis folder structure is as follows :
   * Commit time metric is not available for Serverless.
   * Replay analysis currently only supports CSV format. PDF report generation is work in progress.
 * Workload Replicator does not support replaying federated users as this is a limitation for `GetClusterCredentials `API call.
+* Stored procedures cannot be replayed by Workload Replicator.
 
 ## IAM Permissions
 Below is a list of IAM permissions required to run Extract and Replay, ensure that you assume a role with the following permissions:
