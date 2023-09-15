@@ -278,6 +278,8 @@ Resources:
     DeletionPolicy: Retain
     UpdateReplacePolicy: Retain
     Properties:
+      VersioningConfiguration:
+        Status: Enabled
       BucketEncryption:
         ServerSideEncryptionConfiguration:
           - ServerSideEncryptionByDefault:
@@ -293,6 +295,16 @@ Resources:
       PolicyDocument:
         Version: "2012-10-17"
         Statement:
+          - Action:
+              - 's3:*'
+            Effect: Deny
+            Principal: '*'
+            Resource:
+              - !Join ['',['arn:aws:s3:::',!Ref RedshiftConfigTestingBucket]]
+              - !Join ['',['arn:aws:s3:::',!Ref RedshiftConfigTestingBucket, '/*']]
+            Condition:
+              Bool:
+                'aws:SecureTransport': false
           - Action:
             - 's3:PutObject'
             - 's3:GetObject'
@@ -311,6 +323,8 @@ Resources:
   LoggingBucket:
     Type: 'AWS::S3::Bucket'
     Properties:
+      VersioningConfiguration:
+        Status: Enabled
       BucketEncryption:
         ServerSideEncryptionConfiguration:
           - ServerSideEncryptionByDefault:
@@ -323,6 +337,15 @@ Resources:
       PolicyDocument:
         Version: "2012-10-17"
         Statement:
+          - Action:
+              - 's3:*'
+            Effect: Deny
+            Principal: '*'
+            Resource:
+              - !Join [ '',[ 'arn:aws:s3:::', !Ref LoggingBucket, '/*' ] ]
+            Condition:
+              Bool:
+                'aws:SecureTransport': false
           - Action:
               - 's3:PutObject'
             Effect: Allow
@@ -463,19 +486,7 @@ Resources:
           - Effect: Allow
             Action:
               - ec2:Describe*
-            Resource:
-              - !Sub "arn:aws:ec2:${AWS::Region}:${AWS::AccountId}:elastic-ip/*"
-              - !Sub "arn:aws:ec2:${AWS::Region}:${AWS::AccountId}:client-vpn-endpoint/*"
-              - !Sub "arn:aws:ec2:${AWS::Region}:${AWS::AccountId}:image/*"
-              - !Sub "arn:aws:ec2:${AWS::Region}:${AWS::AccountId}:fleet/*"
-              - !Sub "arn:aws:ec2:${AWS::Region}:${AWS::AccountId}:fpga-image/*"
-              - !Sub "arn:aws:ec2:${AWS::Region}:${AWS::AccountId}:instance/*"
-              - !Sub "arn:aws:ec2:${AWS::Region}:${AWS::AccountId}:snapshot/*"
-              - !Sub "arn:aws:ec2:${AWS::Region}:${AWS::AccountId}:spot-fleet-request/*"
-              - !Sub "arn:aws:ec2:${AWS::Region}:${AWS::AccountId}:volumne/*"
-              - !Sub "arn:aws:ec2:${AWS::Region}:${AWS::AccountId}:elastic-ip/*"
-              - !Sub "arn:aws:ec2:${AWS::Region}:${AWS::AccountId}:vpc/*"
-              - !Sub "arn:aws:ec2:${AWS::Region}:${AWS::AccountId}:vpc-endpoint-service/*"
+            Resource: "*"
 
   RedshiftServerlessIAMPolicy:
     Type: 'AWS::IAM::ManagedPolicy'
