@@ -3,6 +3,7 @@ import datetime
 import json
 import logging
 import boto3
+from botocore.config import Config
 from botocore.exceptions import ClientError
 import asyncio
 import functools
@@ -34,15 +35,11 @@ def redshift_describe_logging_status(source_cluster_endpoint):
 
 
 def redshift_get_cluster_credentials(
-    region,
-    user,
-    database_name,
-    cluster_id,
-    duration=900,
-    auto_create=False,
-    additional_client_args={},
+    region, user, database_name, cluster_id, duration=900, auto_create=False, additional_args={}
 ):
-    rs_client = boto3.client("redshift", region, **additional_client_args)
+    # see https://boto3.amazonaws.com/v1/documentation/api/latest/guide/retries.html#standard-retry-mode
+    config = Config(retries={"max_attempts": 10, "mode": "standard"})
+    rs_client = boto3.client("redshift", region, config=config)
     try:
         response = rs_client.get_cluster_credentials(
             DbUser=user,
@@ -50,6 +47,7 @@ def redshift_get_cluster_credentials(
             ClusterIdentifier=cluster_id,
             DurationSeconds=duration,
             AutoCreate=auto_create,
+            **additional_args,
         )
     except Exception as e:
         if e == rs_client.exceptions.ClusterNotFoundFault:

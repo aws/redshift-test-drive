@@ -105,11 +105,8 @@ class ReplayPrep:
             total_connections,
         )
 
-    def get_connection_credentials(
-        self, username, database=None, max_attempts=10, skip_cache=False
-    ):
+    def get_connection_credentials(self, username, database=None, skip_cache=False):
         credentials_timeout_sec = 3600
-        retry_delay_sec = 10
 
         # how long to cache credentials per user
         cache_timeout_sec = 1800
@@ -177,7 +174,7 @@ class ReplayPrep:
                 cluster_id=cluster_id,
                 duration=credentials_timeout_sec,
                 auto_create=False,
-                additional_client_args=additional_args,
+                additional_args=additional_args,
             )
 
         if response is None:
