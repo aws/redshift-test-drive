@@ -34,13 +34,12 @@ It may take around three hours for the audit logs to be delivered to S3.
    1. Install Python3.
     Check if Python is already installed by doing ``which python3``. If the python3 binary is not found, then use:
     ```
-    sudo yum install python3
-    
-    sudo yum install python3-pip
+    yum install python3
+    yum install python3-pip
     ```
    2. Install ODBC dependencies
     ```
-    sudo yum install gcc gcc-c++ python3 python3-devel unixODBC unixODBC-devel
+    yum install gcc gcc-c++ python3 python3-devel unixODBC unixODBC-devel
     ```
    3. (Skip this step if you have already cloned test-drive) Clone Workload Replicator scripts. Check if `git` is installed by doing ``which git``. If git binary cannot be found, then do ``yum install git`` before proceeding.
     ```
