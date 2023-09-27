@@ -17,9 +17,7 @@ class UnloadSysTable:
     def unload_system_table(self):
         # TODO: wrap this in retries and proper logging
         prep = ReplayPrep(self.config)
-        credentials = prep.get_connection_credentials(
-            self.config["master_username"], max_attempts=3
-        )
+        credentials = prep.get_connection_credentials(self.config["master_username"])
         try:
             conn = db_connect(
                 self.default_interface,

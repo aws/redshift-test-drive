@@ -104,9 +104,7 @@ class ConnectionThread(threading.Thread):
         else:
             interface = "psql"
         r = ReplayPrep(self.config)
-        credentials = r.get_connection_credentials(
-            username, database=self.connection_log.database_name
-        )
+        credentials = r.get_connection_credentials(username, database=self.connection_log.database_name)
 
         try:
             try:

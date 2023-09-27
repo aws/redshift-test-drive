@@ -83,11 +83,7 @@ def main():
     # test connection
     try:
         # use the first user as a test
-        prep.get_connection_credentials(
-            connection_logs[0].username,
-            database=connection_logs[0].database_name,
-            max_attempts=1,
-        )
+        prep.get_connection_credentials(connection_logs[0].username, database=connection_logs[0].database_name)
     except CredentialsException as e:
         logger.error(
             f"Unable to retrieve credentials using GetClusterCredentials ({str(e)}).  "
