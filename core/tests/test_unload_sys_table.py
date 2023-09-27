@@ -38,7 +38,7 @@ cursor.execute.return_value = True
 conn.cursor.return_value = cursor
 
 
-def mock_get_connection_cred(self, val, max_attempts):
+def mock_get_connection_cred(self, val):
     return {
         "host": "somehost",
         "port": 5437,
@@ -82,9 +82,7 @@ class TestReplay(unittest.TestCase):
 
         unload_object.unload_system_table()
 
-        mock_debug.assert_called_once_with(
-            "Executed unload query: stl_unload"
-        )
+        mock_debug.assert_called_once_with("Executed unload query: stl_unload")
 
     @patch.object(ReplayPrep, "get_connection_credentials", mock_get_connection_cred)
     @patch("core.replay.unload_sys_table.db_connect", mock_db_connect_error)
