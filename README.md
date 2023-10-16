@@ -1,7 +1,7 @@
 # Redshift Test Drive
 
 ## Introduction
-Redshift Test Drive is an amalgation of Redshift Replay and Node Config. The Redshift Replay consits of Workload Replicator, Replay Analysis and External Object Replicator.
+Redshift Test Drive is an amalgamation of Redshift Replay and Node Config. The Redshift Replay consits of Workload Replicator, Replay Analysis and External Object Replicator.
 
 ## Prerequisites
 Install the following packages before cloning the repository:
