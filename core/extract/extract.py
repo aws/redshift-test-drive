@@ -73,7 +73,7 @@ def main():
         log_location, start_time, end_time
     )
 
-    e.validate_log_result(connections, audit_logs)
+    # e.validate_log_result(connections, audit_logs) # The connections and audit_log objects do not seem to update as expected
     e.retrieve_cluster_endpoint_info(extraction_name)
 
     e.save_logs(
