@@ -94,7 +94,7 @@ class Extractor:
 
         df = pd.DataFrame(columns=['query tag','federated user','config','misc','entity','query/ACL'])
 
-        with open("/home/devsaba/code/redshift-test-drive/core/sql/federated_queries.sql",'r') as f:
+        with open("core/sql/federated_queries.sql",'r') as f:
             queries_raw = f.read()
         queries = queries_raw.split('\n\n\n')
 
@@ -247,18 +247,23 @@ class Extractor:
             replacements_file.close()
 
         # Retrieve federated user objects
+        logger.info("Collecting data on federated users")
         dataset = self.get_federated_objects()
-
-        if output_directory.startswith("s3://"):
-            dataset.to_csv("/tmp/federated-user-data.csv")
-            s3_object = output_directory[5:].partition("/")
-            bucket = s3_object[0]
-            prefix = s3_object[2]
-            object_name = '/federated-user-data.csv'
-
-            aws_service_helper.s3_upload('/tmp/federated-user-data.csv',bucket, f'{prefix}{object_name}' )
+        if dataset.empty:
+            logger.info("No data on federated users")
         else:
-            dataset.to_csv(f'{output_directory}/federated-user-data.csv')
+            logger.info(f"exporting federated users file to {output_directory}")
+            if output_directory.startswith("s3://"):
+                dataset.to_csv("/tmp/federated-user-data.csv")
+                s3_object = output_directory[5:].partition("/")
+                bucket = s3_object[0]
+                prefix = s3_object[2]
+                object_name = '/federated-user-data.csv'
+
+                aws_service_helper.s3_upload('/tmp/federated-user-data.csv',bucket, f'{prefix}{object_name}' )
+            else:
+                dataset.to_csv(f'{output_directory}/federated-user-data.csv')
+        
 
     def get_sql_connections_replacements(self, last_connections, log_items):
         # transactions has form { "xid": xxx, "pid": xxx, etc..., queries: [] }
