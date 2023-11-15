@@ -12,6 +12,7 @@ import pathlib
 import re
 import sys
 import traceback
+import pandas as pd
 
 import dateutil.parser
 import redshift_connector
@@ -81,6 +82,36 @@ class Extractor:
                 return self.cloudwatch_extractor.get_extract_from_cloudwatch(start_time, end_time)
             else:
                 return self.local_extractor.get_extract_locally(log_location, start_time, end_time)
+            
+    def get_federated_objects(self):
+
+        region = self.config['region']
+        user = self.config['master_username']
+        database_name = self.config['source_cluster_endpoint'].split("/")[-1]
+        cluster_id = self.config['source_cluster_endpoint'].split(".")[0]
+        host = self.config['source_cluster_endpoint'].split(":")[0]
+        port = self.config['source_cluster_endpoint'].split(":")[1].split("/")[0]
+
+        df = pd.DataFrame(columns=['query tag','federated user','config','misc','entity','query/ACL'])
+
+        with open("/home/devsaba/code/redshift-test-drive/core/sql/federated_queries.sql",'r') as f:
+            queries_raw = f.read()
+        queries = queries_raw.split('\n\n\n')
+
+        creds = aws_service_helper.redshift_get_cluster_credentials(region=region, user=user, database_name=database_name,
+                                                                    cluster_id=cluster_id)
+        
+        conn = util.db_connect(username=creds['DbUser'],password=creds['DbPassword'],
+                                            host=host,port=port, database=database_name)
+        cursor = conn.cursor()
+        for query in queries:
+            cursor.execute(query)
+            query_result = cursor.fetchall()
+
+            temp_df = pd.DataFrame.from_records(query_result,columns=['query tag','federated user','config','misc','entity','query/ACL'])
+            df = pd.concat([df,temp_df],axis=0,ignore_index=True)
+
+        return df            
 
     def save_logs(
         self,
@@ -214,6 +245,20 @@ class Extractor:
             replacements_file = open(output_directory + "/copy_replacements.csv", "w")
             replacements_file.write(replacements_string)
             replacements_file.close()
+
+        # Retrieve federated user objects
+        dataset = self.get_federated_objects()
+
+        if output_directory.startswith("s3://"):
+            dataset.to_csv("/tmp/federated-user-data.csv")
+            s3_object = output_directory[5:].partition("/")
+            bucket = s3_object[0]
+            prefix = s3_object[2]
+            object_name = '/federated-user-data.csv'
+
+            aws_service_helper.s3_upload('/tmp/federated-user-data.csv',bucket, f'{prefix}{object_name}' )
+        else:
+            dataset.to_csv(f'{output_directory}/federated-user-data.csv')
 
     def get_sql_connections_replacements(self, last_connections, log_items):
         # transactions has form { "xid": xxx, "pid": xxx, etc..., queries: [] }
