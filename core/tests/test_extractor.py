@@ -1,11 +1,13 @@
 import datetime
 import unittest
+import pandas as pd
 from pathlib import Path
 from unittest.mock import patch, Mock, mock_open
 
 from core.extract.extractor import Extractor
 
 from core.replay.connections_parser import Log
+
 
 
 def mock_redshift_describe_logging_status(endpoint):
@@ -190,12 +192,14 @@ class ExtractorTestCases(unittest.TestCase):
     @patch("common.aws_service.s3_upload")
     @patch("common.aws_service.s3_put_object")
     @patch("common.util.cluster_dict")
+    @patch.object(Extractor,"get_federated_objects")
     @patch.object(Extractor, "get_copy_replacements")
     def test_save_logs_s3(
         self,
         mock_copy_replacements,
         mock_cluster_dict,
         mock_s3_put_object,
+        mock_federated_objects,
         mock_s3_upload,
     ):
         e = Extractor(
@@ -213,13 +217,15 @@ class ExtractorTestCases(unittest.TestCase):
             "2022-11-18T00:00:00",
         )
         self.assertTrue(mock_s3_upload.called)
-        self.assertTrue(mock_s3_put_object.called)
+        self.assertTrue(mock_s3_put_object.called_once)
+        self.assertTrue(mock_federated_objects.called)
 
     @patch("gzip.open", mock_open())
     @patch("builtins.open", mock_open())
     @patch("common.util.cluster_dict")
     @patch.object(Extractor, "get_copy_replacements")
-    def test_save_logs_non_s3(self, mock_copy_replacements, mock_cluster_dict):
+    @patch.object(Extractor,"get_federated_objects")
+    def test_save_logs_non_s3(self, mock_copy_replacements, mock_cluster_dict,mock_federated_objects):
         with patch.object(Path, "mkdir") as mock_mkdir:
             mock_mkdir.return_value = None
             e = Extractor(
