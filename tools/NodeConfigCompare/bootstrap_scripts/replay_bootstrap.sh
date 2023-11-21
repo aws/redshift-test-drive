@@ -30,7 +30,7 @@ git clone https://github.com/aws/redshift-test-drive.git
 cd redshift-test-drive
 make setup
 if [[ "$SIMPLE_REPLAY_OVERWRITE_S3_PATH" != "N/A" ]]; then
-  aws s3 cp $SIMPLE_REPLAY_OVERWRITE_S3_PATH replay.yaml
+  aws s3 cp $SIMPLE_REPLAY_OVERWRITE_S3_PATH config/replay.yaml
 fi
 
 sed -i "s#master_username: \".*\"#master_username: \"$REDSHIFT_USER_NAME\"#g" config/replay.yaml
