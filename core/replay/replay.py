@@ -189,8 +189,8 @@ def main():
 
     bucket = bucket_dict(config["workload_location"])
     if bucket.get("bucket_name", ""):
+        logger.info(f"Uploading replay logs to {bucket['bucket_name']}/{bucket['prefix']}")
         for log_type, directory in [("replay_logs","core/logs/replay/replay_log"), ("replay_worker_logs","core/logs/replay_log")]:
-            logger.info(f"Uploading replay logs to {bucket['bucket_name']}/{bucket['prefix']}")
             object_key = f"{log_type}.zip"
             zip_file_name = f"{log_type}.zip"
             dir = f"{directory}-{replay_id}"
