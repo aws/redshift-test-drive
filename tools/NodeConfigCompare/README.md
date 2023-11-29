@@ -28,7 +28,7 @@ If you are already running Amazon Redshift workload in production, you may like 
 
 If you are going to replay your workload into Serverless workgroup then make sure that you must have at least three subnets, and they must span across three Availability Zones. You can review the considerations when using Amazon Redshift Serverless [here](https://docs.aws.amazon.com/redshift/latest/mgmt/serverless-known-issues.html).
 
-You need to provide at least one subnet in the same VPC (where you have Redshift provisioned clusters or serverless workgroups) which has access to the internet to download the ECR container image.
+You need to provide at least one subnet in the same VPC (where you have Redshift provisioned clusters or serverless workgroups) which has access to the internet to download the ECR container image ( from `public.ecr.aws`), python packages ( from `pypi.org` and `files.pythonhosted.org`) , code ( from github repository `github.com/aws/redshift-test-drive.git`) , and additional artefacts (from `d2glxqk2uabbnd.cloudfront.net` and `cdn.amazonlinux.com`). If there are outbound firewall rules, you have to allow list these URLs. 
 
 ## Example Use Case
 
