@@ -47,17 +47,26 @@ It may take around three hours for the audit logs to be delivered to S3.
     cd redshift-test-drive/
     export REDSHIFT_TEST_DRIVE_ROOT=$(pwd)
     ```
-
-   4. Install necessary Python libraries. In the root directory (`<directory you cloned the git repository into>/`), you will find the file requirements.txt. Run the following command
+   4. Create a virtual environment in the root directory ( A virtual environment can be thought of as an isolated container. If anything goes wrong, simply deleting and creating a new environment will not mess with the python the OS uses ). Run the following commands 
     ```
-    cd $REDSHIFT_TEST_DRIVE_ROOT && make setup
+    cd $REDSHIFT_TEST_DRIVE_ROOT 
+    python3 -m venv test-drive-virtualenv
+    source test-drive-virtualenv/bin/activate
+    ```
+    - To deactivate the virtual environment (after using the utility or if needed), run the following command
+    ```
+    deactivate
+    ``` 
+   5. Install necessary Python libraries. In the root directory (`<directory you cloned the git repository into>/`), you will find the file requirements.txt. Run the following command
+    ```
+   make setup
     ```
 
-   5. Follow the steps provided by the [documentation](https://docs.aws.amazon.com/redshift/latest/mgmt/configure-odbc-connection.html) and install ODBC Driver for Linux
+   6. Follow the steps provided by the [documentation](https://docs.aws.amazon.com/redshift/latest/mgmt/configure-odbc-connection.html) and install ODBC Driver for Linux
 
-   6. Check if AWS CLI is configured in the machine. If it’s not configured, follow the steps in [installation guide](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-install.html)
+   7. Check if AWS CLI is configured in the machine. If it’s not configured, follow the steps in [installation guide](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-install.html)
    
-   7. Configure AWS CLI:
+   8. Configure AWS CLI:
       * Provided IAM user should have Redshift and S3 permissions. If temporary IAM credentials are being used, ensure they do not expire before the replay ends.
       * The IAM user needs to have permission to read the Audit logs S3 bucket configured in Step 1. This is required for the Extraction step of Workload Replicator.
       * The IAM user needs to have Redshift::GetClusterCredentials and redshift:DescribeLoggingStatus This is required for the Replay step of Workload Replicator

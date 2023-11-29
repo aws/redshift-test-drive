@@ -29,11 +29,21 @@ yum install git
  cd redshift-test-drive/
  export REDSHIFT_TEST_DRIVE_ROOT=$(pwd)
  ```
- 02. Execute the following command from the root directory to install all the required packages:
+ 02. Create a virtual environment in the root directory ( A virtual environment can be thought of as an isolated container. If anything goes wrong, simply deleting and creating a new environment will not mess with the python the OS uses ). Run the following commands 
+```
+cd $REDSHIFT_TEST_DRIVE_ROOT 
+python3 -m venv test-drive-virtualenv
+source test-drive-virtualenv/bin/activate
+```
+- To deactivate the virtual environment (after using the utility or if needed), run the following command
+```
+deactivate
+``` 
+ 03. Execute the following command from the root directory to install all the required packages:
  ```
- cd $REDSHIFT_TEST_DRIVE_ROOT && make setup
+make setup
  ```
- 03. Refer to the Table of Content which will point out the different tools and README links of your interest.
+ 04. Refer to the Table of Content which will point out the different tools and README links of your interest.
 
 
 <br>
