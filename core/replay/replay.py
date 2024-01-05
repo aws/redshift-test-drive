@@ -18,6 +18,7 @@ from common.util import (
     is_serverless,
     CredentialsException,
     bucket_dict,
+    db_connect
 )
 import report_gen
 from unload_sys_table import UnloadSysTable
@@ -94,6 +95,27 @@ def main():
     if len(connection_logs) == 0:
         logger.info("No logs to replay, nothing to do.")
         sys.exit()
+
+    # setting application name for tracking
+    application = "WorkloadReplicator-Replay"
+    
+    host = config.get("target_cluster_endpoint").split(".")[0]
+    port = int(config.get("target_cluster_endpoint").split(":")[-1].split("/")[0])
+    DbUser = config.get("master_username")
+    DbName = config.get("target_cluster_endpoint").split("/")[-1]
+    region = config.get("target_cluster_region")
+    endpoint = config.get('target_cluster_endpoint').split(":")[0]
+
+    response = aws_service_helper.redshift_get_cluster_credentials(
+        user=DbUser,
+        database_name=DbName,
+        cluster_id=host,
+        region=region)
+    db_connect(host=endpoint,
+               port=port,
+               database=DbName,
+               password=response['DbPassword'],
+               username=response['DbUser'], app_name=application)
 
     # Actual replay
     logger.debug("Starting replay")
