@@ -23,10 +23,12 @@ def db_connect(
     database=None,
     odbc_driver=None,
     drop_return=False,
+    app_name=None
 ):
     if interface == "psql":
         conn = redshift_connector.connect(
-            user=username, password=password, host=host, port=port, database=database
+            user=username, password=password, host=host, port=port,
+            database=database, application_name=app_name
         )
 
         # if drop_return is set, monkey patch driver to not store result set in memory

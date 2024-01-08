@@ -9,7 +9,7 @@ import time
 import common.config as config_helper
 import common.log as log_helper
 from common import aws_service as aws_service_helper
-from common.util import cluster_dict
+from common.util import cluster_dict, db_connect
 import core.extract.extractor as extractor
 
 logger = logging.getLogger("WorkloadReplicatorLogger")
@@ -61,6 +61,27 @@ def main():
     e = extractor.Extractor(config)
     if not e.load_driver():
         sys.exit("Failed to load driver")
+
+    # setting application name for tracking
+    application = "WorkloadReplicator-Extract"
+    
+    host = config.get("source_cluster_endpoint").split(".")[0]
+    port = int(config.get("source_cluster_endpoint").split(":")[-1].split("/")[0])
+    DbUser = config.get("master_username")
+    DbName = config.get("source_cluster_endpoint").split("/")[-1]
+    region = config.get("region")
+    endpoint = config.get('source_cluster_endpoint').split(":")[0]
+
+    response = aws_service_helper.redshift_get_cluster_credentials(
+        user=DbUser,
+        database_name=DbName,
+        cluster_id=host,
+        region=region)
+    db_connect(host=endpoint,
+               port=port,
+               database=DbName,
+               password=response['DbPassword'],
+               username=response['DbUser'], app_name=application)
 
     # Run extract job
     (
