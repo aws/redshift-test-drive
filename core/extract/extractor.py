@@ -188,10 +188,7 @@ class Extractor:
             connections_file.close()
 
         # Save the replacements
-        if self.config["log_location"]:
-            copy_replacements = replacements
-        else:
-            copy_replacements = self.get_copy_replacements()
+        copy_replacements = replacements
         logger.info("Generating the copy_replcaments........")
         logger.info(f"Exporting copy replacements to {output_directory}")
         replacements_string = "Original location,Replacement location,Replacement IAM role\n"
@@ -298,28 +295,7 @@ class Extractor:
             statements_to_be_avoided,
         )
 
-    def get_copy_replacements(self):
-        copy_replacements = set()
-        cluster_object = util.cluster_dict(self.config["source_cluster_endpoint"])
-        end_time = self.config["end_time"]
-        start_time = self.config["start_time"]
-        redshift_user = self.config["master_username"]
-        (
-            STL_LOAD_response,
-            copy_objects_not_found,
-            copy_source_location,
-        ) = external_object_replicator.execute_stl_load_query(
-            cluster_object,
-            end_time,
-            self.config,
-            redshift_user,
-            start_time,
-        )
-        for copy_record in copy_source_location:
-            copy_replacements.add(
-                f"s3://{copy_record['source_bucket']}/{copy_record['source_key'].rsplit('/', 1)[0]}/"
-            )
-        return copy_replacements
+
 
     def unload_system_table(
         self,
