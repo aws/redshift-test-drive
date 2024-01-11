@@ -188,10 +188,7 @@ class Extractor:
             connections_file.close()
 
         # Save the replacements
-        if self.config["log_location"]:
-            copy_replacements = replacements
-        else:
-            copy_replacements = self.get_copy_replacements()
+        copy_replacements = replacements
         logger.info("Generating the copy_replcaments........")
         logger.info(f"Exporting copy replacements to {output_directory}")
         replacements_string = "Original location,Replacement location,Replacement IAM role\n"
