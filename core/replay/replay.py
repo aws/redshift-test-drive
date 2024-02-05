@@ -99,7 +99,10 @@ def main():
     # setting application name for tracking
     application = "WorkloadReplicator-Replay"
     
-    host = config.get("target_cluster_endpoint").split(".")[0]
+    if is_serverless_endpoint:
+        host = f'redshift-serverless-{config.get("target_cluster_endpoint").split(".")[0]}' 
+    else:
+        host = config.get("target_cluster_endpoint").split(".")[0]
     port = int(config.get("target_cluster_endpoint").split(":")[-1].split("/")[0])
     DbUser = config.get("master_username")
     DbName = config.get("target_cluster_endpoint").split("/")[-1]
