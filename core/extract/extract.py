@@ -63,25 +63,27 @@ def main():
         sys.exit("Failed to load driver")
 
     # setting application name for tracking
-    application = "WorkloadReplicator-Extract"
-    
-    host = config.get("source_cluster_endpoint").split(".")[0]
-    port = int(config.get("source_cluster_endpoint").split(":")[-1].split("/")[0])
-    DbUser = config.get("master_username")
-    DbName = config.get("source_cluster_endpoint").split("/")[-1]
-    region = config.get("region")
-    endpoint = config.get('source_cluster_endpoint').split(":")[0]
+    if config.get("source_cluster_endpoint"):
+        application = "WorkloadReplicator-Extract"
 
-    response = aws_service_helper.redshift_get_cluster_credentials(
-        user=DbUser,
-        database_name=DbName,
-        cluster_id=host,
-        region=region)
-    db_connect(host=endpoint,
-               port=port,
-               database=DbName,
-               password=response['DbPassword'],
-               username=response['DbUser'], app_name=application)
+        host = config.get("source_cluster_endpoint").split(".")[0]
+        port = int(config.get("source_cluster_endpoint").split(":")[-1]
+                   .split("/")[0])
+        DbUser = config.get("master_username")
+        DbName = config.get("source_cluster_endpoint").split("/")[-1]
+        region = config.get("region")
+        endpoint = config.get('source_cluster_endpoint').split(":")[0]
+
+        response = aws_service_helper.redshift_get_cluster_credentials(
+            user=DbUser,
+            database_name=DbName,
+            cluster_id=host,
+            region=region)
+        db_connect(host=endpoint,
+                   port=port,
+                   database=DbName,
+                   password=response['DbPassword'],
+                   username=response['DbUser'], app_name=application)
 
     # Run extract job
     (
