@@ -6,6 +6,7 @@ import yaml
 import os
 import zipfile
 import time
+import re
 import common.config as config_helper
 import common.log as log_helper
 from common import aws_service as aws_service_helper
@@ -13,6 +14,16 @@ from common.util import cluster_dict, db_connect
 import core.extract.extractor as extractor
 
 logger = logging.getLogger("WorkloadReplicatorLogger")
+
+serverless_cluster_endpoint_pattern = (
+    r"(.+)\.(.+)\.(.+).redshift-serverless(-dev)?\.amazonaws\.com:[0-9]{4,5}\/(.)+"
+)
+
+
+def is_serverless(config):
+    return bool(
+            re.fullmatch(serverless_cluster_endpoint_pattern, config["source_cluster_endpoint"])
+        )
 
 
 def main():
@@ -66,7 +77,10 @@ def main():
     if config.get("source_cluster_endpoint"):
         application = "WorkloadReplicator-Extract"
 
-        host = config.get("source_cluster_endpoint").split(".")[0]
+        if is_serverless(config):
+            host = f'redshift-serverless-{config.get("source_cluster_endpoint").split(".")[0]}' 
+        else:
+            host = config.get("source_cluster_endpoint").split(".")[0]
         port = int(config.get("source_cluster_endpoint").split(":")[-1]
                    .split("/")[0])
         DbUser = config.get("master_username")
