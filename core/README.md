@@ -236,6 +236,7 @@ The analysis folder structure is as follows :
   * aggregated_data
     - formatted csv files as the data appears in the report
 <br>
+
 ### Cleanup
 * Delete resources created in this process as part of the cleanup process to avoid incurring costs
     * If a cloud EC2 instance was created, delete the EC2 instance created
