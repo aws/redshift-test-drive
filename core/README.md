@@ -238,7 +238,10 @@ The analysis folder structure is as follows :
 <br>
 <br>
 
-    
+### Cleanup
+* Delete resources created in this process as part of the cleanup process to avoid incurring costs
+    * If a cloud EC2 instance was created, delete the EC2 instance created
+    * If roles are created as part of the process, delete the role
 
 ## Limitations 
 
