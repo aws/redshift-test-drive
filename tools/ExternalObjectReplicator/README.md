@@ -69,5 +69,11 @@ In the target_S3_location provided in external_replicator.yaml:
 
 In the local directory:
 * external_replicator.log
-    * Logs produced by the execution of external replicator. 
+    * Logs produced by the execution of external replicator.
+ 
+## Cleanup
+To avoid unwanted costs incurring post execution, we recommend deleting the following resources:
+* If S3 bucket was created, delete the s3 bucket
+* Delete EC2 Instance created
+
 
