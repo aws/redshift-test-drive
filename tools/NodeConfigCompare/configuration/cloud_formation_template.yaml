@@ -1092,7 +1092,7 @@ Resources:
       target_folder_s3_path: !Sub
         - s3://${RedshiftConfigTestingBucket}/${ScriptPrefix}
         - {ScriptPrefix: !FindInMap [ ConfigTesting, S3, ScriptPrefix]}
-      branch: "main"
+      branch: "specific-customer-branch"
 
   LakeFormationPermissionGlueCrawler:
     Type: AWS::LakeFormation::Permissions
