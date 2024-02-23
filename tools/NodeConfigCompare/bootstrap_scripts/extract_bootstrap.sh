@@ -9,6 +9,9 @@ echo "simple_replay_extract_start_time: $SIMPLE_REPLAY_EXTRACT_START_TIME"
 echo "simple_replay_extract_end_time: $SIMPLE_REPLAY_EXTRACT_END_TIME"
 echo "extract_prefix: $EXTRACT_PREFIX"
 echo "script_prefix: $SCRIPT_PREFIX"
+echo "replacement_copy_location: $REPLACEMENT_COPY_LOCATION"
+echo "replacement_iam_location: $REPLACEMENT_IAM_LOCATION"
+
 
 yum update -y
 yum -y install git
@@ -30,5 +33,7 @@ sed -i "s#log_location: \".*\"#log_location: \"$SIMPLE_REPLAY_LOG_LOCATION\"#g" 
 sed -i "s#workload_location: \".*\"#workload_location: \"$WORKLOAD_LOCATION\"#g" config/extract.yaml
 sed -i "s#start_time: \".*\"#start_time: \"$SIMPLE_REPLAY_EXTRACT_START_TIME\"#g" config/extract.yaml
 sed -i "s#end_time: \".*\"#end_time: \"$SIMPLE_REPLAY_EXTRACT_END_TIME\"#g" config/extract.yaml
+sed -i "s#replacement_copy_location: \".*\"#replacement_copy_location: \"$REPLACEMENT_COPY_LOCATION\"#g" config/extract.yaml
+sed -i "s#replacement_iam_location: \".*\"#replacement_iam_location: \"$REPLACEMENT_IAM_LOCATION\"#g" config/extract.yaml
 aws s3 cp config/extract.yaml s3://$BUCKET_NAME/$SCRIPT_PREFIX/
 make extract
