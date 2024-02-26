@@ -193,14 +193,15 @@ class Extractor:
         logger.info(f"Exporting copy replacements to {output_directory}")
         replacements_string = "Original location,Replacement location,Replacement IAM role\n"
         for bucket in copy_replacements:
-            replacements_string += (
-                bucket
-                + ","
-                + self.config.get("replacement_copy_location", "")
-                + ","
-                + self.config.get("replacement_iam_location", "")
-                + "\n"
-            )
+            if "prod" in bucket:
+                replacements_string += (
+                    bucket
+                    + ","
+                    + self.config.get("replacement_copy_location", "")
+                    + ","
+                    + self.config.get("replacement_iam_location", "")
+                    + "\n"
+                )
         if is_s3:
             aws_service_helper.s3_put_object(
                 replacements_string,
