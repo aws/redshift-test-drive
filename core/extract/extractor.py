@@ -193,7 +193,16 @@ class Extractor:
         logger.info(f"Exporting copy replacements to {output_directory}")
         replacements_string = "Original location,Replacement location,Replacement IAM role\n"
         for bucket in copy_replacements:
-            if "prod" in bucket:
+            if "tbdp-temp-prod" in bucket:
+                replacements_string += (
+                    bucket
+                    + ","
+                    + bucket.replace("tbdp-temp-prod", "tbdp-temp-qa")
+                    + ","
+                    + self.config.get("replacement_iam_location", "")
+                    + "\n"
+                )
+            else:
                 replacements_string += (
                     bucket
                     + ","
