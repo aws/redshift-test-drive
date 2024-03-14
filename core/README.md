@@ -47,17 +47,22 @@ It may take around three hours for the audit logs to be delivered to S3.
     cd redshift-test-drive/
     export REDSHIFT_TEST_DRIVE_ROOT=$(pwd)
     ```
+   4. Create a virtual environment inside the redshift-test-drive directory
+    ```
+    python3 -m venv testDriveEnv
+    source testDriveEnv/bin/activate
+    ```
 
-   4. Install necessary Python libraries. In the root directory (`<directory you cloned the git repository into>/`), you will find the file requirements.txt. Run the following command
+   5. Install necessary Python libraries. In the root directory (`<directory you cloned the git repository into>/`), you will find the file requirements.txt. Run the following command
     ```
     cd $REDSHIFT_TEST_DRIVE_ROOT && make setup
     ```
 
-   5. Follow the steps provided by the [documentation](https://docs.aws.amazon.com/redshift/latest/mgmt/configure-odbc-connection.html) and install ODBC Driver for Linux
+   6. Follow the steps provided by the [documentation](https://docs.aws.amazon.com/redshift/latest/mgmt/configure-odbc-connection.html) and install ODBC Driver for Linux
 
-   6. Check if AWS CLI is configured in the machine. If it’s not configured, follow the steps in [installation guide](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-install.html)
+   7. Check if AWS CLI is configured in the machine. If it’s not configured, follow the steps in [installation guide](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-install.html)
    
-   7. Configure AWS CLI:
+   8. Configure AWS CLI:
       * Provided IAM user should have Redshift and S3 permissions. If temporary IAM credentials are being used, ensure they do not expire before the replay ends.
       * The IAM user needs to have permission to read the Audit logs S3 bucket configured in Step 1. This is required for the Extraction step of Workload Replicator.
       * The IAM user needs to have Redshift::GetClusterCredentials and redshift:DescribeLoggingStatus This is required for the Replay step of Workload Replicator
@@ -65,7 +70,10 @@ It may take around three hours for the audit logs to be delivered to S3.
     ```
     aws configure
     ```
-                
+   9. Finally after using the utility to run different benchmarks to deactivate virtual environment, run the following
+   ```
+   deactivate
+   ```             
 
 
 ### Step 3 - COPY and UNLOAD setup
