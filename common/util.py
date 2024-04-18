@@ -91,6 +91,8 @@ def cluster_dict(endpoint, is_serverless=False, start_time=None, end_time=None):
             cluster["instance"] = "Serverless"
             if response.get("workgroup").get("baseCapacity"):
                 cluster["base_rpu"] = response.get("workgroup").get("baseCapacity")
+            else:
+                cluster["base_rpu"] = "N/A"
         except Exception as e:
             if e.response["Error"]["Code"] == "ResourceNotFoundException":
                 logger.warning(
