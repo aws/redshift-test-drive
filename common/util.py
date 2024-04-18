@@ -87,10 +87,12 @@ def cluster_dict(endpoint, is_serverless=False, start_time=None, end_time=None):
             response = aws_service_helper.redshift_get_serverless_workgroup(
                 workgroup_name, cluster.get("region")
             )
-
             cluster["num_nodes"] = "N/A"
             cluster["instance"] = "Serverless"
-            cluster["base_rpu"] = response["workgroup"]["baseCapacity"]
+            if response.get("workgroup").get("baseCapacity"):
+                cluster["base_rpu"] = response.get("workgroup").get("baseCapacity")
+            else:
+                cluster["base_rpu"] = "N/A"
         except Exception as e:
             if e.response["Error"]["Code"] == "ResourceNotFoundException":
                 logger.warning(
