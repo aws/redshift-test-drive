@@ -61,21 +61,34 @@ def db_connect(
 def cluster_dict(endpoint, is_serverless=False, start_time=None, end_time=None):
     """Create a object-like dictionary from cluster endpoint"""
     parsed = urlparse(endpoint)
-    url_split = parsed.scheme.split(".")
-    port_database = parsed.path.split("/")
 
     if is_serverless:
+        url_split = parsed.path.split(".")
         workgroup_name = url_split[0]
+        cluster = {
+            "endpoint": endpoint,
+            "id": url_split[0],
+            "host": parsed.path.split("/")[0].split(":")[0],
+            "region": url_split[2],
+            "port": parsed.path.split("/")[0].split(":")[1],
+            "database":  parsed.path.split("/")[-1],
+            "is_serverless": is_serverless,
+        }
+        print(cluster)
+    else:
+        url_split = parsed.scheme.split(".")
+        port_database = parsed.path.split("/")
+        cluster = {
+            "endpoint": endpoint,
+            "id": url_split[0],
+            "host": parsed.scheme,
+            "region": url_split[2],
+            "port": port_database[0],
+            "database": port_database[1],
+            "is_serverless": is_serverless,
+        }
+        print(cluster)
 
-    cluster = {
-        "endpoint": endpoint,
-        "id": url_split[0],
-        "host": parsed.scheme,
-        "region": url_split[2],
-        "port": port_database[0],
-        "database": port_database[1],
-        "is_serverless": is_serverless,
-    }
 
     if start_time is not None:
         cluster["start_time"] = start_time
