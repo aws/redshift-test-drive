@@ -1,5 +1,6 @@
 /*SysQueryHistory*/
 SELECT h.user_id,
+       u.usename,
        query_id,
        transaction_id,
        session_id,
@@ -19,6 +20,7 @@ SELECT h.user_id,
        returned_bytes,
        redshift_version
 from sys_query_history h
+LEFT JOIN pg_user u on h.user_id = u.usesysid
 WHERE user_id > 1
   AND start_time >= {{START_TIME}}
   AND start_time <= {{END_TIME}};

@@ -55,7 +55,7 @@ def pdf_gen(report, summary=None):
     @param summary: list, replay summary
 
     """
-    with open("core/replay/report_content.yaml", "r") as stream:
+    with open("/home/devsaba/code/redshift-test-drive/core/replay/report_content.yaml", "r") as stream:
         docs = yaml.safe_load(stream)
 
         style = g_stylesheet.get("styles")
@@ -347,7 +347,7 @@ def unload(unload_location, iam_role, cluster, user, replay):
 
     logger = logging.getLogger("WorkloadReplicatorLogger")
 
-    directory = r"core/sql"
+    directory = r"/home/devsaba/code/redshift-test-drive/core/sql"
 
     queries = []  # used to return query names
     with initiate_connection(username=user, cluster=cluster) as conn:  # initiate connection
@@ -369,19 +369,40 @@ def unload(unload_location, iam_role, cluster, user, replay):
                 query = re.sub(r"{{END_TIME}}", f"'{cluster.get('end_time')}'", query)
                 parsed_location = f"s3://{unload_location.get('bucket_name')}/{unload_location.get('prefix')}"
 
-                # format unload query with actual query from sql/
-                unload_query = (
-                    f"unload ($${query}$$) to '{parsed_location}analysis/{replay}/raw_data/"
-                    f"{query_name}' iam_role '{iam_role}' CSV header allowoverwrite parallel off;"
-                )
-                try:
-                    cursor.execute(unload_query)  # execute unload
-                except Exception as e:
-                    logger.error(
-                        f"Could not unload {query_name} results. Confirm IAM permissions include UNLOAD "
-                        f"access for Redshift. {e}"
+                # create temp tables for queries joining with pg_user
+                if "CREATE TEMP TABLE" in query:
+                    query_split = query.split('\n\n')
+                    try:
+                        cursor.execute(query_split[0])
+
+                        unload_query = (
+                            f"unload ($${query_split[1]}$$) to '{parsed_location}analysis/{replay}/raw_data/"
+                            f"{query_name}' iam_role '{iam_role}' CSV header allowoverwrite parallel off;"
+                        )
+
+                        cursor.execute(unload_query)
+
+                    except Exception as e:
+                        logger.error(
+                            f"Could not execute query {query_name}"
+                            f"Error: {e}"
+                        )
+                        exit(-1)
+
+                else:
+                    # format unload query with actual query from sql/
+                    unload_query = (
+                        f"unload ($${query}$$) to '{parsed_location}analysis/{replay}/raw_data/"
+                        f"{query_name}' iam_role '{iam_role}' CSV header allowoverwrite parallel off;"
                     )
-                    exit(-1)
+                    try:
+                        cursor.execute(unload_query)  # execute unload
+                    except Exception as e:
+                        logger.error(
+                            f"Could not unload {query_name} results. Confirm IAM permissions include UNLOAD "
+                            f"access for Redshift. {e}"
+                        )
+                        exit(-1)
 
     logger.info(f"Query results available in {unload_location.get('url')}")
     return queries
