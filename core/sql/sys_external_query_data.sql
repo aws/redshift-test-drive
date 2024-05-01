@@ -1,3 +1,4 @@
+/*SysExternalQueryData*/
 SELECT user_id,
        query_id,
        child_query_sequence,
@@ -14,8 +15,8 @@ SELECT user_id,
        returned_bytes,
        file_format,
        file_location,
-       external_query_text from SYS_EXTERNAL_QUERY_DETAIL
-    WHERE user_id > 1
-      AND   start_time >= {{START_TIME}}
-      AND   start_time <= {{END_TIME}};
-    ;
+       external_query_text
+from SYS_EXTERNAL_QUERY_DETAIL
+WHERE user_id > 1
+  AND start_time >= {{START_TIME}}
+  AND start_time <= {{END_TIME}};
