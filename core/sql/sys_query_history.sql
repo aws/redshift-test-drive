@@ -1,6 +1,6 @@
 /*SysQueryHistory*/
 SELECT h.user_id,
-       u.usename,
+       u.usename as user_name,
        query_id,
        transaction_id,
        session_id,
