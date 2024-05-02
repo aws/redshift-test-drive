@@ -55,7 +55,7 @@ def pdf_gen(report, summary=None):
     @param summary: list, replay summary
 
     """
-    with open("/home/devsaba/code/redshift-test-drive/core/replay/report_content.yaml", "r") as stream:
+    with open("core/replay/report_content.yaml", "r") as stream:
         docs = yaml.safe_load(stream)
 
         style = g_stylesheet.get("styles")
@@ -347,7 +347,7 @@ def unload(unload_location, iam_role, cluster, user, replay):
 
     logger = logging.getLogger("WorkloadReplicatorLogger")
 
-    directory = r"/home/devsaba/code/redshift-test-drive/core/sql"
+    directory = r"core/sql"
 
     queries = []  # used to return query names
     with initiate_connection(username=user, cluster=cluster) as conn:  # initiate connection
