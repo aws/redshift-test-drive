@@ -25,7 +25,7 @@ fields @message
       * `curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash`
       * `source ~/.bashrc`
       * `nvm install --lts`
-      * Check that Node js is installed by running: `node -e "console.log('Running Node.js ' + process.version)"`
+      * Check that Node js is installed by running: `which node`
         
     * To install Node js in your local computer, follow [link](https://nodejs.org/en/download/package-manager/all) here.
 
