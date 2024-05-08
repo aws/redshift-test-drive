@@ -20,6 +20,14 @@ fields @message
 | filter @message like /can be used in Replay Analysis./
 ```
 * Pre-install Node js (Minimum Node >= 14 required for React)
+  * If you do not have Node js already installed, follow steps below:
+    * If using EC2 instance, run following commands in order:
+      * `curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash`
+      * `source ~/.bashrc`
+      * `nvm install --lts`
+      * Check that Node js is installed by running: `which node`
+        
+    * To install Node js in your local computer, follow [link](https://nodejs.org/en/download/package-manager/all) here.
 
 
 ## Command
