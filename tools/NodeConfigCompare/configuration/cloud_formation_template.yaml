@@ -57,6 +57,14 @@ Parameters:
     Description: SNS email endpoint to receive step function state change alerts
     Type: String
     Default: "N/A"
+  AWSBatchJobVcpu:
+    Description: VCPU configuration for Redshift Performance Testing Job
+    Type: String
+    Default: "4"
+  AWSBatchJobMemory:
+    Description: Memory configuration for Redshift Performance Testing Job
+    Type: String
+    Default: "16384"
 
 Metadata:
   AWS::CloudFormation::Interface:
@@ -648,9 +656,9 @@ Resources:
           AssignPublicIp: ENABLED
         ResourceRequirements:
         - Type: VCPU
-          Value: 4
+          Value: !Ref AWSBatchJobVcpu
         - Type: MEMORY
-          Value: 16384
+          Value: !Ref AWSBatchJobMemory
         JobRoleArn: !GetAtt EcsTaskExecutionRole.Arn
         ExecutionRoleArn: !GetAtt EcsTaskExecutionRole.Arn
         LogConfiguration:
@@ -1006,6 +1014,7 @@ Resources:
     Properties:
       ServiceToken: !GetAtt [StartUpLambda, Arn]
       RedshiftSubnetList: !Ref RedshiftSubnetId
+      RedshiftPerformanceTestingJobDefinition: !Ref RedshiftPerformanceTestingJobDefinition
 
   LambdaFunctionGitHubCopy:
     Type: "AWS::Lambda::Function"
