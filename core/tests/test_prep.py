@@ -266,6 +266,30 @@ class TestGetConnectionCredentials(unittest.TestCase):
                 "database": "dev",
             },
         )
+    
+    @patch("core.replay.prep.redshift_get_cluster_credentials")
+    def test_get_connection_credentials_for_database_not_being_none(self, mock_get_cluster_creds):
+        mock_get_cluster_creds.return_value = {"DbUser": "testAdmin", "DbPassword": "testPassword"}
+        prep = ReplayPrep(
+            {
+                "target_cluster_endpoint": "test.111222333222.us-east-1.redshift.amazonaws.com:5439/dev",
+                "odbc_driver": "test",
+                "nlb_nat_dns": None,
+                "target_cluster_region": "us-east-1",
+            }
+        )
+
+        result = prep.get_connection_credentials("testUsername","tcpds_100g")
+        self.assertEqual(
+            result["psql"],
+            {
+                "username": "testAdmin",
+                "password": "testPassword",
+                "host": "test.111222333222.us-east-1.redshift.amazonaws.com",
+                "port": "5439",
+                "database": "tcpds_100g",
+            },
+        )
 
 
 class TestCorrelateTransactionsWithConnections(unittest.TestCase):
