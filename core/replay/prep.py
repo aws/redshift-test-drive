@@ -139,7 +139,8 @@ class ReplayPrep:
             cluster_host = cluster_endpoint.split(":")[0]
 
         cluster_port = cluster_endpoint_split[5].split("/")[0][4:]
-        database = cluster_endpoint_split[5].split("/")[1]
+        if database == None:
+            database = cluster_endpoint_split[5].split("/")[1]
 
         additional_args = {}
         if os.environ.get("ENDPOINT_URL"):
