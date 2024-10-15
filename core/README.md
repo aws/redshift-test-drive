@@ -30,6 +30,7 @@ It may take around three hours for the audit logs to be delivered to S3.
 1. Create an EC2 instance
     1. Recommended EC2 instance type: **m5.8xlarge**, 32GB of SSD storage, Amazon Linux AMI
     2. The cluster must be accessible from where Workload Replicator is being run. This may entail modifying the security group inbound rules or running Workload Replicator on the same VPC as the Redshift replica cluster.
+    3. Ensure inbound rules to EC2 allow only required access, i.e., from Redshift to get inbound traffic from the test cluster and SSH access to connect to EC2.
 2. Install Workload Replicator and libraries dependencies on the provided EC2 machine
    1. Install Python3.
     Check if Python is already installed by doing ``which python3``. If the python3 binary is not found, then use:
