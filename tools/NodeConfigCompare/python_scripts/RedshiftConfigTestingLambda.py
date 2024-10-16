@@ -527,6 +527,7 @@ def validate_user_config(user_config, client, current_account_id):
             "ds2.8xlarge",
             "dc2.large",
             "dc2.8xlarge",
+            "ra3.large",
             "ra3.xlplus",
             "ra3.4xlarge",
             "ra3.16xlarge",
