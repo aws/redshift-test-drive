@@ -10,8 +10,8 @@ export const HomePage = () => {
 
     const [resource, setResource] = useState('');
     const [replays, setReplays] = useState([])
-    const [buckets, setBuckets] = useState([])
-    const [bucketLabels, setBucketLabels] = useState([])
+    const [workloads, setWorkloads] = useState([])
+    const [workloadLabels, setWorkloadLabels] = useState([])
     const [searching, setSearching] = useState(false)
     const [profiles, setProfiles] = useState([])
     const [valid, setValid] = useState(true)
@@ -36,10 +36,10 @@ export const HomePage = () => {
                     if (!response.success) {
                         setValid(false)
                     } else {
-                        if (!buckets.includes(response.bucket)) {
+                        if (!workloads.includes(response.workload)) {
                             setReplays(replays => [...replays, ...response.replays]);
-                            setBuckets(buckets => [...buckets, response.bucket]);
-                            setBucketLabels(buckets => [...buckets, {label: response.bucket}]);
+                            setWorkloads(workloads => [...workloads, response.workload]);
+                            setWorkloadLabels(workloads => [...workloads, {label: response.workload}]);
                         }
                     }
 
@@ -59,17 +59,17 @@ export const HomePage = () => {
     }
 
     /**
-     * Removes entries from list of replays when bucket is removed
+     * Removes entries from list of replays when workload is removed
      * @param {number} itemIndex Total data set of query frequency values.
      */
-    function removeBucket(itemIndex) {
-        let bucket = bucketLabels[itemIndex].label
-        setBucketLabels([...bucketLabels.slice(0, itemIndex),
-            ...bucketLabels.slice(itemIndex + 1)]);
-        setBuckets([...buckets.slice(0, itemIndex),
-            ...buckets.slice(itemIndex + 1)]);
+    function removeWorkload(itemIndex) {
+        let workload = workloadLabels[itemIndex].label
+        setWorkloadLabels([...workloadLabels.slice(0, itemIndex),
+            ...workloadLabels.slice(itemIndex + 1)]);
+        setWorkloads([...workloads.slice(0, itemIndex),
+            ...workloads.slice(itemIndex + 1)]);
         let result = replays.filter((data) => {
-            return data.bucket.search(bucket) === -1;
+            return data.workload !== workload;
         });
         setReplays(result);
     }
@@ -113,9 +113,9 @@ export const HomePage = () => {
 
                         <TokenGroup
                             onDismiss={({detail: {itemIndex}}) => {
-                                removeBucket(itemIndex)
+                                removeWorkload(itemIndex)
                             }}
-                            items={bucketLabels}>
+                            items={workloadLabels}>
 
                         </TokenGroup>
 
