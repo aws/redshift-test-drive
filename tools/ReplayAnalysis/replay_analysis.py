@@ -8,7 +8,7 @@ def launch_analysis_v2():
 
     # add explicit instructions for user
 
-    os.system("pip install -r requirements.txt")
+    os.system("python3 -m pip install -r requirements.txt")
     os.chdir(f"{os.getcwd()}/tools/ReplayAnalysis/gui")
 
     # explicit version checking
