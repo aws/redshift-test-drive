@@ -29,7 +29,7 @@ external_object_replicator:
 
 
 setup: requirements.txt
-	pip3 install -r requirements.txt
+	$(PYTHON) -m pip install -r requirements.txt
 
 test:
 	export PYTHONPATH=$(PYTHONPATH):$(CORE_FOLDER):$(CORE_FOLDER) && export PYTHONPATH=$(PYTHONPATH):$(CORE_FOLDER):$(COMMON_FOLDER) && export PYTHONPATH=$(PYTHONPATH):$(CORE_FOLDER):$(EXTERNAL_OBJECT_REPLICATOR_DIR)/ && export PYTHONPATH=$(PYTHONPATH):$(CORE_FOLDER):$(REPLAY_ANALYSIS_DIR)/ && pytest ${EXTERNAL_OBJECT_REPLICATOR_DIR} ${CORE_FOLDER} ${COMMON_FOLDER} ${REPLAY_ANALYSIS_DIR}
