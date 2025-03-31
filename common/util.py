@@ -177,6 +177,8 @@ def get_connection_key(database_name, username, pid):
 
 
 def is_serverless(config):
+    if ".com.cn" in config["target_cluster_endpoint"] and len(config["target_cluster_endpoint"].split(".")) == 7:
+        serverless_cluster_endpoint_pattern = (r"(.+)\.(.+)\.(.+).redshift-serverless(-dev)?\.amazonaws\.com\.cn:[0-9]{4,5}\/(.)+")
     return bool(
         re.fullmatch(serverless_cluster_endpoint_pattern, config["target_cluster_endpoint"])
     )

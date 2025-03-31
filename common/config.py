@@ -174,9 +174,14 @@ def validate_config_file_for_extract(config):
 
 
 def validate_config_for_replay(config):
-    cluster_endpoint_pattern = (
-        r"(.+)\.(.+)\.(.+).redshift(-serverless)?\.amazonaws\.com:[0-9]{4,5}\/(.)+"
-    )
+    if ".com.cn" in config["target_cluster_endpoint"] and len(config["target_cluster_endpoint"].split(".")) == 7:
+        cluster_endpoint_pattern = (
+            r"(.+)\.(.+)\.(.+).redshift(-serverless)?\.amazonaws\.com\.cn:[0-9]{4,5}\/(.)+"
+        )
+    else:
+        cluster_endpoint_pattern = (
+            r"(.+)\.(.+)\.(.+).redshift(-serverless)?\.amazonaws\.com:[0-9]{4,5}\/(.)+"
+        )
     if not bool(re.fullmatch(cluster_endpoint_pattern, config["target_cluster_endpoint"])):
         logger.error(
             'Config file value for "target_cluster_endpoint" is not a valid endpoint. Endpoints must be in the format '
