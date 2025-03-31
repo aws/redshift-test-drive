@@ -104,6 +104,10 @@ class ConnectionThread(threading.Thread):
         else:
             interface = "psql"
         r = ReplayPrep(self.config)
+        ##Fix IAM user bug. G.Bai - mar 2025
+        if username[:4] == "IAM:" or username[:5] == "IAMR:" or username.count(":") == 2:
+            self.logger.debug("Replace user - " + username + " to " + self.config["master_username"])
+            username = self.config["master_username"]
         credentials = r.get_connection_credentials(username, database=self.connection_log.database_name)
 
         try:

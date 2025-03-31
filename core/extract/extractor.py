@@ -391,12 +391,21 @@ class Extractor:
         cluster_region = cluster_endpoint.split(".")[2]
         cluster_id = cluster_endpoint_split[0]
         cluster_host = cluster_endpoint.split(":")[0]
-        if "redshift-serverless" in cluster_endpoint:
-            cluster_port = cluster_endpoint_split[5].split("/")[0][4:]
-            cluster_database = cluster_endpoint_split[5].split("/")[1]
+        ## China region endpoint support - G.Bai - Mar 2025
+        if ".com.cn" in cluster_endpoint and len(cluster_endpoint.split(".")) == 7:
+            if "redshift-serverless" in cluster_endpoint:
+                cluster_port = cluster_endpoint_split[6].split(":")[1].split("/")[0]
+                cluster_database = cluster_endpoint_split[6].split("/")[1]
+            else:
+                cluster_port = cluster_endpoint_split[6].split(":")[1].split("/")[0]
+                cluster_database = cluster_endpoint_split[6].split("/")[1]
         else:
-            cluster_port = cluster_endpoint_split[5].split("/")[0][4:]
-            cluster_database = cluster_endpoint_split[5].split("/")[1]
+            if "redshift-serverless" in cluster_endpoint:
+                cluster_port = cluster_endpoint_split[5].split("/")[0][4:]
+                cluster_database = cluster_endpoint_split[5].split("/")[1]
+            else:
+                cluster_port = cluster_endpoint_split[5].split("/")[0][4:]
+                cluster_database = cluster_endpoint_split[5].split("/")[1]
         try:
             if "redshift-serverless" in cluster_endpoint:
                 response = client.get_credentials(

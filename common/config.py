@@ -37,28 +37,54 @@ def validate_config_file_for_extract(config):
     :return:
     """
     if config["source_cluster_endpoint"]:
-        if "redshift-serverless" in config["source_cluster_endpoint"]:
-            if (
+        ## China region endpoint support. G.Bai - Mar 2025
+        if ".com.cn" in config["source_cluster_endpoint"] and len(config["source_cluster_endpoint"].split(".")) == 7:
+            if "redshift-serverless" in config["source_cluster_endpoint"]:
+                if (
+                    not len(config["source_cluster_endpoint"].split(".")) == 7
+                    or not len(config["source_cluster_endpoint"].split(":")) == 2
+                    or not len(config["source_cluster_endpoint"].split("/")) == 2
+                ):
+                    logger.error(
+                        'Config file value for "source_cluster_endpoint" is not a valid endpoint. Endpoints must be in '
+                        "the format of <identifier>.<region>.redshift-serverless.amazonaws.com.cn:<port>/<database-name>. "
+                    )
+                    exit(-1)
+            elif (
+                not len(config["source_cluster_endpoint"].split(".")) == 7
+                or not len(config["source_cluster_endpoint"].split(":")) == 2
+                or not len(config["source_cluster_endpoint"].split("/")) == 2
+                or ".redshift.amazonaws.com.cn" not in config["source_cluster_endpoint"]
+            ):
+                logger.error(
+                    'Config file value for "source_cluster_endpoint" is not a valid endpoint. Endpoints must be in the '
+                    "format of <cluster-name>.<identifier>.<region>.redshift.amazonaws.com.cn:<port>/<database-name>. "
+                )
+                exit(-1)
+        else:
+            if "redshift-serverless" in config["source_cluster_endpoint"]:
+                if (
+                    not len(config["source_cluster_endpoint"].split(".")) == 6
+                    or not len(config["source_cluster_endpoint"].split(":")) == 2
+                    or not len(config["source_cluster_endpoint"].split("/")) == 2
+                ):
+                    logger.error(
+                        'Config file value for "source_cluster_endpoint" is not a valid endpoint. Endpoints must be in '
+                        "the format of <identifier>.<region>.redshift-serverless.amazonaws.com:<port>/<database-name>. "
+                    )
+                    exit(-1)
+            elif (
                 not len(config["source_cluster_endpoint"].split(".")) == 6
                 or not len(config["source_cluster_endpoint"].split(":")) == 2
                 or not len(config["source_cluster_endpoint"].split("/")) == 2
+                or ".redshift.amazonaws.com:" not in config["source_cluster_endpoint"]
             ):
                 logger.error(
-                    'Config file value for "source_cluster_endpoint" is not a valid endpoint. Endpoints must be in '
-                    "the format of <identifier>.<region>.redshift-serverless.amazonaws.com:<port>/<database-name>. "
+                    'Config file value for "source_cluster_endpoint" is not a valid endpoint. Endpoints must be in the '
+                    "format of <cluster-name>.<identifier>.<region>.redshift.amazonaws.com:<port>/<database-name>. "
                 )
                 exit(-1)
-        elif (
-            not len(config["source_cluster_endpoint"].split(".")) == 6
-            or not len(config["source_cluster_endpoint"].split(":")) == 2
-            or not len(config["source_cluster_endpoint"].split("/")) == 2
-            or ".redshift.amazonaws.com:" not in config["source_cluster_endpoint"]
-        ):
-            logger.error(
-                'Config file value for "source_cluster_endpoint" is not a valid endpoint. Endpoints must be in the '
-                "format of <cluster-name>.<identifier>.<region>.redshift.amazonaws.com:<port>/<database-name>. "
-            )
-            exit(-1)
+
         if not config["master_username"]:
             logger.error(
                 'Config file missing value for "master_username". Please provide a value or remove the '
