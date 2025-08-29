@@ -137,10 +137,15 @@ class ReplayPrep:
             cluster_host = self.config["nlb_nat_dns"]
         else:
             cluster_host = cluster_endpoint.split(":")[0]
-
-        cluster_port = cluster_endpoint_split[5].split("/")[0][4:]
-        if database == None:
-            database = cluster_endpoint_split[5].split("/")[1]
+        ##China region endpoint support. G.Bai - Mar 2025
+        if ".com.cn" in self.config["target_cluster_endpoint"] and len(self.config["target_cluster_endpoint"].split(".")) == 7:
+            cluster_port = cluster_endpoint_split[6].split(":")[1].split("/")[0]
+            if database == None:
+                database = cluster_endpoint_split[6].split("/")[1]
+        else:
+            cluster_port = cluster_endpoint_split[5].split("/")[0][4:]
+            if database == None:
+                database = cluster_endpoint_split[5].split("/")[1]
 
         additional_args = {}
         if os.environ.get("ENDPOINT_URL"):
@@ -168,6 +173,10 @@ class ReplayPrep:
                 logger.error(f"Required secrets not found: {secret_keys}")
                 exit(-1)
         else:
+            #Fix IAM user bug. G.Bai - Mar 2025
+            if username[:4] == "IAM:" or username[:5] == "IAMR:" or username.count(":") == 2:
+              logger.info("Replaced user + " + username + " to + " + self.config["master_username"])
+              username = self.config["master_username"]
             response = redshift_get_cluster_credentials(
                 region=cluster_region,
                 user=username,

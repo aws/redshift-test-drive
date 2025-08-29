@@ -15,11 +15,6 @@ import core.extract.extractor as extractor
 
 logger = logging.getLogger("WorkloadReplicatorLogger")
 
-serverless_cluster_endpoint_pattern = (
-    r"(.+)\.(.+)\.(.+).redshift-serverless(-dev)?\.amazonaws\.com:[0-9]{4,5}\/(.)+"
-)
-
-
 def is_serverless(config):
     return bool(
             re.fullmatch(serverless_cluster_endpoint_pattern, config["source_cluster_endpoint"])
@@ -76,6 +71,16 @@ def main():
     # setting application name for tracking
     if config.get("source_cluster_endpoint"):
         application = "WorkloadReplicator-Extract"
+        ##China region endpoint - G.Bai - Mar 2025
+        global serverless_cluster_endpoint_pattern
+        if ".com.cn" in config.get("source_cluster_endpoint") and len(config.get("source_cluster_endpoint").split(".")) == 7:
+            serverless_cluster_endpoint_pattern = (
+            r"(.+)\.(.+)\.(.+).redshift-serverless(-dev)?\.amazonaws\.com\.cn:[0-9]{4,5}\/(.)+"
+            )
+        else:
+            serverless_cluster_endpoint_pattern = (
+            r"(.+)\.(.+)\.(.+).redshift-serverless(-dev)?\.amazonaws\.com:[0-9]{4,5}\/(.)+"
+            )
 
         if is_serverless(config):
             host = f'redshift-serverless-{config.get("source_cluster_endpoint").split(".")[0]}' 
