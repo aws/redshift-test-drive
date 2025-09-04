@@ -13,7 +13,6 @@ serverless_cluster_endpoint_pattern = (
     r"(.+)\.(.+)\.(.+).redshift-serverless(-dev)?\.amazonaws\.com:[0-9]{4,5}\/(.)+"
 )
 
-
 def db_connect(
     interface="psql",
     host=None,
@@ -126,7 +125,6 @@ def cluster_dict(endpoint, is_serverless=False, start_time=None, end_time=None):
 
     return cluster
 
-
 def bucket_dict(bucket_url):
     bucket, path = None, None
     try:
@@ -145,7 +143,6 @@ def bucket_dict(bucket_url):
     if path == "replays/":
         path = ""
     return {"url": bucket_url, "bucket_name": bucket, "prefix": path}
-
 
 def matches_filters(obj, filters):
     """Check if the object matches the filters.  The object just needs to
@@ -171,22 +168,25 @@ def matches_filters(obj, filters):
     else:
         return False
 
-
 def get_connection_key(database_name, username, pid):
     return f"{database_name}_{username}_{pid}"
 
-
 def is_serverless(config):
-    if ".com.cn" in config["target_cluster_endpoint"] and len(config["target_cluster_endpoint"].split(".")) == 7:
-        serverless_cluster_endpoint_pattern = (r"(.+)\.(.+)\.(.+).redshift-serverless(-dev)?\.amazonaws\.com\.cn:[0-9]{4,5}\/(.)+")
-    return bool(
-        re.fullmatch(serverless_cluster_endpoint_pattern, config["target_cluster_endpoint"])
-    )
-
+    endpoint = config["target_cluster_endpoint"]
+    
+    # Determine the domain suffix based on region
+    if ".com.cn" in endpoint and len(endpoint.split(".")) == 7:
+        domain_suffix = "amazonaws.com.cn"
+    else:
+        domain_suffix = "amazonaws.com"
+    
+    # Build the pattern dynamically
+    pattern = rf"(.+)\.(.+)\.(.+).redshift-serverless(-dev)?\.{domain_suffix}:[0-9]{{4,5}}\/(.)+"
+    
+    return bool(re.fullmatch(pattern, endpoint))
 
 def current_offset_ms(ref_time):
     return (datetime.datetime.now(tz=datetime.timezone.utc) - ref_time).total_seconds() * 1000.0
-
 
 # exception thrown if credentials can't be retrieved
 class CredentialsException(Exception):

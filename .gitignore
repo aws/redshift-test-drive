@@ -17,7 +17,6 @@ __pycache__/
 .Python
 build/
 develop-eggs/
-dist/
 downloads/
 eggs/
 .eggs/
@@ -174,3 +173,8 @@ statements_to_be_avoided.txt
 core/*/logs/*
 tools/*/logs/*
 tools/*/tests/logs/*
+
+.python-version
+testDrive*/
+testDrive*
+/testDrive*/
