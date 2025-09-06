@@ -171,15 +171,15 @@ def search_s3():
         boto3_session = boto3.Session()
 
     if request.method == "GET":
-        bucket = request.args.get("uri")
-        bucket, data = list_replays(bucket, session=boto3_session)
-        if bucket is None:
+        uri = request.args.get("uri")
+        workload, data = list_replays(uri, session=boto3_session)
+        if workload is None:
             if data is ClientError:
                 return jsonify({"success": False, "message": data.__str__()}), 403
             else:
                 return jsonify({"success": False, "message": data.__str__()}), 404
 
-        return jsonify({"success": True, "bucket": bucket, "replays": data}), 201
+        return jsonify({"success": True, "workload": workload, "replays": data}), 201
 
 
 @app.route("/submit_replays", methods=["GET", "POST"])
