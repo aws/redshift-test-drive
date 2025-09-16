@@ -147,6 +147,8 @@ This template provisions the required AWS Resources except the Amazon Redshift p
 | AWSECRContainerImage | N/A, Amazon Elastic Container Registry | Default value is N/A, Provide container image if you would like to use your private image which is already available.
 | UseAWSLakeFormationForGlueCatalog | No,Yes | Default value is No ,Select Yes if AWS Lake Formation is enabled for the account and manages access for Glue catalog
 | NotificationEmail | N/A, Email address | Default value is N/A , Provide one email address if you would like to receive step function status notifications
+| AWSBatchJobVcpu | VCPU          | Default value is 4 , Provide VCPU, refer https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-batch-jobdefinition-resourcerequirement.html for valid values. 
+| AWSBatchJobMemory | Memory        | Default value is 16384 , Provide memory, refer https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-batch-jobdefinition-resourcerequirement.html for valid values. 
 
 ## Orchestration with AWS Step Functions State Machine
 
