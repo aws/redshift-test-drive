@@ -81,7 +81,7 @@ def list_replays(bucket_url, session):
                 print(f"Unable to access replay. {e}")
 
     # use tabulate lib to format output
-    return bucket.get("bucket_name"), table
+    return table[0]["workload"], table
 
 
 def remove_comments(string):
