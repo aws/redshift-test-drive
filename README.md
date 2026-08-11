@@ -56,7 +56,7 @@ The following table provides links to all tools, locations & READMEs in the repo
 | 01|                 [Workload Replicator](/core)                  |Workload Replicator is an open source tool which helps customers to mimic their workloads on clusters |[README](/core/README.md)|
 | 02|           [Replay Analysis](/tools/ReplayAnalysis)            |Replay Analysis utility enhances auditing in the Workload Replicator process to extract information about the errors that occurred, the validity of the run, and the performance of the replay. This is also a user interface in which customers can choose multiple replays to analyze, validate, and compare using the extracted audit logs.|[README](/tools/ReplayAnalysis/README.md)|
 |03 | [External Object Replicator](/tools/ExternalObjectReplicator) |External Object Replicator replicates COPY manifest objects, and Spectrum object in the customer cluster|[README](/tools/ExternalObjectReplicator/README.md)|
-|04|            [Node Config](/tools/NodeConfigCompare)            | Node Configuration Comparison utility answers a very common question on which instance type and number of nodes should we choose for your workload on Amazon Redshift.|[README](/tools/NodeConfigCompare/README.md)
+|04|            [Node Config](/tools/NodeConfigCompare)            | Node Configuration Comparison utility answers a very common question on which instance type and number of nodes should we choose for your workload on Amazon Redshift. Also supports comparing datashare consumer configurations.|[README](/tools/NodeConfigCompare/README.md)
 
 ## FAQs
 Q. I'm experiencing issues with boto3 appearing as `ValueError: Invalid endpoint: https://s3..amazonaws.com` or something to that effect, how do I fix this?

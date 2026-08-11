@@ -1,0 +1,44 @@
+# Datashare Mode — Custom Replay Configuration
+# UPDATE: Replace <YOUR-DATASHARE-DB-NAME> with your actual datashare database name
+# The bootstrap script will automatically replace target_cluster_endpoint and workload_location
+
+tag: "datashare-replay"
+source_tag: ""
+workload_location: "PLACEHOLDER_REPLACED_BY_BOOTSTRAP"
+target_cluster_endpoint: "PLACEHOLDER_REPLACED_BY_BOOTSTRAP"
+target_cluster_region: "PLACEHOLDER_REPLACED_BY_BOOTSTRAP"
+master_username: "awsuser"
+nlb_nat_dns: ""
+odbc_driver: ""
+default_interface: "psql"
+time_interval_between_transactions: "all on"
+time_interval_between_queries: "all on"
+execute_copy_statements: "false"
+execute_unload_statements: "false"
+replay_output: ""
+analysis_output: ""
+unload_iam_role: ""
+analysis_iam_role: ""
+unload_system_table_queries: ""
+target_cluster_system_table_unload_iam_role: ""
+
+# IMPORTANT: Replace <YOUR-DATASHARE-DB-NAME> below with your datashare database name
+# This filters the replay to only run queries that connected to the datashare database
+filters:
+  include:
+    database_name: ['<YOUR-DATASHARE-DB-NAME>']
+    username: ['*']
+    pid: ['*']
+  exclude:
+    database_name: []
+    username: []
+    pid: []
+
+log_level: "INFO"
+num_workers: ~
+connection_tolerance_sec: 300
+backup_count: 1
+drop_return: true
+limit_concurrent_connections: ~
+split_multi: true
+secret_name: ""

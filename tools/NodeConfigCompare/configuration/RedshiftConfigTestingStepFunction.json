@@ -595,10 +595,45 @@
                 {
                   "Variable": "$.step_output.output.status",
                   "StringEquals": "FINISHED",
-                  "Next": "run_replay"
+                  "Next": "setup_datashare"
                 }
               ],
               "Default": "extract_wait"
+            },
+            "setup_datashare": {
+              "Comment": "Set up datashare on target cluster (skipped if DATASHARE_CONFIG not enabled)",
+              "Type": "Task",
+              "Resource": "arn:aws:states:::lambda:invoke",
+              "TimeoutSeconds": 300,
+              "HeartbeatSeconds": 60,
+              "ResultPath": "$.step_output",
+              "ResultSelector": {
+                "output.$": "$.Payload"
+              },
+              "Parameters": {
+                "FunctionName": "${FunctionArn}",
+                "Payload": {
+                  "Input": {
+                    "action": "setup_datashare",
+                    "cluster_identifier.$": "$.cluster_identifier.output.status",
+                    "endpoint_type.$": "$.endpoint_type.output.status",
+                    "what_if_timestamp.$": "$.what_if_timestamp.output.status",
+                    "redshift_cluster_configuration.$": "$.redshift_cluster_configuration",
+                    "redshift_cluster_index.$": "$.redshift_cluster_index"
+                  }
+                }
+              },
+              "Retry": [
+                {
+                  "ErrorEquals": [
+                    "States.ALL"
+                  ],
+                  "IntervalSeconds": 5,
+                  "MaxAttempts": 2,
+                  "BackoffRate": 2
+                }
+              ],
+              "Next": "run_replay"
             },
             "run_replay": {
               "Comment": "Invoke lambda function",

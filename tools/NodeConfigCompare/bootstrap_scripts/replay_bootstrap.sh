@@ -58,5 +58,5 @@ make replay
 if [[ $ENDPOINT_TYPE == 'SERVERLESS' ]]; then
   aws s3 cp s3://$BUCKET_NAME/$SCRIPT_PREFIX/system_config.json .
   aws s3 cp s3://$BUCKET_NAME/$SCRIPT_PREFIX/create_external_schema.py .
-  python3 tools/NodeConfigCompare/python_scripts/create_external_schema.py
+  python3 tools/NodeConfigCompare/python_scripts/create_external_schema.py || echo "Warning: create_external_schema.py failed (non-fatal in datashare mode, Lambda handles it)"
 fi
