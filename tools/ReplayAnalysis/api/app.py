@@ -56,7 +56,14 @@ def request_s3_data(filename, should_error_if_missing):
                 Bucket=replay["bucket"],
                 Key=f"{replay['s3_prefix']}raw_data/{filename}",
             )
-            temp = pd.read_csv(response.get("Body"), encoding_errors="replace").fillna(0)
+            temp = pd.read_csv(response.get("Body"), encoding_errors="replace")
+            # query_text is a text column, so NULLs must stay text. Filling them
+            # with 0 like the numeric columns leaves a mix of strings and ints,
+            # which makes str.contains() below return NaN instead of a bool and
+            # breaks the helpers that expect a string.
+            if "query_text" in temp.columns:
+                temp["query_text"] = temp["query_text"].fillna("")
+            temp = temp.fillna(0)
         except Exception as e:
             if should_error_if_missing:
                 print(
@@ -101,7 +108,7 @@ def request_s3_data(filename, should_error_if_missing):
 
     if {"query_text"}.issubset(df.columns):
         if "query" in filename:  # filter out non-replay executed statements
-            df = df[df["query_text"].str.contains("replay_start")]
+            df = df[df["query_text"].str.contains("replay_start", na=False)]
         df["query_hash"] = df["query_text"].apply(lambda x: hash_query(x))
         df["query_text"] = df["query_text"].apply(lambda x: remove_comments(x))
 
