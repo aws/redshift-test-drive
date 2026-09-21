@@ -574,7 +574,7 @@ class TestReportGen(unittest.TestCase):
     def test_analysis_summary(self, mock_test_create_presigned_url):
         report_gen.analysis_summary("s3://devsaba-sr-drill/extracts/", "replay_id")
 
-        mock_test_create_presigned_url.called_once_with(
+        mock_test_create_presigned_url.assert_called_once_with(
             "devsaba-sr-drill", "analysis/replay_id/out/replay_id_report.pdf"
         )
 

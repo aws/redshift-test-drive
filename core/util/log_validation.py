@@ -186,3 +186,33 @@ def remove_line_comments(query):
                 removed_string = removed_string[:line_comment_begin]
 
     return removed_string
+
+
+def has_executable_text(text):
+    """True when the text holds anything a database could execute.
+
+    Whitespace, ``;``, ``-- ...`` line comments and ``/* ... */`` block comments do
+    not count. The scan stops at the first other character, so a ``--`` inside a
+    string literal is never reached. Never rewrites the statement (unlike
+    ``remove_line_comments``, which truncates ``'a--b'`` to ``'a``).
+    """
+    if not text:
+        return False
+    i, n = 0, len(text)
+    while i < n:
+        c = text[i]
+        if c.isspace() or c == ";":
+            i += 1
+        elif text.startswith("--", i):
+            newline = text.find("\n", i)
+            if newline == -1:
+                return False
+            i = newline + 1
+        elif text.startswith("/*", i):
+            end = text.find("*/", i + 2)
+            if end == -1:
+                return False
+            i = end + 2
+        else:
+            return True
+    return False

@@ -6,6 +6,7 @@ from core.util.log_validation import (
     get_logs_in_range,
     is_valid_log,
     remove_line_comments,
+    has_executable_text,
 )
 import os
 import datetime
@@ -222,3 +223,41 @@ class TestGetLogsInRange(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestHasExecutableText(unittest.TestCase):
+    """has_executable_text() decides whether an entry holds a statement at all. It must
+    reject the repeated cursor FETCH lines the extract parser comments out (with or
+    without the trailing newline the audit log carries) and accept every real statement,
+    including one with "--" inside a string literal."""
+
+    def test_nothing_to_execute(self):
+        for text in [
+            "",
+            None,
+            "   \n",
+            ";",
+            "--FETCH 100 FROM c1;",
+            "--fetch 100 from c1;\n",
+            "-- first line\n-- second line\n",
+            "/* only a block comment */",
+            "/* block */ -- then a line comment\n;",
+        ]:
+            with self.subTest(text=text):
+                self.assertFalse(has_executable_text(text))
+
+    def test_statements_are_executable(self):
+        for text in [
+            "FETCH 100 FROM c1;",
+            "select 1 -- trailing comment",
+            "-- leading comment\nselect 1;",
+            "/* block */ select 1;",
+            "select 'a--b' as x;",
+            "insert into t values ('--');",
+        ]:
+            with self.subTest(text=text):
+                self.assertTrue(has_executable_text(text))
+
+    def test_remove_line_comments_truncates_quoted_dashes(self):
+        # Documents why the extractor no longer rewrites statements with this function.
+        self.assertEqual(remove_line_comments("select 'a--b' as x;"), "select 'a")

@@ -158,7 +158,7 @@ class TestConnectionThread(unittest.TestCase):
     ):
         mock_initiate_connection.return_value.__enter__.return_value = None
         get_connection_thread(get_connection_log()).run()
-        assert mock_execute_transactions.not_called
+        mock_execute_transactions.assert_not_called()
 
     @patch("core.replay.connection_thread.current_offset_ms", lambda _: 0.5)
     @patch.object(ConnectionThread, "initiate_connection")
@@ -211,7 +211,7 @@ class TestConnectionThread(unittest.TestCase):
         conn_thread = get_connection_thread(connection_log)
         mock_connection = True
         conn_thread.execute_transactions(mock_connection)
-        assert mock_exec_transaction.called_with(transactions, mock_connection)
+        mock_exec_transaction.assert_called_once_with(transactions[0], mock_connection)
         patched_time_sleep.assert_called()
 
     @patch("time.sleep")
@@ -226,7 +226,7 @@ class TestConnectionThread(unittest.TestCase):
         conn_thread = get_connection_thread(connection_log)
         mock_connection = True
         conn_thread.execute_transactions(mock_connection)
-        assert mock_exec_transaction.called_with(transactions, mock_connection)
+        mock_exec_transaction.assert_called_once_with(transactions[0], mock_connection)
         patched_time_sleep.assert_not_called()
 
     @patch("time.sleep")
@@ -253,7 +253,7 @@ class TestConnectionThread(unittest.TestCase):
 
         mock_connection = True
         conn_thread.execute_transactions(mock_connection)
-        assert mock_exec_transaction.called_with(transactions, mock_connection)
+        mock_exec_transaction.assert_called_once_with(transactions[0], mock_connection)
         patched_time_sleep.assert_not_called()
 
 
@@ -405,3 +405,111 @@ class TestParseError(unittest.TestCase):
         err = parse_error(error, user, db, query_text)
 
         self.assertEqual(err["detail"], "this is a test;")
+
+
+
+def make_query(text):
+    return Query(
+        start_time=datetime.datetime(2023, 2, 1, 9, 45, 0, tzinfo=datetime.timezone.utc),
+        end_time=datetime.datetime(2023, 2, 1, 9, 45, 1, tzinfo=datetime.timezone.utc),
+        text=text,
+    )
+
+
+class TestExecuteTransactionEmptyStatements(unittest.TestCase):
+    """An entry with no executable statement (empty text, or a line comment such as the
+    extractor's commented-out repeated cursor FETCH) must neither be sent to the target
+    nor move the query or transaction counters, under either split_multi setting."""
+
+    def run_transaction(self, texts, split_multi):
+        mock_connection = Mock()
+        mock_cursor = Mock()
+        mock_connection.cursor.return_value = mock_cursor
+        transactions = get_transactions([make_query(t) for t in texts])
+        conn_thread = get_connection_thread(get_connection_log(transactions))
+        conn_thread.config = dict(config_dict, split_multi=split_multi)
+        conn_thread.error_logger = []
+        with patch("time.sleep"):
+            conn_thread.execute_transaction(transactions[0], mock_connection)
+        return conn_thread.thread_stats, mock_cursor
+
+    def test_empty_text_is_not_counted_split_multi_true(self):
+        stats, cursor = self.run_transaction([""], split_multi=True)
+        cursor.execute.assert_not_called()
+        self.assertEqual(stats["query_success"], 0)
+        self.assertEqual(stats["query_error"], 0)
+        self.assertEqual(stats["executed_queries"], 0)
+        self.assertEqual(stats["transaction_success"], 0)
+        self.assertEqual(stats["transaction_error"], 0)
+
+    def test_commented_fetch_is_not_sent_split_multi_true(self):
+        stats, cursor = self.run_transaction(["--FETCH 100 FROM c1;"], split_multi=True)
+        cursor.execute.assert_not_called()
+        self.assertEqual(stats["query_success"], 0)
+        self.assertEqual(stats["query_error"], 0)
+
+    def test_commented_fetch_is_not_sent_split_multi_false(self):
+        stats, cursor = self.run_transaction(["--FETCH 100 FROM c1;"], split_multi=False)
+        cursor.execute.assert_not_called()
+        self.assertEqual(stats["query_success"], 0)
+        self.assertEqual(stats["query_error"], 0)
+
+    def test_real_statements_around_a_skipped_entry_still_count(self):
+        stats, cursor = self.run_transaction(
+            ["FETCH 100 FROM c1;", "--FETCH 100 FROM c1;", "CLOSE c1;"], split_multi=True
+        )
+        self.assertEqual(cursor.execute.call_count, 2)
+        self.assertEqual(stats["query_success"], 2)
+        self.assertEqual(stats["executed_queries"], 2)
+        self.assertEqual(stats["transaction_success"], 1)
+
+
+class TestTransactionCounterIsPerTransaction(unittest.TestCase):
+    """A transaction is a success when none of its own statements failed; an error in
+    an earlier transaction on the same connection must not mark later ones failed."""
+
+    @patch("time.sleep")
+    @patch("core.replay.connection_thread.parse_error", lambda a, b, c, d: "Test")
+    def test_later_transaction_succeeds_after_an_earlier_error(self, patched_time_sleep):
+        mock_connection = Mock()
+        mock_cursor = Mock()
+        mock_cursor.execute.side_effect = [Exception("boom"), None]
+        mock_connection.cursor.return_value = mock_cursor
+        transactions = get_transactions([make_query("select 1;")]) + get_transactions(
+            [make_query("select 2;")]
+        )
+        conn_thread = get_connection_thread(get_connection_log(transactions))
+        conn_thread.error_logger = []
+
+        conn_thread.execute_transaction(transactions[0], mock_connection)
+        conn_thread.execute_transaction(transactions[1], mock_connection)
+
+        self.assertEqual(conn_thread.thread_stats["query_error"], 1)
+        self.assertEqual(conn_thread.thread_stats["query_success"], 1)
+        self.assertEqual(conn_thread.thread_stats["transaction_error"], 1)
+        self.assertEqual(conn_thread.thread_stats["transaction_success"], 1)
+
+
+class TestParseErrorClientSideMessages(unittest.TestCase):
+    """Driver errors whose message is a plain string (not the server's error dict) must
+    produce an error entry instead of raising inside the caller's except handler."""
+
+    def test_plain_string_error_does_not_raise(self):
+        err = parse_error(Exception("query was empty"), "awsuser", "dev", "--FETCH 100 FROM c1;")
+        self.assertEqual(err["message"], "query was empty")
+        self.assertEqual(err["code"], "")
+        self.assertEqual(err["severity"], "ERROR")
+        self.assertEqual(err["category"], "Client Error")
+        self.assertEqual(err["detail"], "")
+
+    def test_empty_message_does_not_raise(self):
+        err = parse_error(Exception(""), "awsuser", "dev", "select 1;")
+        self.assertEqual(err["message"], "")
+        self.assertEqual(err["category"], "Client Error")
+
+    def test_server_error_dict_still_parsed(self):
+        error = "{'S': 'ERROR', 'C': '25P02', 'M': 'current transaction is aborted, commands ignored until end of transaction block'}"
+        err = parse_error(error, "awsuser", "dev", "select 1;")
+        self.assertEqual(err["code"], "25P02")
+        self.assertEqual(err["severity"], "ERROR")
+        self.assertEqual(err["category"], "Invalid Transaction State")
