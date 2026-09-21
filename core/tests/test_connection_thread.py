@@ -158,7 +158,7 @@ class TestConnectionThread(unittest.TestCase):
     ):
         mock_initiate_connection.return_value.__enter__.return_value = None
         get_connection_thread(get_connection_log()).run()
-        assert mock_execute_transactions.not_called
+        mock_execute_transactions.assert_not_called()
 
     @patch("core.replay.connection_thread.current_offset_ms", lambda _: 0.5)
     @patch.object(ConnectionThread, "initiate_connection")
@@ -211,7 +211,7 @@ class TestConnectionThread(unittest.TestCase):
         conn_thread = get_connection_thread(connection_log)
         mock_connection = True
         conn_thread.execute_transactions(mock_connection)
-        assert mock_exec_transaction.called_with(transactions, mock_connection)
+        mock_exec_transaction.assert_called_once_with(transactions[0], mock_connection)
         patched_time_sleep.assert_called()
 
     @patch("time.sleep")
@@ -226,7 +226,7 @@ class TestConnectionThread(unittest.TestCase):
         conn_thread = get_connection_thread(connection_log)
         mock_connection = True
         conn_thread.execute_transactions(mock_connection)
-        assert mock_exec_transaction.called_with(transactions, mock_connection)
+        mock_exec_transaction.assert_called_once_with(transactions[0], mock_connection)
         patched_time_sleep.assert_not_called()
 
     @patch("time.sleep")
@@ -253,7 +253,7 @@ class TestConnectionThread(unittest.TestCase):
 
         mock_connection = True
         conn_thread.execute_transactions(mock_connection)
-        assert mock_exec_transaction.called_with(transactions, mock_connection)
+        mock_exec_transaction.assert_called_once_with(transactions[0], mock_connection)
         patched_time_sleep.assert_not_called()
 
 
