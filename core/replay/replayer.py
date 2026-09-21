@@ -155,8 +155,11 @@ class Replayer:
         print_stats(per_process_stats)
         for worker in self.workers:
             worker.join()
+        # The workers append every failed statement to this manager-backed list.
+        # Copy it before the manager shuts down and the proxy becomes unusable.
+        replay_errors = list(errors)
         manager.shutdown()
-        return aggregated_stats
+        return aggregated_stats, replay_errors
 
     def observe_active_processes(
         self,

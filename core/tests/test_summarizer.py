@@ -1,6 +1,6 @@
 import unittest
 from unittest.mock import patch, mock_open, call
-from core.replay.summarizer import summarize, export_errors
+from core.replay.summarizer import summarize, export_errors, export_replay_errors
 import datetime
 
 aggregated_stats = {
@@ -195,3 +195,54 @@ class TestSummarizer(unittest.TestCase):
                 "Key": "test/2023-02-07T19:17:11.472063+00:00_cluster-testing_1ddab/transaction_errors/test.txt",
             },
         )
+
+
+class TestExportReplayErrors(unittest.TestCase):
+    """The per-statement error list collected by the workers is written as CSV and
+    uploaded with a bucket name, so the analysis backend can read it back."""
+
+    replay_errors = [
+        {
+            "timestamp": "2023-02-07T19:20:00+00:00",
+            "user": "awsuser",
+            "db": "dev",
+            "query_text": "select 1;",
+            "detail": "",
+            "code": "42601",
+            "message": "syntax error",
+            "severity": "ERROR",
+            "category": "Syntax Error",
+        }
+    ]
+
+    def test_no_errors_writes_nothing(self):
+        with patch("common.aws_service.s3_upload") as mock_upload:
+            self.assertIsNone(export_replay_errors([], "s3://somebucket/some/prefix", replay_id))
+        mock_upload.assert_not_called()
+
+    @patch("common.aws_service.s3_upload")
+    def test_uploads_csv_with_bucket_name_string(self, mock_upload):
+        m = mock_open()
+        with patch("builtins.open", m):
+            key = export_replay_errors(
+                self.replay_errors, "s3://somebucket/some/prefix", replay_id
+            )
+
+        expected_key = f"some/prefix/analysis/{replay_id}/raw_data/replayerrors000"
+        self.assertEqual(key, expected_key)
+        # The bucket argument must be the plain bucket name, not the bucket dict.
+        mock_upload.assert_called_once_with("replayerrors000", "somebucket", expected_key)
+
+        written = "".join(c.args[0] for c in m().write.call_args_list)
+        self.assertTrue(written.startswith("timestamp,user,db,query_text,"))
+        self.assertIn("42601", written)
+
+    @patch("common.aws_service.s3_upload", side_effect=Exception("denied"))
+    def test_upload_failure_is_reported_not_raised(self, mock_upload):
+        with patch("builtins.open", mock_open()):
+            with self.assertLogs("WorkloadReplicatorLogger", level="ERROR") as logs:
+                result = export_replay_errors(
+                    self.replay_errors, "s3://somebucket/some/prefix", replay_id
+                )
+        self.assertIsNone(result)
+        self.assertTrue(any("Failed to upload replay errors" in line for line in logs.output))
