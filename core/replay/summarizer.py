@@ -1,3 +1,4 @@
+import csv
 import datetime
 import logging
 import os
@@ -6,6 +7,7 @@ from tqdm import tqdm
 from boto3 import client
 
 import common.aws_service as aws_service_helper
+from common.util import bucket_dict
 
 logger = logging.getLogger("WorkloadReplicatorLogger")
 
@@ -56,6 +58,36 @@ def summarize(
         f"Replay finished in {datetime.datetime.now(tz=datetime.timezone.utc) - replay_start_timestamp}."
     )
     return replay_summary
+
+
+def export_replay_errors(replay_errors, analysis_output, replay_id):
+    """Write the per-statement replay errors to CSV and upload them for the analysis tools.
+
+    Each entry is a dict from parse_error(). The analysis backend reads the result from
+    analysis/{replay_id}/raw_data/replayerrors000 under the analysis_output location.
+    """
+    if not replay_errors:
+        return None
+
+    bucket = bucket_dict(analysis_output)
+    filename = "replayerrors000"
+    try:
+        with open(filename, "w", newline="") as output_file:
+            dict_writer = csv.DictWriter(output_file, fieldnames=replay_errors[0].keys())
+            dict_writer.writeheader()
+            dict_writer.writerows(replay_errors)
+    except Exception as e:
+        logger.error(f"Failed to write replay errors to CSV. {e}")
+        return None
+
+    key = f"{bucket['prefix']}analysis/{replay_id}/raw_data/{filename}"
+    try:
+        aws_service_helper.s3_upload(filename, bucket["bucket_name"], key)
+    except Exception as e:
+        logger.error(f"Failed to upload replay errors to S3 {bucket['bucket_name']}. {e}")
+        return None
+    logger.info(f"Exported {len(replay_errors)} replay errors to s3://{bucket['bucket_name']}/{key}")
+    return key
 
 
 def export_errors(connection_errors, transaction_errors, workload_location, replay_name):

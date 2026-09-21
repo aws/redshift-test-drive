@@ -1,4 +1,3 @@
-import csv
 import datetime
 import hashlib
 import logging
@@ -11,7 +10,7 @@ import common.config as config_helper
 import common.log as log_helper
 from connections_parser import ConnectionLog
 from core.replay.prep import ReplayPrep
-from summarizer import summarize
+from summarizer import summarize, export_replay_errors
 from replayer import Replayer
 from common.util import (
     cluster_dict,
@@ -127,7 +126,7 @@ def main():
     errors = []
     try:
         replayer = Replayer(config)
-        aggregated_stats = replayer.start_replay(
+        aggregated_stats, errors = replayer.start_replay(
             connection_logs,
             first_event_time,
             query_count,
@@ -144,24 +143,7 @@ def main():
         logger.debug("".join(traceback.format_exception(*sys.exc_info())))
         raise e
 
-    if len(errors) > 0:
-        bucket = bucket_dict(config["analysis_output"])
-        with open("replayerrors000", "w", newline="") as output_file:
-            try:
-                dict_writer = csv.DictWriter(output_file, fieldnames=errors[0].keys())
-                dict_writer.writeheader()
-                dict_writer.writerows(errors)
-            except Exception as e:
-                logger.debug(f"Failed to write replay errors to CSV. {e}")
-
-        try:
-            aws_service_helper.s3_upload(
-                output_file.name,
-                bucket,
-                f"{bucket['prefix']}analysis/{replay_id}/raw_data/{output_file.name}",
-            )
-        except Exception as e:
-            logger.debug(f"Error upload to S3 {bucket['bucket_name']} failed. {e}")
+    export_replay_errors(errors, config["analysis_output"], replay_id)
     replay_end_time = datetime.datetime.now(tz=datetime.timezone.utc)
     replay_summary = summarize(
         connection_logs,
