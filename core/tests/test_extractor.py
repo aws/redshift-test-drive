@@ -189,3 +189,65 @@ class ExtractorTestCases(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestExtractorEmptyStatements(unittest.TestCase):
+    """Entries with no executable statement (e.g. the parser's commented-out repeated
+    FETCH lines) must not be written to SQLs.json.gz, and transactions left empty must
+    be dropped, so the replay's attempted-query count only holds real statements."""
+
+    def make_query(self, xid, text):
+        query = Log()
+        query.xid = xid
+        query.pid = "213"
+        query.database_name = "test"
+        query.username = "testuser"
+        query.record_time = datetime.datetime.now()
+        query.text = text
+        return query
+
+    def run_extract(self, queries):
+        e = Extractor({"log_location": "test/test_data"})
+        sql_json, _, _, _ = e.get_sql_connections_replacements(
+            [], {"abc.log": queries}.items()
+        )
+        return sql_json
+
+    def test_commented_repeated_fetch_is_not_written(self):
+        sql_json = self.run_extract(
+            [
+                self.make_query("1", "FETCH 100 FROM c1;\n"),
+                self.make_query("1", "--FETCH 100 FROM c1;\n"),
+                self.make_query("1", "--FETCH 100 FROM c1;\n"),
+                self.make_query("1", "CLOSE c1;\n"),
+            ]
+        )
+        texts = [q["text"] for q in sql_json["transactions"]["1"]["queries"]]
+        self.assertEqual(texts, ["FETCH 100 FROM c1;", "CLOSE c1;"])
+
+    def test_transaction_with_only_empty_statements_is_dropped(self):
+        sql_json = self.run_extract(
+            [
+                self.make_query("1", "select 1;\n"),
+                self.make_query("2", "--FETCH 100 FROM c1;\n"),
+                self.make_query("2", "-- a stray comment\n"),
+            ]
+        )
+        self.assertEqual(list(sql_json["transactions"].keys()), ["1"])
+
+    def test_statement_with_trailing_comment_is_kept_verbatim(self):
+        # The statement is no longer rewritten; the comment stays and the database
+        # ignores it. Only the terminating ";" is appended, as for every entry.
+        sql_json = self.run_extract(
+            [self.make_query("1", "select 1 -- trailing comment\n")]
+        )
+        texts = [q["text"] for q in sql_json["transactions"]["1"]["queries"]]
+        self.assertEqual(texts, ["select 1 -- trailing comment;"])
+
+    def test_dashes_inside_a_string_literal_are_preserved(self):
+        # remove_line_comments() would have truncated this to "select 'a;".
+        sql_json = self.run_extract(
+            [self.make_query("1", "select 'a--b' as x, 'c' as y\n")]
+        )
+        texts = [q["text"] for q in sql_json["transactions"]["1"]["queries"]]
+        self.assertEqual(texts, ["select 'a--b' as x, 'c' as y;"])

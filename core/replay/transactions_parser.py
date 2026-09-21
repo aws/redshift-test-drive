@@ -12,6 +12,7 @@ import dateutil.parser
 import re
 
 from core.replay.copy_replacements_parser import parse_copy_replacements
+from core.util.log_validation import has_executable_text
 from common.util import matches_filters, get_connection_key, logger
 
 logger = logging.getLogger("WorkloadReplicatorLogger")
@@ -35,10 +36,23 @@ class TransactionsParser:
             replacements = parse_copy_replacements(self.workload_directory)
 
         sql_json = retrieve_compressed_json(gz_path)
+        skipped_queries = 0
+        skipped_transactions = 0
         for xid, transaction_dict in sql_json["transactions"].items():
             transaction = self.parse_transaction(transaction_dict, replacements)
+            skipped_queries += transaction.skipped_queries
+            if not transaction.queries:
+                skipped_transactions += 1
+                continue
             if transaction.start_time() and matches_filters(transaction, self.filters):
                 transactions.append(transaction)
+
+        if skipped_queries or skipped_transactions:
+            logger.info(
+                f"Skipped {skipped_queries} queries with no executable statement (empty or "
+                f"comment-only text) and {skipped_transactions} transactions left with no queries; "
+                f"they are not counted as attempted queries."
+            )
 
         transactions.sort(key=lambda txn: (txn.start_time(), txn.xid))
 
@@ -46,8 +60,12 @@ class TransactionsParser:
 
     def parse_transaction(self, transaction_dict, replacements):
         queries = []
+        skipped_queries = 0
 
         for q in transaction_dict["queries"]:
+            if not has_executable_text(q["text"]):
+                skipped_queries += 1
+                continue
             start_time = dateutil.parser.isoparse(q["record_time"])
             if q["start_time"] is not None:
                 start_time = dateutil.parser.isoparse(q["start_time"])
@@ -92,7 +110,7 @@ class TransactionsParser:
         transaction_key = get_connection_key(
             transaction_dict["db"], transaction_dict["user"], transaction_dict["pid"]
         )
-        return Transaction(
+        transaction = Transaction(
             transaction_dict["time_interval"],
             transaction_dict["db"],
             transaction_dict["user"],
@@ -101,6 +119,8 @@ class TransactionsParser:
             queries,
             transaction_key,
         )
+        transaction.skipped_queries = skipped_queries
+        return transaction
 
     @staticmethod
     def get_unload_replacements(
@@ -220,6 +240,8 @@ class Transaction:
         self.xid = xid
         self.queries = queries
         self.transaction_key = transaction_key
+        # queries dropped at load because their text held no executable statement
+        self.skipped_queries = 0
 
     def __str__(self):
         return (

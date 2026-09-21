@@ -21,7 +21,7 @@ from tqdm import tqdm
 from common import aws_service as aws_service_helper
 from common import util
 from core.replay.connections_parser import ConnectionLog
-from core.util.log_validation import remove_line_comments
+from core.util.log_validation import has_executable_text
 from core.extract.cloudwatch_extractor import CloudwatchExtractor
 from core.extract.s3_extractor import S3Extractor
 from core.extract.local_extractor import LocalExtractor
@@ -218,6 +218,7 @@ class Extractor:
         missing_audit_log_connections = set()
         replacements = set()
         statements_to_be_avoided = set()
+        empty_statements_skipped = 0
         for filename, queries in tqdm(
             log_items,
             disable=self.disable_progress_bar,
@@ -251,7 +252,13 @@ class Extractor:
                     logger.error(f"Query is missing header info, skipping {filename}: {query}")
                     continue
 
-                query.text = remove_line_comments(query.text).strip()
+                # Keep statement text verbatim; remove_line_comments() is not quote-aware and
+                # would truncate 'a--b' to 'a. Entries with no executable statement (typically
+                # a repeated cursor FETCH the parser commented out) are dropped, not written.
+                query.text = query.text.strip()
+                if not has_executable_text(query.text):
+                    empty_statements_skipped += 1
+                    continue
 
                 if self.config["log_location"]:
                     if "copy " in query.text.lower() and "from 's3:" in query.text.lower():
@@ -277,9 +284,8 @@ class Extractor:
                     query.text.replace("%", "%%")
 
                 query.text = f"{query.text.strip()}"
-                if not len(query.text) == 0:
-                    if not query.text.endswith(";"):
-                        query.text += ";"
+                if not query.text.endswith(";"):
+                    query.text += ";"
 
                 query_info["text"] = query.text
 
@@ -288,6 +294,17 @@ class Extractor:
                     missing_audit_log_connections.add(
                         (query.database_name, query.username, query.pid)
                     )
+        empty_transactions = [
+            xid for xid, txn in sql_json["transactions"].items() if not txn["queries"]
+        ]
+        for xid in empty_transactions:
+            del sql_json["transactions"][xid]
+        if empty_statements_skipped or empty_transactions:
+            logger.info(
+                f"Skipped {empty_statements_skipped} entries with no executable statement (empty "
+                f"or comment-only text, e.g. repeated cursor FETCH lines) and dropped "
+                f"{len(empty_transactions)} transactions left with no statements."
+            )
         return (
             sql_json,
             missing_audit_log_connections,

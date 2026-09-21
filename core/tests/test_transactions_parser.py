@@ -704,3 +704,58 @@ class TestTransactionParser(unittest.TestCase):
             text,
             "COPY  /* 0001_01_call_center_copy.sql.0 !CF:IR-fb3d5188-8604-11ed-b844-022e2270cad7.load-tables.load-tables.s0001.f0001.1.1:CF! */public.call_center \n            FROM 's3://test-location'\n                 IAM_ROLE 'This_is_a_test_role' \n                region 'us-east-1' \n                gzip delimiter '|';",
         )
+
+
+class TestTransactionParserSkipsEmptyStatements(unittest.TestCase):
+    """SQLs.json.gz written by other extractor versions can hold entries whose text is
+    empty or a bare line comment. They execute nothing, so the replay must not load
+    them as queries or count them in the attempted-query total."""
+
+    def make_parser(self):
+        cfg = dict(config)
+        cfg["execute_copy_statements"] = "false"
+        cfg["execute_unload_statements"] = "false"
+        return TransactionsParser(cfg, replay_id)
+
+    def make_transaction_dict(self, xid, texts):
+        return {
+            "xid": xid,
+            "pid": "1073815778",
+            "db": "dev",
+            "user": "awsuser",
+            "time_interval": True,
+            "queries": [
+                {
+                    "record_time": "2023-01-09T15:48:15+00:00",
+                    "start_time": None,
+                    "end_time": None,
+                    "text": text,
+                }
+                for text in texts
+            ],
+        }
+
+    def test_parse_transaction_drops_empty_and_comment_only_entries(self):
+        parser = self.make_parser()
+        transaction = parser.parse_transaction(
+            self.make_transaction_dict(
+                "1", ["FETCH 100 FROM c1;", "--FETCH 100 FROM c1;", "", "CLOSE c1;"]
+            ),
+            [],
+        )
+        self.assertEqual([q.text for q in transaction.queries], ["FETCH 100 FROM c1;", "CLOSE c1;"])
+        self.assertEqual(transaction.skipped_queries, 2)
+
+    @patch("core.replay.transactions_parser.matches_filters", mock_filters)
+    @patch("core.replay.transactions_parser.retrieve_compressed_json")
+    def test_parse_transactions_drops_transactions_left_empty(self, mock_retrieve_json):
+        mock_retrieve_json.return_value = {
+            "transactions": {
+                "1": self.make_transaction_dict("1", ["select 1;"]),
+                "2": self.make_transaction_dict("2", ["--FETCH 100 FROM c1;", ""]),
+                "3": self.make_transaction_dict("3", ["--FETCH 100 FROM c1;", "select 2;"]),
+            }
+        }
+        transactions = self.make_parser().parse_transactions()
+        self.assertEqual([t.xid for t in transactions], ["1", "3"])
+        self.assertEqual(sum(len(t.queries) for t in transactions), 2)

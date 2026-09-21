@@ -13,6 +13,7 @@ from pathlib import Path
 import sqlparse
 
 from core.replay.prep import ReplayPrep
+from core.util.log_validation import has_executable_text
 from common.util import (
     db_connect,
     current_offset_ms,
@@ -213,6 +214,7 @@ class ConnectionThread(threading.Thread):
         cursor = connection.cursor()
 
         transaction_query_idx = 0
+        attempted_any = False
         for idx, query in enumerate(transaction.queries):
             time_until_start_ms = query.offset_ms(self.first_event_time) - current_offset_ms(
                 self.replay_start
@@ -225,6 +227,16 @@ class ConnectionThread(threading.Thread):
             )
             if time_until_start_ms > 10:
                 time.sleep(time_until_start_ms / 1000.0)
+            if not has_executable_text(query.text):
+                # Empty or comment-only text (e.g. a repeated cursor FETCH the extractor
+                # commented out). There is no statement to send, so it is neither a
+                # success nor an error and must not move the query counters.
+                self.logger.debug(
+                    f"Skipping query {idx + 1}/{len(transaction.queries)} of XID {transaction.xid}: "
+                    f"no executable statement"
+                )
+                continue
+
             if self.config.get("split_multi", True) and query.text is not None:
                 formatted_query = query.text.lower()
                 if not formatted_query.startswith(("begin", "start")):
@@ -241,9 +253,17 @@ class ConnectionThread(threading.Thread):
             else:
                 split_statements = [query.text]
 
+            if not split_statements:
+                self.logger.debug(
+                    f"Skipping query {idx + 1}/{len(transaction.queries)} of XID {transaction.xid}: "
+                    f"statement splitter returned nothing"
+                )
+                continue
+
             if len(split_statements) > 1:
                 self.thread_stats["multi_statements"] += 1
             self.thread_stats["executed_queries"] += len(split_statements)
+            attempted_any = True
 
             success = True
             for s_idx, sql_text in enumerate(split_statements):
@@ -304,7 +324,15 @@ class ConnectionThread(threading.Thread):
         cursor.close()
         connection.commit()
 
-        if self.thread_stats["query_error"] == 0:
+        if not attempted_any:
+            # Every entry was skipped: nothing was attempted, so the transaction is
+            # neither a success nor a failure.
+            return
+
+        # A transaction fails when one of its own statements failed. `query_error` is
+        # cumulative for the thread, so it marked every later transaction on a
+        # connection as failed once any earlier one had an error.
+        if not errors:
             self.thread_stats["transaction_success"] += 1
         else:
             self.thread_stats["transaction_error"] += 1
@@ -404,9 +432,23 @@ def parse_error(error, user, db, query_text):
         "query_text": remove_comments(query_text),
     }
 
-    temp = error.__str__().replace('"', r"\"")
-    raw_error_string = json.loads(temp.replace("'", '"'))
+    raw_message = error.__str__()
     err_entry["detail"] = ""
+
+    # Server errors are the dict-repr of the wire fields (S, C, M, ...). Driver-side errors
+    # carry a plain string; parsing that as JSON used to raise inside the caller's except.
+    raw_error_string = None
+    try:
+        temp = raw_message.replace('"', r"\"")
+        raw_error_string = json.loads(temp.replace("'", '"'))
+    except (json.JSONDecodeError, TypeError, ValueError):
+        raw_error_string = None
+    if not isinstance(raw_error_string, dict):
+        err_entry["code"] = ""
+        err_entry["message"] = raw_message
+        err_entry["severity"] = "ERROR"
+        err_entry["category"] = "Client Error"
+        return err_entry
 
     if "D" in raw_error_string:
         detail_string = raw_error_string["D"]
@@ -417,9 +459,9 @@ def parse_error(error, user, db, query_text):
         )
         err_entry["detail"] = detail
 
-    err_entry["code"] = raw_error_string["C"]
-    err_entry["message"] = raw_error_string["M"]
-    err_entry["severity"] = raw_error_string["S"]
+    err_entry["code"] = raw_error_string.get("C", "")
+    err_entry["message"] = raw_error_string.get("M", raw_message)
+    err_entry["severity"] = raw_error_string.get("S", "ERROR")
     err_entry["category"] = categorize_error(err_entry["code"])
 
     return err_entry
