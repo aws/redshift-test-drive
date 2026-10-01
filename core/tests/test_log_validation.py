@@ -7,6 +7,8 @@ from core.util.log_validation import (
     is_valid_log,
     remove_line_comments,
     has_executable_text,
+    external_schema_pattern,
+    references_external_schema,
 )
 import os
 import datetime
@@ -261,3 +263,44 @@ class TestHasExecutableText(unittest.TestCase):
     def test_remove_line_comments_truncates_quoted_dashes(self):
         # Documents why the extractor no longer rewrites statements with this function.
         self.assertEqual(remove_line_comments("select 'a--b' as x;"), "select 'a")
+
+
+class TestReferencesExternalSchema(unittest.TestCase):
+    def setUp(self):
+        self.pattern = external_schema_pattern(["ext_sales", "spectrum_logs", "web"])
+
+    def check(self, text):
+        return references_external_schema(text, self.pattern)
+
+    def test_schema_qualified_reference(self):
+        self.assertTrue(self.check("select * from ext_sales.orders where id = 1"))
+        self.assertTrue(self.check("insert into t select a from spectrum_logs.clicks"))
+
+    def test_case_insensitive(self):
+        self.assertTrue(self.check("SELECT * FROM EXT_SALES.ORDERS"))
+        self.assertTrue(self.check("select * from Web.Visits"))
+
+    def test_quoted_identifiers(self):
+        self.assertTrue(self.check('select * from "ext_sales"."orders"'))
+        self.assertTrue(self.check('select * from "Web" . "visits"'))
+
+    def test_database_qualified_reference(self):
+        self.assertTrue(self.check("select * from prod.ext_sales.orders"))
+
+    def test_name_inside_longer_identifier_does_not_match(self):
+        self.assertFalse(self.check("select * from web_vw.visits"))
+        self.assertFalse(self.check("select * from ext_sales_archive.orders"))
+        self.assertFalse(self.check("select * from myweb.visits"))
+
+    def test_name_not_used_as_qualifier_does_not_match(self):
+        self.assertFalse(self.check("select 'web' as name, count(*) from visits"))
+        self.assertFalse(self.check("select * from pg_namespace where nspname = 'ext_sales'"))
+        self.assertFalse(self.check("select web, ext_sales from report"))
+
+    def test_empty_inputs(self):
+        self.assertIsNone(external_schema_pattern(None))
+        self.assertIsNone(external_schema_pattern([]))
+        self.assertIsNone(external_schema_pattern(["", "  "]))
+        self.assertFalse(references_external_schema("select * from web.visits", None))
+        self.assertFalse(self.check(""))
+        self.assertFalse(self.check(None))

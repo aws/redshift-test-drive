@@ -216,3 +216,23 @@ def has_executable_text(text):
         else:
             return True
     return False
+
+
+def external_schema_pattern(schemas):
+    """Compiles a case-insensitive matcher for schema.table references to the given schemas."""
+    names = [s.strip().strip('"') for s in (schemas or []) if s and s.strip().strip('"')]
+    if not names:
+        return None
+    alternatives = "|".join(re.escape(n) for n in sorted(names, key=len, reverse=True))
+    # schema name used as a qualifier, optionally quoted, not part of a longer identifier
+    return re.compile(
+        r'(?<![A-Za-z0-9_$])"?(?:' + alternatives + r')"?\s*\.\s*"?[A-Za-z_]',
+        re.IGNORECASE,
+    )
+
+
+def references_external_schema(text, pattern):
+    """True if the statement references one of the external schemas."""
+    if not text or pattern is None:
+        return False
+    return pattern.search(text) is not None

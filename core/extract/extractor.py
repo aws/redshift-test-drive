@@ -21,7 +21,11 @@ from tqdm import tqdm
 from common import aws_service as aws_service_helper
 from common import util
 from core.replay.connections_parser import ConnectionLog
-from core.util.log_validation import has_executable_text
+from core.util.log_validation import (
+    external_schema_pattern,
+    has_executable_text,
+    references_external_schema,
+)
 from core.extract.cloudwatch_extractor import CloudwatchExtractor
 from core.extract.s3_extractor import S3Extractor
 from core.extract.local_extractor import LocalExtractor
@@ -218,6 +222,8 @@ class Extractor:
         missing_audit_log_connections = set()
         replacements = set()
         statements_to_be_avoided = set()
+        external_statements_skipped = 0
+        external_pattern = external_schema_pattern(self.config.get("external_schemas"))
         empty_statements_skipped = 0
         for filename, queries in tqdm(
             log_items,
@@ -227,11 +233,11 @@ class Extractor:
             bar_format=self.bar_format,
         ):
             for idx, query in enumerate(queries):
-                if self.config.get("external_schemas", None):
-                    external_schemas = self.config["external_schemas"]
-                    if any(schema in query.text for schema in external_schemas):
-                        statements_to_be_avoided.add(query.text)
-                        continue
+                # skip statements referencing external schemas, they are not replayed
+                if references_external_schema(query.text, external_pattern):
+                    statements_to_be_avoided.add(query.text)
+                    external_statements_skipped += 1
+                    continue
                 # query -> sql query details, access query.text for sql
                 try:
                     if query.xid not in sql_json["transactions"]:
@@ -299,6 +305,11 @@ class Extractor:
         ]
         for xid in empty_transactions:
             del sql_json["transactions"][xid]
+        if external_statements_skipped:
+            logger.info(
+                f"Skipped {external_statements_skipped} statements referencing external_schemas "
+                f"({len(statements_to_be_avoided)} distinct), saved to sql_statements_skipped.txt"
+            )
         if empty_statements_skipped or empty_transactions:
             logger.info(
                 f"Skipped {empty_statements_skipped} entries with no executable statement (empty "

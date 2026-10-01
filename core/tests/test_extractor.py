@@ -251,3 +251,51 @@ class TestExtractorEmptyStatements(unittest.TestCase):
         )
         texts = [q["text"] for q in sql_json["transactions"]["1"]["queries"]]
         self.assertEqual(texts, ["select 'a--b' as x, 'c' as y;"])
+
+
+class TestExtractorExternalSchemas(unittest.TestCase):
+    def make_query(self, xid, text):
+        query = Log()
+        query.xid = xid
+        query.pid = "213"
+        query.database_name = "test"
+        query.username = "testuser"
+        query.record_time = datetime.datetime.now()
+        query.text = text
+        return query
+
+    def run_extract(self, queries, external_schemas):
+        e = Extractor({"log_location": "test/test_data", "external_schemas": external_schemas})
+        sql_json, _, _, skipped = e.get_sql_connections_replacements(
+            [], {"abc.log": queries}.items()
+        )
+        texts = [q["text"] for t in sql_json["transactions"].values() for q in t["queries"]]
+        return texts, skipped
+
+    def test_external_schema_statements_are_skipped(self):
+        queries = [
+            self.make_query("1", "select * from ext_sales.orders"),
+            self.make_query("2", 'select * from "EXT_SALES"."orders"'),
+            self.make_query("3", "select * from local.orders"),
+        ]
+        texts, skipped = self.run_extract(queries, ["ext_sales"])
+        self.assertEqual(texts, ["select * from local.orders;"])
+        self.assertEqual(len(skipped), 2)
+
+    def test_substring_of_other_identifiers_is_kept(self):
+        queries = [
+            self.make_query("1", "select * from web_vw.visits"),
+            self.make_query("2", "select 'web' as name from visits"),
+            self.make_query("3", "select * from web.visits"),
+        ]
+        texts, skipped = self.run_extract(queries, ["web"])
+        self.assertEqual(
+            texts, ["select * from web_vw.visits;", "select 'web' as name from visits;"]
+        )
+        self.assertEqual(skipped, {"select * from web.visits"})
+
+    def test_no_external_schemas_keeps_everything(self):
+        queries = [self.make_query("1", "select * from ext_sales.orders")]
+        texts, skipped = self.run_extract(queries, None)
+        self.assertEqual(texts, ["select * from ext_sales.orders;"])
+        self.assertEqual(skipped, set())
