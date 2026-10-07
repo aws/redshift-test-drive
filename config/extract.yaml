@@ -49,5 +49,7 @@ log_level: info
 # Number of logfiles to maintain
 backup_count: 1
 
-#Provide the schemas list for spectrum to avoid modification during Replay in format ['schema_name']
+# Optional. Statements that reference these schemas (schema.table, any case) are removed
+# from the workload and saved to sql_statements_skipped.txt, so they are not replayed.
+# Leave empty to replay them. Format ['schema_name']
 external_schemas:
