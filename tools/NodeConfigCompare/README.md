@@ -30,6 +30,8 @@ If you are going to replay your workload into Serverless workgroup then make sur
 
 You need to provide at least one subnet in the same VPC (where you have Redshift provisioned clusters or serverless workgroups) which has access to the internet to download the ECR container image.
 
+If you operate in a restricted network environment with an outbound firewall or URL allow-list, the AWS Batch subnet needs outbound HTTPS (443) access to `public.ecr.aws`, `d2glxqk2uabbnd.cloudfront.net`, `cdn.amazonlinux.com`, `github.com`, `pypi.org`, and `files.pythonhosted.org`.
+
 ## Example Use Case
 
 As an example, you may assume you have an existing Amazon Redshift cluster with 2 nodes of DC2.8XLarge instances. You would like to evaluate moving this cluster to RA3.4XLarge instances with four nodes and Redshift Serverless with base RPU 64 and 128. You would replay one hour past workload in these Redshift datawareshouse configurations and workgroups and compare their performance.
