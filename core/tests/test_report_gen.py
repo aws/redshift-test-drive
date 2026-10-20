@@ -6,6 +6,7 @@ import redshift_connector
 import botocore.errorfactory
 from botocore.exceptions import ClientError
 import core.replay.report_gen as report_gen
+from common.version import application_name
 import pandas
 
 df_mock = pandas.DataFrame(["a", "mock", "for", "test"], columns=["statement_type"])
@@ -335,6 +336,7 @@ class TestReportGen(unittest.TestCase):
                 username="someuser",
                 password="secret_password",
                 database=self.severless_cluster["database"],
+                app_name=application_name("Replay"),
             )
 
     @patch(
@@ -356,6 +358,7 @@ class TestReportGen(unittest.TestCase):
                 username=self.user,
                 password="password123",
                 database=self.provisioned_cluster["database"],
+                app_name=application_name("Replay"),
             )
             mock_get_cluster_credentials.assert_called_once_with(
                 "someregion", "someuser", "somedb", "someid"
@@ -386,6 +389,7 @@ class TestReportGen(unittest.TestCase):
                         username=self.user,
                         password="password123",
                         database=self.provisioned_cluster["database"],
+                        app_name=application_name("Replay"),
                     )
 
     @patch("common.util.db_connect", return_value=None)
@@ -424,6 +428,7 @@ class TestReportGen(unittest.TestCase):
                         username=self.user,
                         password="password123",
                         database=self.provisioned_cluster["database"],
+                        app_name=application_name("Replay"),
                     )
 
     @patch("common.util.db_connect", return_value=None)

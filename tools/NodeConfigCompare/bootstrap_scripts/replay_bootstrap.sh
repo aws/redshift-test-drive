@@ -54,6 +54,7 @@ if [[ "$account_id" == "$SNAPSHOT_ACCOUNT_ID" ]]; then
    aws s3 cp copy_replacements.csv $WORKLOAD_LOCATION/copy_replacements.csv || true
 fi
 aws s3 cp config/replay.yaml s3://$BUCKET_NAME/$SCRIPT_PREFIX/replay_$CLUSTER_IDENTIFIER.yaml
+export REDSHIFT_TEST_DRIVE_CLIENT=nodeconfigcompare
 make replay
 if [[ $ENDPOINT_TYPE == 'SERVERLESS' ]]; then
   aws s3 cp s3://$BUCKET_NAME/$SCRIPT_PREFIX/system_config.json .

@@ -2,18 +2,15 @@ import logging
 import logging.handlers
 import time
 import os
+from common.version import get_version, get_channel
 
 log_date_format = "%Y-%m-%d %H:%M:%S"
 
 
-def log_version():
-    """Read the VERSION file and log it"""
-    logger = logging.getLogger("WorkloadReplicatorLogger")
-    try:
-        with open("VERSION", "r") as fp:
-            logger.info(f"Version {fp.read().strip()}")
-    except:
-        logger.warning(f"Version unknown")
+def log_version(logger_name="WorkloadReplicatorLogger"):
+    """Log the tool version (short git SHA) and invocation channel"""
+    logger = logging.getLogger(logger_name)
+    logger.info(f"Version {get_version()}, channel {get_channel()}")
 
 
 def init_logging(
