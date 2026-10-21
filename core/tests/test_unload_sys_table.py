@@ -49,11 +49,13 @@ def mock_get_connection_cred(self, val):
     }
 
 
-def mock_db_connect(interface, host, port, username, password, database, odbc_driver):
+def mock_db_connect(interface, host, port, username, password, database, odbc_driver, app_name):
     return conn
 
 
-def mock_db_connect_error(interface, host, port, username, password, database, odbc_driver):
+def mock_db_connect_error(
+    interface, host, port, username, password, database, odbc_driver, app_name
+):
     cursor.execute.side_effect = KeyError
     conn.cursor.return_value = cursor
 
