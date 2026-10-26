@@ -149,7 +149,7 @@ This template provisions the required AWS Resources except the Amazon Redshift p
 | OnPremisesCIDR | CIDR Notation |  The IP range (CIDR notation) for your existing infrastructure to access the target and replica provisioned clusters and Serverless workgroups from a SQL client. If unsure, enter your corporate desktop&#39;s CIDR address. For instance, if your desktop&#39;s IP address is 10.156.87.45, enter10.156.87.45/32.
 | VPC | VPC ID	| An existing [Amazon Virtual Private Cloud](https://aws.amazon.com/vpc/) (Amazon VPC) where you want to deploy the provisioned clusters, Serverless workgroups and EC2 instances.
 | RedshiftSubnetId | Subnet ID | You can provide upto 3 subnets within the same VPC to deploy the Amazon Redshift provisioned clusters and Serverless workgroups.
-| AWSBatchSubnetId | Subnet ID | Provide 1 existing subnet (subnet should have route to the internet) within the VPC in which you deploy AWS Batch compute environment.
+| AWSBatchSubnetId | Subnet ID | Provide 1 existing subnet within the VPC in which you deploy the AWS Batch compute environment. With the default public image and package paths this subnet needs a route to the internet; for restricted networks see the prerequisites above (private image via `AWSECRContainerImage`, private mirrors, and VPC endpoints).
 | AWSECRContainerImage | N/A, Amazon Elastic Container Registry | Default value is N/A, Provide container image if you would like to use your private image which is already available.
 | UseAWSLakeFormationForGlueCatalog | No,Yes | Default value is No ,Select Yes if AWS Lake Formation is enabled for the account and manages access for Glue catalog
 | NotificationEmail | N/A, Email address | Default value is N/A , Provide one email address if you would like to receive step function status notifications
@@ -306,7 +306,7 @@ You can find [here](https://github.com/aws/redshift-test-drive/blob/main/tools/N
 
 ## Troubleshooting
 
-AWS Batch jobs can fail with error **– CannotPullContainerError**, if the subnet doesn’t have route to the internet to pull the container image. Refer to [this](https://aws.amazon.com/premiumsupport/knowledge-center/ecs-fargate-pull-container-error/) KB article to resolve the issue.
+AWS Batch jobs can fail with error **– CannotPullContainerError**. With the default public image, this usually means the subnet has no route to the internet to pull the image — refer to [this](https://aws.amazon.com/premiumsupport/knowledge-center/ecs-fargate-pull-container-error/) KB article. With a private ECR image, the same error instead points to ECR/S3 VPC endpoint, DNS, security-group, IAM, or image-reference configuration.
 
 There might be some rare instances in which failures occur in the state machine running this solution. To troubleshoot, refer to its logs, along with logs from the AWS Batch jobs in [Amazon CloudWatch Logs](https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/WhatIsCloudWatchLogs.html). To view the AWS Batch logs, navigate to the [Amazon CloudWatch](https://aws.amazon.com/cloudwatch/) console and choose **Logs** in the navigation pane. Find the log group with name **`<`Your CloudFormation Stack Name`>`/log** and choose the latest log streams.
 
