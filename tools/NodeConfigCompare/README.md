@@ -28,13 +28,13 @@ If you are already running Amazon Redshift workload in production, you may like 
 
 If you are going to replay your workload into Serverless workgroup then make sure that you must have at least three subnets, and they must span across three Availability Zones. You can review the considerations when using Amazon Redshift Serverless [here](https://docs.aws.amazon.com/redshift/latest/mgmt/serverless-known-issues.html).
 
-You need to provide at least one subnet in the same VPC (where you have Redshift provisioned clusters or serverless workgroups) which has access to the internet to download the ECR container image.
+You need to provide at least one subnet in the same VPC (where you have Redshift provisioned clusters or serverless workgroups) which has access to the internet to download the default public ECR container image.
 
 If you run in a restricted network (outbound firewall or URL allow-list), the egress the AWS Batch subnet needs is configuration-dependent — it varies with your container image, Region, package mirrors, and the selected extract/replay mode, so verify it against your setup rather than treating any list as complete. With the default image and modes, the jobs reach:
 
 - **Public package/source hosts:** `cdn.amazonlinux.com` (yum), `github.com` (git clone), and `pypi.org` + `files.pythonhosted.org` (pip). If you use private package mirrors, allow those instead.
 - **Default container image (Amazon ECR Public):** `public.ecr.aws` for the manifest, with layers served from Amazon CloudFront. ECR Public does not publish a stable CloudFront distribution name — the `*.cloudfront.net` host varies by client and over time — so a single pinned host is unreliable. Either allow the broad `*.cloudfront.net` wildcard, or (recommended for strict networks) mirror the image into private Amazon ECR and set the `AWSECRContainerImage` parameter, which removes the public-image/CloudFront dependency and lets the pull use ECR VPC endpoints.
-- **AWS service endpoints** (over the internet or via VPC endpoints): Amazon S3 (job bootstrap and data) and Amazon CloudWatch Logs (the `awslogs` driver) on every run, plus mode-dependent services such as AWS STS, Amazon Redshift / Redshift Serverless, AWS Secrets Manager, and AWS Glue.
+- **AWS service endpoints** (over the internet or via VPC endpoints): Amazon S3 (job bootstrap and data) and Amazon CloudWatch Logs (the `awslogs` driver) on every run, plus mode-dependent services such as AWS STS, Amazon Redshift / Redshift Serverless, and AWS Secrets Manager.
 
 ## Example Use Case
 
