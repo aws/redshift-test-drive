@@ -28,7 +28,13 @@ If you are already running Amazon Redshift workload in production, you may like 
 
 If you are going to replay your workload into Serverless workgroup then make sure that you must have at least three subnets, and they must span across three Availability Zones. You can review the considerations when using Amazon Redshift Serverless [here](https://docs.aws.amazon.com/redshift/latest/mgmt/serverless-known-issues.html).
 
-You need to provide at least one subnet in the same VPC (where you have Redshift provisioned clusters or serverless workgroups) which has access to the internet to download the ECR container image.
+You need to provide at least one subnet in the same VPC (where you have Redshift provisioned clusters or serverless workgroups) which has access to the internet to download the default public ECR container image.
+
+If you run in a restricted network (outbound firewall or URL allow-list), the egress the AWS Batch subnet needs is configuration-dependent — it varies with your container image, Region, package mirrors, and the selected extract/replay mode, so verify it against your setup rather than treating any list as complete. With the default image and modes, the jobs reach:
+
+- **Public package/source hosts:** `cdn.amazonlinux.com` (yum), `github.com` (git clone), and `pypi.org` + `files.pythonhosted.org` (pip). If you use private package mirrors, allow those instead.
+- **Default container image (Amazon ECR Public):** `public.ecr.aws` for the manifest, with layers served from Amazon CloudFront. ECR Public does not publish a stable CloudFront distribution name — the `*.cloudfront.net` host varies by client and over time — so a single pinned host is unreliable. Either allow the broad `*.cloudfront.net` wildcard, or (recommended for strict networks) mirror the image into private Amazon ECR and set the `AWSECRContainerImage` parameter, which removes the public-image/CloudFront dependency and lets the pull use ECR VPC endpoints.
+- **AWS service endpoints** (over the internet or via VPC endpoints): Amazon S3 (job bootstrap and data) and Amazon CloudWatch Logs (the `awslogs` driver) on every run, plus mode-dependent services such as AWS STS, Amazon Redshift / Redshift Serverless, and AWS Secrets Manager.
 
 ## Example Use Case
 
@@ -143,7 +149,7 @@ This template provisions the required AWS Resources except the Amazon Redshift p
 | OnPremisesCIDR | CIDR Notation |  The IP range (CIDR notation) for your existing infrastructure to access the target and replica provisioned clusters and Serverless workgroups from a SQL client. If unsure, enter your corporate desktop&#39;s CIDR address. For instance, if your desktop&#39;s IP address is 10.156.87.45, enter10.156.87.45/32.
 | VPC | VPC ID	| An existing [Amazon Virtual Private Cloud](https://aws.amazon.com/vpc/) (Amazon VPC) where you want to deploy the provisioned clusters, Serverless workgroups and EC2 instances.
 | RedshiftSubnetId | Subnet ID | You can provide upto 3 subnets within the same VPC to deploy the Amazon Redshift provisioned clusters and Serverless workgroups.
-| AWSBatchSubnetId | Subnet ID | Provide 1 existing subnet (subnet should have route to the internet) within the VPC in which you deploy AWS Batch compute environment.
+| AWSBatchSubnetId | Subnet ID | Provide 1 existing subnet within the VPC in which you deploy the AWS Batch compute environment. With the default public image and package paths this subnet needs a route to the internet; for restricted networks see the prerequisites above (private image via `AWSECRContainerImage`, private mirrors, and VPC endpoints).
 | AWSECRContainerImage | N/A, Amazon Elastic Container Registry | Default value is N/A, Provide container image if you would like to use your private image which is already available.
 | UseAWSLakeFormationForGlueCatalog | No,Yes | Default value is No ,Select Yes if AWS Lake Formation is enabled for the account and manages access for Glue catalog
 | NotificationEmail | N/A, Email address | Default value is N/A , Provide one email address if you would like to receive step function status notifications
@@ -300,7 +306,7 @@ You can find [here](https://github.com/aws/redshift-test-drive/blob/main/tools/N
 
 ## Troubleshooting
 
-AWS Batch jobs can fail with error **– CannotPullContainerError**, if the subnet doesn’t have route to the internet to pull the container image. Refer to [this](https://aws.amazon.com/premiumsupport/knowledge-center/ecs-fargate-pull-container-error/) KB article to resolve the issue.
+AWS Batch jobs can fail with error **– CannotPullContainerError**. With the default public image, this usually means the subnet has no route to the internet to pull the image — refer to [this](https://aws.amazon.com/premiumsupport/knowledge-center/ecs-fargate-pull-container-error/) KB article. With a private ECR image, the same error can also point to ECR/S3 VPC endpoint, DNS, security-group, IAM, or image-reference configuration.
 
 There might be some rare instances in which failures occur in the state machine running this solution. To troubleshoot, refer to its logs, along with logs from the AWS Batch jobs in [Amazon CloudWatch Logs](https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/WhatIsCloudWatchLogs.html). To view the AWS Batch logs, navigate to the [Amazon CloudWatch](https://aws.amazon.com/cloudwatch/) console and choose **Logs** in the navigation pane. Find the log group with name **`<`Your CloudFormation Stack Name`>`/log** and choose the latest log streams.
 
