@@ -20,6 +20,7 @@ from boto3 import client
 from tqdm import tqdm
 from common import aws_service as aws_service_helper
 from common import util
+from common.version import application_name
 from core.replay.connections_parser import ConnectionLog
 from core.util.log_validation import (
     external_schema_pattern,
@@ -352,6 +353,7 @@ class Extractor:
                 password=source_cluster_urls["psql"]["password"],
                 host=source_cluster_urls["psql"]["host"],
                 database=source_cluster_urls["psql"]["database"],
+                application_name=application_name("Extract"),
             )
 
         conn.autocommit = True

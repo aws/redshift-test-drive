@@ -31,4 +31,5 @@ sed -i "s#workload_location: \".*\"#workload_location: \"$WORKLOAD_LOCATION\"#g"
 sed -i "s#start_time: \".*\"#start_time: \"$SIMPLE_REPLAY_EXTRACT_START_TIME\"#g" config/extract.yaml
 sed -i "s#end_time: \".*\"#end_time: \"$SIMPLE_REPLAY_EXTRACT_END_TIME\"#g" config/extract.yaml
 aws s3 cp config/extract.yaml s3://$BUCKET_NAME/$SCRIPT_PREFIX/
+export REDSHIFT_TEST_DRIVE_CLIENT=nodeconfigcompare
 make extract

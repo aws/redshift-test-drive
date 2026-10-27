@@ -1,0 +1,23 @@
+# Tags and releases every commit pushed to main as v<yyyy.mm.dd>-<sha7>; the seven
+# characters match the version in the RedshiftTestDrive-* application_name marker.
+
+name: Release
+
+on:
+  push:
+    branches: [ "main" ]
+
+permissions:
+  contents: write  # create the tag and the release
+
+jobs:
+  release:
+    if: github.repository == 'aws/redshift-test-drive'
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: Tag and release this commit
+      run: gh release create "v$(date -u +%Y.%m.%d)-${GITHUB_SHA::7}" --target "$GITHUB_SHA" --generate-notes
+      env:
+        GH_TOKEN: ${{ github.token }}

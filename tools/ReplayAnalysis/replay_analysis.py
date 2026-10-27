@@ -25,7 +25,7 @@ def launch_analysis_v2():
 
 def main():
     log_helper.init_logging("replay_analysis.log",dir='tools/ReplayAnalysis/logs',logger_name="ReplayAnalysisLogger")
-    log_helper.log_version()
+    log_helper.log_version(logger_name="ReplayAnalysisLogger")
     launch_analysis_v2()
 
 
