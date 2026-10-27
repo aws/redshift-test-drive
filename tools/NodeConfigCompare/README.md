@@ -306,7 +306,7 @@ You can find [here](https://github.com/aws/redshift-test-drive/blob/main/tools/N
 
 ## Troubleshooting
 
-AWS Batch jobs can fail with error **– CannotPullContainerError**. With the default public image, this usually means the subnet has no route to the internet to pull the image — refer to [this](https://aws.amazon.com/premiumsupport/knowledge-center/ecs-fargate-pull-container-error/) KB article. With a private ECR image, the same error instead points to ECR/S3 VPC endpoint, DNS, security-group, IAM, or image-reference configuration.
+AWS Batch jobs can fail with error **– CannotPullContainerError**. With the default public image, this usually means the subnet has no route to the internet to pull the image — refer to [this](https://aws.amazon.com/premiumsupport/knowledge-center/ecs-fargate-pull-container-error/) KB article. With a private ECR image, the same error can also point to ECR/S3 VPC endpoint, DNS, security-group, IAM, or image-reference configuration.
 
 There might be some rare instances in which failures occur in the state machine running this solution. To troubleshoot, refer to its logs, along with logs from the AWS Batch jobs in [Amazon CloudWatch Logs](https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/WhatIsCloudWatchLogs.html). To view the AWS Batch logs, navigate to the [Amazon CloudWatch](https://aws.amazon.com/cloudwatch/) console and choose **Logs** in the navigation pane. Find the log group with name **`<`Your CloudFormation Stack Name`>`/log** and choose the latest log streams.
 
