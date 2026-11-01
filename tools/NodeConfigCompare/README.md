@@ -318,6 +318,10 @@ To view the Step Functions logs, navigate to the state machine’s latest run on
 
 After you fix the issue, you can restart the state machine by choosing New execution.
 
+### AWS Batch extract job fails with `MemoryError`
+
+In rare instances, the extract job may fail with a `MemoryError`. This usually happens when the extract window is too large relative to the audit-log volume on the source cluster. If it occurs, either shorten the extract time range, or increase `AWSBatchJobMemory` (default `16384` MiB) - and `AWSBatchJobVcpu` if needed - via a CloudFormation stack update, then re-run. Use a valid Fargate [vCPU/memory combination](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-batch-jobdefinition-resourcerequirement.html).
+
 ## Clean up
 
 Running this template in your AWS account may have some cost implications because it provisions new Amazon Redshift provisioned clusters, serverless namespaces and workgroups. Once you are done with the evaluation and you don’t plan to run this test in future, you should delete the CloudFormation stack. It deletes all the resources it created, except the below ones needs to be deleted manually:
