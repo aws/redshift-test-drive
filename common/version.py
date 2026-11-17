@@ -18,10 +18,10 @@ logger = logging.getLogger("WorkloadReplicatorLogger")
 
 @functools.cache  # one git call per process; replay opens thousands of connections
 def get_version():
-    """First 7 characters of HEAD, or 'nogit' when git or .git is unavailable"""
+    """First 7 characters of HEAD, or 'nogit' unless the tool's own folder is the git toplevel"""
     try:
         out = subprocess.run(
-            ["git", "rev-parse", "HEAD"],
+            ["git", "rev-parse", "--show-toplevel", "HEAD"],
             cwd=_ROOT,
             capture_output=True,
             text=True,
@@ -29,8 +29,14 @@ def get_version():
         )
     except (OSError, subprocess.SubprocessError):
         return "nogit"
-    sha = out.stdout.strip()
-    return sha[:7] if out.returncode == 0 and sha else "nogit"
+    lines = out.stdout.splitlines()
+    if out.returncode != 0 or len(lines) != 2:
+        return "nogit"
+    toplevel, sha = (line.strip() for line in lines)
+    # a copy or ZIP placed inside another repository would otherwise report that repository's HEAD
+    if not sha or Path(toplevel).resolve() != _ROOT:
+        return "nogit"
+    return sha[:7]
 
 
 @functools.cache  # read the environment once per process

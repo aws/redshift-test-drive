@@ -346,7 +346,11 @@ class Extractor:
         """
         conn = None
         if odbc_driver:
-            conn = pyodbc.connect(source_cluster_urls["odbc"])
+            import pyodbc
+
+            conn = pyodbc.connect(
+                f"{source_cluster_urls['odbc']}; ApplicationName={application_name('Extract')}"
+            )
         else:
             conn = redshift_connector.connect(
                 user=source_cluster_urls["psql"]["username"],

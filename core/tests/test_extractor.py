@@ -1,4 +1,5 @@
 import datetime
+import sys
 import unittest
 from pathlib import Path
 from unittest.mock import patch, Mock, mock_open
@@ -299,3 +300,29 @@ class TestExtractorExternalSchemas(unittest.TestCase):
         texts, skipped = self.run_extract(queries, None)
         self.assertEqual(texts, ["select * from ext_sales.orders;"])
         self.assertEqual(skipped, set())
+
+
+class TestExtractorUnloadSystemTable(unittest.TestCase):
+    """unload_system_table opens its own connection; both drivers must send the marker"""
+
+    QUERIES = "--stl_query\nunload ('select 1') to '' credentials '';\n"
+
+    def unload_over_odbc(self, mock_pyodbc):
+        e = Extractor({"log_location": "test/test_data"})
+        with patch.dict(sys.modules, {"pyodbc": mock_pyodbc}):
+            with patch("builtins.open", mock_open(read_data=self.QUERIES)):
+                e.unload_system_table(
+                    {"odbc": "Driver={Amazon Redshift (x64)}", "psql": {}},
+                    "Amazon Redshift (x64)",
+                    "unload_system_tables.sql",
+                    "s3://bucket/prefix",
+                    "unload-role",
+                )
+
+    def test_odbc_connection_string_carries_application_name(self):
+        mock_pyodbc = Mock()
+        self.unload_over_odbc(mock_pyodbc)
+        connection_str = mock_pyodbc.connect.call_args.args[0]
+        self.assertTrue(connection_str.startswith("Driver={Amazon Redshift (x64)}; "))
+        self.assertIn("; ApplicationName=RedshiftTestDrive-Extract/", connection_str)
+        self.assertTrue(mock_pyodbc.connect.return_value.cursor.return_value.execute.called)

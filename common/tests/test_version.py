@@ -5,12 +5,15 @@ from unittest import TestCase
 from unittest.mock import patch, Mock
 
 import common.util
+import common.version
 from common.version import get_version, get_channel, application_name
 
 CHANNEL_ENV = "REDSHIFT_TEST_DRIVE_CLIENT"
+SHA = "c288d94b0f1e2d3c4b5a69788796a5b4c3d2e1f0"
+ROOT = str(common.version._ROOT)
 
 
-def git_result(returncode=0, stdout="c288d94b0f1e2d3c4b5a69788796a5b4c3d2e1f0\n"):
+def git_result(returncode=0, stdout=f"{ROOT}\n{SHA}\n"):
     return Mock(returncode=returncode, stdout=stdout)
 
 
@@ -26,7 +29,10 @@ class TestVersion(TestCase):
     @patch("subprocess.run", return_value=git_result())
     def test_get_version_short_sha(self, mock_run):
         self.assertEqual(get_version(), "c288d94")
-        self.assertEqual(mock_run.call_args.args[0], ["git", "rev-parse", "HEAD"])
+        self.assertEqual(
+            mock_run.call_args.args[0], ["git", "rev-parse", "--show-toplevel", "HEAD"]
+        )
+        self.assertEqual(mock_run.call_args.kwargs["cwd"], common.version._ROOT)
 
     @patch("subprocess.run", return_value=git_result())
     def test_get_version_runs_git_once(self, mock_run):
@@ -44,6 +50,18 @@ class TestVersion(TestCase):
 
     @patch("subprocess.run", return_value=git_result(returncode=128, stdout=""))
     def test_get_version_not_a_repository(self, mock_run):
+        self.assertEqual(get_version(), "nogit")
+
+    @patch("subprocess.run", return_value=git_result(stdout=f"{ROOT}/../other\n{SHA}\n"))
+    def test_get_version_inside_another_repository(self, mock_run):
+        self.assertEqual(get_version(), "nogit")
+
+    @patch("subprocess.run", return_value=git_result(stdout=f"{SHA}\n"))
+    def test_get_version_single_output_line(self, mock_run):
+        self.assertEqual(get_version(), "nogit")
+
+    @patch("subprocess.run", return_value=git_result(stdout=f"{ROOT}\n\n"))
+    def test_get_version_empty_sha(self, mock_run):
         self.assertEqual(get_version(), "nogit")
 
 
@@ -78,8 +96,9 @@ class TestChannel(TestCase):
     @patch("common.version.multiprocessing.parent_process", return_value=Mock())
     def test_get_channel_invalid_silent_in_worker(self, mock_parent):
         with patch.dict(os.environ, {CHANNEL_ENV: "bad value!"}):
-            with self.assertNoLogs("WorkloadReplicatorLogger", level="WARNING"):
+            with patch.object(common.version.logger, "warning") as mock_warning:
                 self.assertEqual(get_channel(), "cli")
+        mock_warning.assert_not_called()
 
     def test_get_channel_too_many_segments(self):
         with patch.dict(os.environ, {CHANNEL_ENV: "a/b/c"}):
