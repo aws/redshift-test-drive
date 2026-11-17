@@ -41,6 +41,7 @@ from core.replay.report_util import (
 )
 from common import util
 from common import aws_service as aws_service_helper
+from common.version import application_name
 import core.replay.report_util as report_util
 
 g_stylesheet = styles()
@@ -323,6 +324,7 @@ def initiate_connection(username, cluster):
             username=cluster_string["username"],
             password=cluster_string["password"],
             database=cluster_string["database"],
+            app_name=application_name("Replay"),
         )  # yield to reuse connection
         yield conn
     except Exception as e:

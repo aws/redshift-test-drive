@@ -20,6 +20,7 @@ from boto3 import client
 from tqdm import tqdm
 from common import aws_service as aws_service_helper
 from common import util
+from common.version import application_name
 from core.replay.connections_parser import ConnectionLog
 from core.util.log_validation import (
     external_schema_pattern,
@@ -345,13 +346,18 @@ class Extractor:
         """
         conn = None
         if odbc_driver:
-            conn = pyodbc.connect(source_cluster_urls["odbc"])
+            import pyodbc
+
+            conn = pyodbc.connect(
+                f"{source_cluster_urls['odbc']}; ApplicationName={application_name('Extract')}"
+            )
         else:
             conn = redshift_connector.connect(
                 user=source_cluster_urls["psql"]["username"],
                 password=source_cluster_urls["psql"]["password"],
                 host=source_cluster_urls["psql"]["host"],
                 database=source_cluster_urls["psql"]["database"],
+                application_name=application_name("Extract"),
             )
 
         conn.autocommit = True

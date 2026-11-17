@@ -19,6 +19,7 @@ from common.util import (
     bucket_dict,
     db_connect
 )
+from common.version import application_name
 import report_gen
 from unload_sys_table import UnloadSysTable
 import common.aws_service as aws_service_helper
@@ -96,7 +97,7 @@ def main():
         sys.exit()
 
     # setting application name for tracking
-    application = "WorkloadReplicator-Replay"
+    application = application_name("Replay")
     
     if is_serverless_endpoint:
         host = f'redshift-serverless-{config.get("target_cluster_endpoint").split(".")[0]}' 

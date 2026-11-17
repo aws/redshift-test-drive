@@ -1,5 +1,6 @@
 from core.replay.prep import ReplayPrep
 from common.util import db_connect
+from common.version import application_name
 import re
 import logging
 
@@ -27,6 +28,7 @@ class UnloadSysTable:
                 password=credentials["password"],
                 database=credentials["database"],
                 odbc_driver=credentials["odbc_driver"],
+                app_name=application_name("Replay"),
             )
         except Exception as e:
             logger.debug(f"Unable to connect: {e}", exc_info=True)

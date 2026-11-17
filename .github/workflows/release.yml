@@ -1,0 +1,31 @@
+# Tags and releases every commit pushed to main as v<yyyy.mm.dd>-<sha7>; the date is the
+# commit date and the seven characters match the version in the RedshiftTestDrive-*
+# application_name marker. Re-running the job for an already released commit is a no-op.
+
+name: Release
+
+on:
+  push:
+    branches: [ "main" ]
+
+permissions:
+  contents: write  # create the tag and the release
+
+jobs:
+  release:
+    if: github.repository == 'aws/redshift-test-drive'
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: Tag and release this commit
+      run: |
+        tag="v$(git log -1 --format=%cs "$GITHUB_SHA" | tr - .)-${GITHUB_SHA::7}"
+        if gh release view "$tag" > /dev/null 2>&1; then
+          echo "Release $tag already exists; nothing to do."
+          exit 0
+        fi
+        gh release create "$tag" --target "$GITHUB_SHA" --generate-notes
+      env:
+        GH_TOKEN: ${{ github.token }}
+        GH_REPO: ${{ github.repository }}

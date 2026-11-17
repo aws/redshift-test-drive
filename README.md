@@ -70,6 +70,13 @@ A. Make sure you are in the right directory for execution. Make commands are mad
 
 ----
 
+## Telemetry
+Extract and Replay set the Redshift connection parameter `application_name` to
+`RedshiftTestDrive-<Component>/<git-sha>/<channel>` (for example `RedshiftTestDrive-Replay/c288d94/cli`). It names the tool,
+the commit it was run from and how it was launched; it carries no data about you or your workload, and your replayed
+`SET application_name` statements are untouched. Set `REDSHIFT_TEST_DRIVE_CLIENT=<channel>[/<channel-version>]` before
+`make extract` / `make replay` to declare a launcher. You can see the value in `SYS_CONNECTION_LOG` on your own cluster.
+
 ## Security
 
 See [CONTRIBUTING](CONTRIBUTING.md#security-issue-notifications) for more information.

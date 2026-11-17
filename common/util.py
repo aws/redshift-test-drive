@@ -50,6 +50,8 @@ def db_connect(
                 odbc_driver, host, database, username, password, port
             )
         )
+        if app_name:
+            odbc_connection_str += f"; ApplicationName={app_name}"
         conn = pyodbc.connect(odbc_connection_str)
     else:
         raise ValueError(f"Unknown Interface {interface}")

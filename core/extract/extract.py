@@ -11,6 +11,7 @@ import common.config as config_helper
 import common.log as log_helper
 from common import aws_service as aws_service_helper
 from common.util import cluster_dict, db_connect
+from common.version import application_name
 import core.extract.extractor as extractor
 
 logger = logging.getLogger("WorkloadReplicatorLogger")
@@ -70,7 +71,7 @@ def main():
 
     # setting application name for tracking
     if config.get("source_cluster_endpoint"):
-        application = "WorkloadReplicator-Extract"
+        application = application_name("Extract")
         ##China region endpoint - G.Bai - Mar 2025
         global serverless_cluster_endpoint_pattern
         if ".com.cn" in config.get("source_cluster_endpoint") and len(config.get("source_cluster_endpoint").split(".")) == 7:

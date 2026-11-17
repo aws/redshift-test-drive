@@ -18,6 +18,7 @@ from common.util import (
     db_connect,
     current_offset_ms,
 )
+from common.version import application_name
 
 
 class ConnectionThread(threading.Thread):
@@ -122,6 +123,7 @@ class ConnectionThread(threading.Thread):
                     database=credentials["database"],
                     odbc_driver=credentials["odbc_driver"],
                     drop_return=self.config.get("drop_return"),
+                    app_name=application_name("Replay"),
                 )
                 self.logger.debug(
                     f"Connected using {interface} for PID: {self.connection_log.pid}"
