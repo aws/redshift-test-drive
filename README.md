@@ -57,6 +57,7 @@ The following table provides links to all tools, locations & READMEs in the repo
 | 02|           [Replay Analysis](/tools/ReplayAnalysis)            |Replay Analysis utility enhances auditing in the Workload Replicator process to extract information about the errors that occurred, the validity of the run, and the performance of the replay. This is also a user interface in which customers can choose multiple replays to analyze, validate, and compare using the extracted audit logs.|[README](/tools/ReplayAnalysis/README.md)|
 |03 | [External Object Replicator](/tools/ExternalObjectReplicator) |External Object Replicator replicates COPY manifest objects, and Spectrum object in the customer cluster|[README](/tools/ExternalObjectReplicator/README.md)|
 |04|            [Node Config](/tools/NodeConfigCompare)            | Node Configuration Comparison utility answers a very common question on which instance type and number of nodes should we choose for your workload on Amazon Redshift. Also supports comparing datashare consumer configurations.|[README](/tools/NodeConfigCompare/README.md)
+|05|          [Agent skill](/skills/redshift-test-drive)           | Instructions that let a coding agent run these tools: extract, replay on a baseline and a target, and read the results with Replay Analysis or NodeConfigCompare. Ships no code of its own.|[SKILL.md](/skills/redshift-test-drive/SKILL.md)|
 
 ## FAQs
 Q. I'm experiencing issues with boto3 appearing as `ValueError: Invalid endpoint: https://s3..amazonaws.com` or something to that effect, how do I fix this?
@@ -75,7 +76,8 @@ Extract and Replay set the Redshift connection parameter `application_name` to
 `RedshiftTestDrive-<Component>/<git-sha>/<channel>` (for example `RedshiftTestDrive-Replay/c288d94/cli`). It names the tool,
 the commit it was run from and how it was launched; it carries no data about you or your workload, and your replayed
 `SET application_name` statements are untouched. Set `REDSHIFT_TEST_DRIVE_CLIENT=<channel>[/<channel-version>]` before
-`make extract` / `make replay` to declare a launcher. You can see the value in `SYS_CONNECTION_LOG` on your own cluster.
+`make extract` / `make replay` to declare a launcher. The agent skill declares itself as `skill/<n>`.
+You can see the value in `SYS_CONNECTION_LOG` on your own cluster.
 
 ## Security
 

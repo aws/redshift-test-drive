@@ -255,6 +255,7 @@ The analysis folder structure is as follows :
 
 * Dependent SQL queries across connections are not guaranteed to run in the original order.
 * Spectrum queries are not replayed if the target cluster doesn’t have access to external tables
+  * For a workload that reads external tables, decide at extract time. Leave `external_schemas` in `extract.yaml` empty to keep those statements, and make the external tables reachable from the target before replay: either give the target the same external schema, catalog and IAM role, or copy the objects with the [External Object Replicator](/tools/ExternalObjectReplicator/README.md) (provisioned sources). If the target cannot reach them, list the schemas in `external_schemas` instead; their statements are then removed from the workload and saved to `sql_statements_skipped.txt`, so the gap is visible rather than counted as replay failures.
 * COPY and UNLOAD command within stored procedures must be altered manually by the customers. 
 * Replay using JDBC is not supported.
 * If a connection’s session initiation or disconnection time are not found in the audit connection logs (e.g. outside of the specified `start_time` and `end_time`), the connection’s time is assumed to be the overall workload’s time.
